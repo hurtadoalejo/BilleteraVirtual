@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900&display=swap"
+    rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap"
+    rel="stylesheet">
+
+  <title>Registro de Usuario</title>
+
+  <style>
+    * {
+      user-select: none;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --card-width: 850px;
+      --input-bg: rgba(255, 255, 255, 0.2);
+      --button-bg: rgba(255, 255, 255, 0.3);
+      --accent-color: #4d82bc;
+      --error-color: #ff9b9b;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(117, 157, 199, 0.6), transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(77, 130, 188, 0.6), transparent 40%),
+        radial-gradient(circle at 50% 50%, var(--accent-color), #005187);
+      background-blend-mode: screen;
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .register-card {
+      background-color: rgba(7, 68, 109, 0.2);
+      backdrop-filter: blur(15px);
+      border-radius: 30px;
+      box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: var(--card-width);
+      padding: 50px 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .register-form {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .form-title {
+      font-size: 30px;
+      margin-bottom: 30px;
+      font-family: 'Google Sans', sans-serif;
+      color: rgb(219, 219, 219);
+    }
+
+    .form-field {
+      width: 100%;
+    }
+
+    .field-label {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 13px;
+      opacity: 0.8;
+      padding-left: 5px;
+    }
+
+    .input-container {
+      width: 100%;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      padding: 0 15px;
+      border-radius: 40px;
+      background-color: var(--input-bg);
+      backdrop-filter: blur(10px);
+      border: 1px solid transparent;
+      transition: all 0.2s ease;
+    }
+
+    .form-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: white;
+      font-size: 16px;
+      font-family: 'Inter', sans-serif;
+      width: 100%;
+    }
+
+    .form-input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .btn-submit {
+      margin-top: 20px;
+      width: 200px;
+      height: 50px;
+      border-radius: 40px;
+      border: none;
+      background-color: var(--button-bg);
+      color: white;
+      font-size: 18px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: transform 0.1s ease, background-color 0.2s;
+    }
+
+    .btn-submit:hover {
+      background-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .btn-submit:active {
+      transform: scale(0.97);
+    }
+
+    .login-link-container {
+      margin-top: 15px;
+      font-size: 14px;
+      color: white;
+      opacity: 0.7;
+    }
+
+    .login-link-container a {
+      color: white;
+      text-decoration: underline;
+      opacity: 0.8;
+      transition: opacity 0.2s ease;
+    }
+
+    .login-link-container a:hover {
+      opacity: 1;
+    }
+
+    .input-error {
+      animation: shake 0.3s;
+      border: 2px solid var(--error-color);
+    }
+
+    #error-msg {
+      color: var(--error-color);
+      font-size: 14px;
+      display: none;
+      margin-top: 8px;
+      text-align: center;
+    }
+
+    .toggle-eye {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-left: 10px;
+    }
+
+    .toggle-eye svg {
+      width: 22px;
+      height: 22px;
+      fill: white;
+      opacity: 0.7;
+    }
+
+    .eye-closed {
+      display: none;
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-4px);
+      }
+
+      75% {
+        transform: translateX(4px);
+      }
+    }
+
+    @media (max-width: 700px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .register-card {
+        padding: 40px 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="register-card">
+    <h1 class="form-title">Crear Usuario</h1>
+
+    <form class="register-form" id="registerForm">
+
+      <div class="form-grid">
+
+        <div class="form-field" style="margin-bottom: 15px;">
+          <label class="field-label">Nombre completo</label>
+          <div class="input-container">
+            <input type="text" id="nombreCompleto" class="form-input" placeholder="Ej. Alejandro Hurtado" required>
+          </div>
+        </div>
+
+        <div class="form-field" style="margin-bottom: 15px;">
+          <label class="field-label">Cédula</label>
+          <div class="input-container">
+            <input type="text" id="cedula" class="form-input" placeholder="Ej. 1092850037" required>
+          </div>
+        </div>
+
+        <div class="form-field" style="margin-bottom: 15px;">
+          <label class="field-label">Correo electrónico</label>
+          <div class="input-container">
+            <input type="email" id="correoElectronico" class="form-input" placeholder="Ej. correo@gmail.com" required>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="field-label">Número telefónico</label>
+          <div class="input-container">
+            <input type="text" id="numeroTelefonico" class="form-input" placeholder="Ej. 3161971519" required>
+          </div>
+        </div>
+
+        <div class="form-field" style="margin-bottom: 15px;">
+          <label class="field-label">Contraseña</label>
+          <div class="input-container">
+            <input type="password" id="password" class="form-input" placeholder="Mínimo 8 caracteres" required>
+            <span class="toggle-eye" onclick="togglePassword('password', this)">
+              <svg class="eye-open" viewBox="0 0 24 24">
+                <path
+                  d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+              </svg>
+              <svg class="eye-closed" viewBox="0 0 24 24">
+                <path
+                  d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.82l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.74-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
+              </svg>
+            </span>
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="field-label">Confirmar contraseña</label>
+          <div class="input-container" id="confirmWrapper">
+            <input type="password" id="confirmPassword" class="form-input" placeholder="Repite la contraseña" required>
+            <span class="toggle-eye" onclick="togglePassword('confirmPassword', this)">
+              <svg class="eye-open" viewBox="0 0 24 24">
+                <path
+                  d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+              </svg>
+              <svg class="eye-closed" viewBox="0 0 24 24">
+                <path
+                  d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.82l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.74-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
+              </svg>
+            </span>
+          </div>
+          <div id="error-msg">Las contraseñas no coinciden</div>
+        </div>
+
+      </div>
+
+      <div class="login-link-container">
+        ¿Ya tienes una cuenta? <a href="/login.html">Inicia sesión aquí</a>
+      </div>
+
+      <button type="submit" class="btn-submit">Registrarse</button>
+    </form>
+  </div>
+
+  <script>
+    const password = document.getElementById("password");
+    const confirmPassword = document.getElementById("confirmPassword");
+    const errorMsg = document.getElementById("error-msg");
+    const confirmWrapper = document.getElementById("confirmWrapper");
+    const form = document.getElementById("registerForm");
+
+    function validarPassword() {
+      if (confirmPassword.value === "") {
+        errorMsg.style.display = "none";
+        confirmWrapper.classList.remove("input-error");
+        return;
+      }
+      if (password.value !== confirmPassword.value) {
+        errorMsg.style.display = "block";
+        confirmWrapper.classList.add("input-error");
+      } else {
+        errorMsg.style.display = "none";
+        confirmWrapper.classList.remove("input-error");
+      }
+    }
+
+    confirmPassword.addEventListener("input", validarPassword);
+    password.addEventListener("input", validarPassword);
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      if (password.value !== confirmPassword.value) {
+        validarPassword();
+        return;
+      }
+
+      const usuario = {
+        nombreCompleto: document.getElementById("nombreCompleto").value,
+        cedula: document.getElementById("cedula").value,
+        correoElectronico: document.getElementById("correoElectronico").value,
+        numeroTelefonico: document.getElementById("numeroTelefonico").value,
+        password: document.getElementById("password").value
+      };
+
+      fetch("http://localhost:8080/usuarios", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(usuario)
+      })
+        .then(async response => {
+          const message = await response.text();
+
+          if (!response.ok) {
+            throw new Error(message);
+          }
+
+          return message;
+        })
+        .then(data => {
+          alert(data);
+          form.reset();
+        })
+        .catch(error => {
+          alert(error.message);
+        });
+    });
+
+    function togglePassword(inputId, element) {
+      const input = document.getElementById(inputId);
+      const eyeOpen = element.querySelector(".eye-open");
+      const eyeClosed = element.querySelector(".eye-closed");
+
+      if (input.type === "password") {
+        input.type = "text";
+        eyeOpen.style.display = "none";
+        eyeClosed.style.display = "block";
+      } else {
+        input.type = "password";
+        eyeOpen.style.display = "block";
+        eyeClosed.style.display = "none";
+      }
+    }
+
+    window.onload = function () {
+      document.getElementById("cedula").value = "";
+      document.getElementById("password").value = "";
+    };
+  </script>
+
+</body>
+
+</html>
