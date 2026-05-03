@@ -77,7 +77,6 @@ public class UsuarioController {
     public ResponseEntity<?> login(@RequestBody Usuario usuario) {
 
         Usuario encontrado = usuarioService.buscarUsuarioPorCedula(usuario.getCedula());
-        System.out.println(usuario.getCedula());
 
         if (encontrado != null &&
                 encontrado.getPassword().equals(usuario.getPassword())) {

@@ -282,7 +282,7 @@
           return JSON.parse(text);
         })
         .then(data => {
-          alert("Bienvenido " + data.nombreCompleto);
+          sessionStorage.setItem("usuario", JSON.stringify(data));
           window.location.href = "/home.html";
         })
         .catch(error => {

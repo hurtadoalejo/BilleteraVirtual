@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Home</title>
+  <title>Perfil</title>
 
   <style>
     * {
@@ -12,29 +12,25 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: sans-serif;
+      font-family: 'Inter', sans-serif;
     }
 
     body {
       display: flex;
       height: 100vh;
-      background-color: #0f172a;
-      color: white;
       background:
         radial-gradient(circle at 20% 30%, rgba(77, 130, 188, 0.6), transparent 40%),
         radial-gradient(circle at 80% 70%, rgba(77, 130, 188, 0.6), transparent 40%),
         radial-gradient(circle at 50% 50%, #4d82bc, #005187);
       background-blend-mode: screen;
+      color: white;
     }
 
     .sidebar {
       width: 220px;
-
       background: rgba(7, 68, 109, 0.25);
       backdrop-filter: blur(20px);
-
       border-right: 1px solid rgba(255, 255, 255, 0.08);
-
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -65,80 +61,498 @@
       opacity: 0.8;
     }
 
-    .nav-item span {
-      font-size: 15px;
-    }
-
     .nav-item:hover {
       background: rgba(255, 255, 255, 0.1);
     }
 
-    .nav-item.active {
-      background: rgba(77, 130, 188, 0.5);
-      box-shadow: 0 0 10px rgba(77, 130, 188, 0.4);
-    }
-
-    .nav-item:active {
-      transform: scale(0.96);
-    }
-
     .content {
-      background-color: #F3F6FF;
-      color: black;
       flex: 1;
+      background: #F3F6FF;
+      color: #1e293b;
+      padding: 40px;
+      overflow-y: auto;
+    }
+
+    .perfil-container {
+      max-width: 900px;
+      margin: auto;
+    }
+
+    .titulo {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    .info-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .puntos {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: bold;
+      color: #4d82bc;
+    }
+
+    .saldo {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .form-card {
+      background: white;
+      border-radius: 20px;
       padding: 30px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-field label {
+      font-size: 13px;
+      margin-bottom: 5px;
+      color: #64748b;
+    }
+
+    .form-field input {
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      outline: none;
+    }
+
+    .form-field input:disabled {
+      background: #e2e8f0;
+      cursor: not-allowed;
+    }
+
+    .botones {
+      margin-top: 25px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 15px;
+    }
+
+    .btn {
+      padding: 10px 20px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .btn-limpiar {
+      background: #e2e8f0;
+    }
+
+    .btn-actualizar {
+      background: #4d82bc;
+      color: white;
+    }
+
+    @media (max-width: 700px) {
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .toggle-eye {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding-left: 10px;
+    }
+
+    .toggle-eye svg {
+      width: 22px;
+      height: 22px;
+      fill: #64748b;
+      opacity: 0.7;
+    }
+
+    .eye-closed {
+      display: none;
+    }
+
+    .input-error {
+      border: 2px solid #ff9b9b !important;
+      background: rgba(255, 155, 155, 0.1);
+      animation: shake 0.3s;
+    }
+
+    #error-msg {
+      color: #ff9b9b;
+      font-size: 13px;
+      display: none;
+      margin-top: 6px;
+      width: 100%;
+      text-align: center;
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-4px);
+      }
+
+      75% {
+        transform: translateX(4px);
+      }
+    }
+
+    .popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+
+      background: rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(8px);
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      z-index: 9999;
+
+    }
+
+    .popup-content {
+      background: rgba(77, 130, 188, 0.85);
+      backdrop-filter: blur(10px);
+      padding: 25px 30px;
+      border-radius: 20px;
+      text-align: center;
+      color: white;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .popup-content p {
+      margin-bottom: 20px;
+    }
+
+    .popup-content button {
+      padding: 10px 25px;
+      border: none;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
+      cursor: pointer;
+    }
+
+    .popup-content button:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 
 <body>
-
   <nav class="sidebar">
-
     <div class="nav-group">
-      <a class="nav-item">
-        <img src="home.svg">
-        <span>Inicio</span>
-      </a>
-
-      <a class="nav-item">
-        <img src="billeteras.svg">
-        <span>Billeteras</span>
-      </a>
-
-      <a class="nav-item">
-        <img src="recargar.svg">
-        <span>Recargar</span>
-      </a>
-
-      <a class="nav-item">
-        <img src="retirar.svg">
-        <span>Retirar</span>
-      </a>
-
-      <a class="nav-item">
-        <img src="transferir.svg">
-        <span>Transferir</span>
-      </a>
-
-      <a class="nav-item">
-        <img src="historial.svg">
-        <span>Historial</span>
-      </a>
+      <a href="/home.html" class="nav-item"><img src="home.svg"><span>Inicio</span></a>
+      <a class="nav-item"><img src="billeteras.svg"><span>Billeteras</span></a>
+      <a class="nav-item"><img src="recargar.svg"><span>Recargar</span></a>
+      <a class="nav-item"><img src="retirar.svg"><span>Retirar</span></a>
+      <a class="nav-item"><img src="transferir.svg"><span>Transferir</span></a>
+      <a class="nav-item"><img src="historial.svg"><span>Historial</span></a>
     </div>
 
     <div class="nav-group">
-      <a href="/login.html" class="nav-item">
+      <a href="/login.html" class="nav-item" onclick="logout()">
         <img src="cerrar-sesion.svg">
         <span>Cerrar sesión</span>
       </a>
     </div>
-
   </nav>
 
   <div class="content">
-    <h1>Algo algo</h1>
+    <div class="perfil-container">
+
+      <h1 class="titulo" id="tituloUsuario"></h1>
+
+      <div class="info-top">
+        <div class="puntos">
+          <img src="trofeo.svg" width="24">
+          <span id="puntosUsuario"></span>
+        </div>
+
+        <div class="saldo" id="saldoTotal">
+        </div>
+      </div>
+
+      <div class="form-card">
+
+        <form id="formPerfil">
+
+          <div class="form-grid">
+
+            <div class="form-field">
+              <label>Nombre completo</label>
+              <input type="text" id="nombreCompleto" required>
+            </div>
+
+            <div class="form-field">
+              <label>Cédula</label>
+              <input type="text" id="cedula" disabled>
+            </div>
+
+            <div class="form-field">
+              <label>Correo electrónico</label>
+              <input type="email" id="correoElectronico" required>
+            </div>
+
+            <div class="form-field">
+              <label>Número telefónico</label>
+              <input type="text" id="numeroTelefonico" required>
+            </div>
+
+            <div class="form-field">
+              <label>Nueva contraseña</label>
+              <div class="input-container"
+                style="display:flex; align-items:center; border:1px solid #ccc; border-radius:10px; padding-right:10px;">
+                <input type="password" id="nuevaPassword" placeholder="Nueva contraseña"
+                  style="flex:1; border:none; outline:none; padding:12px;">
+                <span class="toggle-eye" onclick="togglePassword('nuevaPassword', this)">
+                  <svg class="eye-open" viewBox="0 0 24 24">
+                    <path
+                      d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                  </svg>
+                  <svg class="eye-closed" viewBox="0 0 24 24">
+                    <path
+                      d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.82l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.74-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
+                  </svg>
+                </span>
+              </div>
+            </div>
+
+            <div class="form-field">
+              <label>Confirmar nueva contraseña</label>
+              <div class="input-container" id="confirmWrapper"
+                style="display:flex; align-items:center; border:1px solid #ccc; border-radius:10px; padding-right:10px;">
+                <input type="password" id="confirmarPassword" placeholder="Confirmar contraseña"
+                  style="flex:1; border:none; outline:none; padding:12px;">
+
+                <span class="toggle-eye" onclick="togglePassword('confirmarPassword', this)">
+                  <svg class="eye-open" viewBox="0 0 24 24">
+                    <path
+                      d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
+                  </svg>
+                  <svg class="eye-closed" viewBox="0 0 24 24">
+                    <path
+                      d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.82l2.92 2.92c1.51-1.26 2.7-2.89 3.44-4.74-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
+                  </svg>
+                </span>
+              </div>
+
+              <div id="error-msg">Las contraseñas no coinciden</div>
+            </div>
+          </div>
+
+          <div class="botones">
+            <button type="button" class="btn btn-limpiar" id="btnLimpiar">Limpiar</button>
+            <button type="submit" class="btn btn-actualizar">Actualizar</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
+
+  <div id="popup" class="popup hidden">
+    <div class="popup-content">
+      <p id="popup-message"></p>
+      <button onclick="cerrarPopup()">Aceptar</button>
+    </div>
+  </div>
+
+  <script>
+    const usuario = JSON.parse(sessionStorage.getItem("usuario"));
+
+    if (!usuario) {
+      window.location.href = "/login.html";
+    }
+
+    document.getElementById("tituloUsuario").textContent =
+      "Bienvenido " + usuario.nombreCompleto;
+
+    document.getElementById("puntosUsuario").textContent =
+      usuario.puntos + " puntos - Nivel " + usuario.nivel;
+
+    document.getElementById("saldoTotal").textContent =
+      "Saldo Total: $" + usuario.saldoTotal.toLocaleString();
+
+    document.getElementById("nombreCompleto").value = usuario.nombreCompleto;
+    document.getElementById("cedula").value = usuario.cedula;
+    document.getElementById("correoElectronico").value = usuario.correoElectronico;
+    document.getElementById("numeroTelefonico").value = usuario.numeroTelefonico;
+
+    const nuevaPassword = document.getElementById("nuevaPassword");
+    const confirmarPassword = document.getElementById("confirmarPassword");
+    const errorMsg = document.getElementById("error-msg");
+    const confirmWrapper = document.getElementById("confirmWrapper");
+
+    function validarPassword() {
+      if (confirmarPassword.value === "") {
+        errorMsg.style.display = "none";
+        confirmWrapper.classList.remove("input-error");
+        return;
+      }
+
+      if (nuevaPassword.value !== confirmarPassword.value) {
+        errorMsg.style.display = "block";
+        confirmWrapper.classList.add("input-error");
+      } else {
+        errorMsg.style.display = "none";
+        confirmWrapper.classList.remove("input-error");
+      }
+    }
+
+    confirmarPassword.addEventListener("input", validarPassword);
+    nuevaPassword.addEventListener("input", validarPassword);
+
+    function togglePassword(inputId, element) {
+      const input = document.getElementById(inputId);
+      const eyeOpen = element.querySelector(".eye-open");
+      const eyeClosed = element.querySelector(".eye-closed");
+
+      if (input.type === "password") {
+        input.type = "text";
+        eyeOpen.style.display = "none";
+        eyeClosed.style.display = "block";
+      } else {
+        input.type = "password";
+        eyeOpen.style.display = "block";
+        eyeClosed.style.display = "none";
+      }
+    }
+
+    const form = document.getElementById("formPerfil");
+    const btnLimpiar = document.getElementById("btnLimpiar");
+
+    btnLimpiar.addEventListener("click", () => {
+      const usuarioSession = JSON.parse(sessionStorage.getItem("usuario"));
+
+      document.getElementById("nombreCompleto").value = usuarioSession.nombreCompleto;
+      document.getElementById("correoElectronico").value = usuarioSession.correoElectronico;
+      document.getElementById("numeroTelefonico").value = usuarioSession.numeroTelefonico;
+
+      document.getElementById("nuevaPassword").value = "";
+      document.getElementById("confirmarPassword").value = "";
+
+      errorMsg.style.display = "none";
+      confirmWrapper.classList.remove("input-error");
+    });
+
+    function logout() {
+      sessionStorage.removeItem("usuario");
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const nuevaPassword = document.getElementById("nuevaPassword").value;
+      const confirmarPassword = document.getElementById("confirmarPassword").value;
+
+      if (nuevaPassword !== confirmarPassword) {
+        validarPassword();
+        return;
+      }
+
+      const usuarioSession = JSON.parse(sessionStorage.getItem("usuario"));
+
+      const datos = {
+        nombreCompleto: document.getElementById("nombreCompleto").value,
+        correoElectronico: document.getElementById("correoElectronico").value,
+        numeroTelefonico: document.getElementById("numeroTelefonico").value,
+        password: nuevaPassword || usuarioSession.password
+      };
+
+      try {
+        const response = await fetch(`http://localhost:8080/usuarios/${usuarioSession.cedula}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(datos)
+        });
+
+        if (!response.ok) {
+          throw new Error("Error al actualizar");
+        }
+
+        const usuarioActualizado = { ...usuarioSession, ...datos };
+        sessionStorage.setItem("usuario", JSON.stringify(usuarioActualizado));
+
+        mostrarPopup("Usuario actualizado correctamente");
+        await cargarUsuario();
+
+      } catch (error) {
+        mostrarPopup("Usuario actualizado correctamente");
+        console.error(error);
+      }
+    });
+
+    async function cargarUsuario() {
+      try {
+        const usuarioSession = JSON.parse(sessionStorage.getItem("usuario"));
+        const response = await fetch(`http://localhost:8080/usuarios/${usuarioSession.cedula}`);
+        const data = await response.json();
+
+        sessionStorage.setItem("usuario", JSON.stringify(data));
+
+        document.getElementById("tituloUsuario").textContent =
+          "Bienvenido " + data.nombreCompleto;
+
+        document.getElementById("puntosUsuario").textContent =
+          data.puntos + " puntos - Nivel " + data.nivel;
+
+        document.getElementById("saldoTotal").textContent =
+          "Saldo Total: $" + (data.saldoTotal || 0).toLocaleString();
+
+        document.getElementById("nombreCompleto").value = data.nombreCompleto;
+        document.getElementById("cedula").value = data.cedula;
+        document.getElementById("correoElectronico").value = data.correoElectronico;
+        document.getElementById("numeroTelefonico").value = data.numeroTelefonico;
+
+      } catch (error) {
+        console.error("Error cargando usuario", error);
+      }
+    }
+
+    function mostrarPopup(mensaje) {
+      document.getElementById("popup-message").textContent = mensaje;
+      document.getElementById("popup").classList.remove("hidden");
+    }
+
+    function cerrarPopup() {
+      document.getElementById("popup").classList.add("hidden");
+    }
+
+    cargarUsuario();
+  </script>
 
 </body>
 

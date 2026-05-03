@@ -1,5 +1,9 @@
 package com.proyectofinal.billeteravirtual.model;
+import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Usuario {
 
@@ -9,11 +13,13 @@ public class Usuario {
     private String numeroTelefonico;
     private String password;
 
-    private int puntos;
-    private NivelUsuario nivel;
+    private int puntos = 0;
+    private int puntosAcumulados = 0;
+    private NivelUsuario nivel = NivelUsuario.BRONCE;
 
-    private List<Billetera> billeteras;
-    private List<Transaccion> historialTransacciones;
+    private List<Transaccion> historialTransacciones = new LinkedList<>();
+    private List<Beneficio> listaBeneficios = new LinkedList<>();
+    private Map<String, Billetera> billeteras = new HashMap<>();
     private List<Notificacion> notificaciones;
 
     public String getNombreCompleto() {
@@ -72,14 +78,6 @@ public class Usuario {
         this.nivel = nivel;
     }
 
-    public List<Billetera> getBilleteras() {
-        return billeteras;
-    }
-
-    public void setBilleteras(List<Billetera> billeteras) {
-        this.billeteras = billeteras;
-    }
-
     public List<Transaccion> getHistorialTransacciones() {
         return historialTransacciones;
     }
@@ -88,12 +86,45 @@ public class Usuario {
         this.historialTransacciones = historialTransacciones;
     }
 
+    public Map<String, Billetera> getBilleteras() {
+        return billeteras;
+    }
+
+    public void setBilleteras(Map<String, Billetera> billeteras) {
+        this.billeteras = billeteras;
+    }
+
     public List<Notificacion> getNotificaciones() {
         return notificaciones;
     }
 
     public void setNotificaciones(List<Notificacion> notificaciones) {
         this.notificaciones = notificaciones;
+    }
+
+    public List<Beneficio> getListaBeneficios() {
+        return listaBeneficios;
+    }
+
+    public void setListaBeneficios(List<Beneficio> listaBeneficios) {
+        this.listaBeneficios = listaBeneficios;
+    }
+
+    public int getPuntosAcumulados() {
+        return puntosAcumulados;
+    }
+
+    public void setPuntosAcumulados(int puntosAcumulados) {
+        this.puntosAcumulados = puntosAcumulados;
+    }
+
+    @JsonProperty("saldoTotal")
+    public double getSaldoTotal() {
+        if (billeteras == null || billeteras.isEmpty()) return 0;
+
+        return billeteras.values().stream()
+                .mapToDouble(Billetera::getSaldo)
+                .sum();
     }
 
     @Override
