@@ -232,6 +232,7 @@
       width: 40%;
       font-size: 14px;
       color: #e2e8f0;
+      text-align: right;
     }
 
     .form-row input,
@@ -259,6 +260,61 @@
       display: flex;
       justify-content: center;
       gap: 10px;
+    }
+
+    .error-msg {
+      color: #ff9b9b;
+      font-size: 13px;
+      margin-top: 5px;
+      display: none;
+    }
+
+    .input-error {
+      animation: shake 0.3s;
+      border: 2px solid #ff9b9b !important;
+    }
+
+    .edit-error {
+      width: 100%;
+      text-align: center;
+      margin: 10px 0;
+    }
+
+    .form-column {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .form-column label {
+      width: 100%;
+      text-align: left;
+      margin-bottom: 5px;
+    }
+
+    .form-column input {
+      width: 100%;
+    }
+
+    .form-column .error-msg {
+      width: 100%;
+      text-align: left;
+      margin-top: 5px;
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-4px);
+      }
+
+      75% {
+        transform: translateX(4px);
+      }
     }
   </style>
 </head>
@@ -288,12 +344,13 @@
 
       <h1 class="titulo">Mis Billeteras</h1>
 
-      <div class="card">
+      <form class="card" onsubmit="crearBilletera(event)">
         <h3>Crear nueva billetera</h3>
 
-        <input type="text" id="nombre" placeholder="Nombre">
+        <input type="text" id="nombre" placeholder="Nombre" required>
+        <div id="error-nombre" class="error-msg">Ya existe una billetera con ese nombre</div>
 
-        <select id="tipo">
+        <select id="tipo" required>
           <option value="">Selecciona tipo</option>
           <option value="AHORRO">Ahorro</option>
           <option value="GASTOS_DIARIOS">Gastos diarios</option>
@@ -302,8 +359,8 @@
           <option value="INVERSION">Inversión</option>
         </select>
 
-        <button class="btn" onclick="crearBilletera()">Crear</button>
-      </div>
+        <button class="btn">Crear</button>
+      </form>
 
       <div class="lista-billeteras" id="listaBilleteras"></div>
 
@@ -330,12 +387,16 @@
 
       <div class="form-row">
         <label>Nuevo nombre</label>
-        <input type="text" id="editNombre">
+        <input type="text" id="editNombre" required>
+      </div>
+
+      <div id="error-edit-nombre" class="error-msg edit-error">
+        Ya existe una billetera con ese nombre
       </div>
 
       <div class="form-row">
         <label>Nuevo tipo</label>
-        <select id="editTipo">
+        <select id="editTipo" required>
           <option value="AHORRO">Ahorro</option>
           <option value="GASTOS_DIARIOS">Gastos diarios</option>
           <option value="COMPRAS">Compras</option>
@@ -364,17 +425,19 @@
       return crypto.randomUUID();
     }
 
-    async function crearBilletera() {
+    async function crearBilletera(event) {
+      event.preventDefault();
+
       const nombre = document.getElementById("nombre").value;
       const tipo = document.getElementById("tipo").value;
-
-      if (!nombre || !tipo) {
-        mostrarPopup("Completa todos los campos");
-        return;
-      }
+      const error = document.getElementById("error-nombre");
+      error.style.display = "none";
 
       if (nombreRepetido(nombre)) {
-        mostrarPopup("Ya tienes una billetera con ese nombre");
+        const input = document.getElementById("nombre");
+
+        error.style.display = "block";
+        reiniciarErrorAnimacion(input);
         return;
       }
 
@@ -513,10 +576,16 @@
     let billeteraEditandoId = null;
 
     function editarBilletera(id, nombre, tipo) {
-      billeteraEditandoId = id;
+      billeteraEditandoId = id.toString();
 
       document.getElementById("editNombre").value = nombre;
       document.getElementById("editTipo").value = tipo;
+
+      const error = document.getElementById("error-edit-nombre");
+      const input = document.getElementById("editNombre");
+
+      error.style.display = "none";
+      input.classList.remove("input-error");
 
       document.getElementById("popup-editar").classList.remove("hidden");
     }
@@ -530,13 +599,13 @@
       const nombre = document.getElementById("editNombre").value;
       const tipo = document.getElementById("editTipo").value;
 
-      if (!nombre || !tipo) {
-        mostrarPopup("Completa todos los campos");
-        return;
-      }
-
       if (nombreRepetido(nombre, billeteraEditandoId)) {
-        mostrarPopup("Ya tienes una billetera con ese nombre");
+        const input = document.getElementById("editNombre");
+        const error = document.getElementById("error-edit-nombre");
+
+        error.style.display = "block";
+        reiniciarErrorAnimacion(input);
+
         return;
       }
 
@@ -562,6 +631,35 @@
         mostrarPopup("Error al actualizar");
       }
 
+    });
+
+    function reiniciarErrorAnimacion(element) {
+      element.classList.remove("input-error");
+      void element.offsetWidth;
+      element.classList.add("input-error");
+    }
+
+    function nombreRepetido(nombre, ignorarId = null) {
+      return listaActualBilleteras.some(b =>
+        b.nombre.toLowerCase() === nombre.toLowerCase() &&
+        b.id.toString() !== ignorarId
+      );
+    }
+
+    document.getElementById("editNombre").addEventListener("input", () => {
+      const input = document.getElementById("editNombre");
+      const error = document.getElementById("error-edit-nombre");
+
+      error.style.display = "none";
+      input.classList.remove("input-error");
+    });
+
+    document.getElementById("nombre").addEventListener("input", () => {
+      const input = document.getElementById("nombre");
+      const error = document.getElementById("error-nombre");
+
+      error.style.display = "none";
+      input.classList.remove("input-error");
     });
 
     cargarBilleteras();
