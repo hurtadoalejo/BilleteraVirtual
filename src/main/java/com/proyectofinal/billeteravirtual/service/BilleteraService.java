@@ -1,7 +1,6 @@
 package com.proyectofinal.billeteravirtual.service;
 
-import com.proyectofinal.billeteravirtual.model.Billetera;
-import com.proyectofinal.billeteravirtual.model.Usuario;
+import com.proyectofinal.billeteravirtual.model.*;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;

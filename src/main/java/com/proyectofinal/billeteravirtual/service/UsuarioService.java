@@ -1,6 +1,7 @@
 package com.proyectofinal.billeteravirtual.service;
 
 import com.proyectofinal.billeteravirtual.model.Billetera;
+import com.proyectofinal.billeteravirtual.model.NivelUsuario;
 import com.proyectofinal.billeteravirtual.model.TipoBilletera;
 import com.proyectofinal.billeteravirtual.model.Usuario;
 import org.springframework.stereotype.Service;
@@ -65,5 +66,19 @@ public class UsuarioService {
 
     public boolean eliminarUsuario(String cedula) {
         return usuarios.remove(cedula) != null;
+    }
+
+    public void actualizarNivelUsuario(Usuario usuario) {
+        int puntos = usuario.getPuntosAcumulados();
+
+        if (puntos <= 500) {
+            usuario.setNivel(NivelUsuario.BRONCE);
+        } else if (puntos <= 1000) {
+            usuario.setNivel(NivelUsuario.PLATA);
+        } else if (puntos <= 5000) {
+            usuario.setNivel(NivelUsuario.ORO);
+        } else {
+            usuario.setNivel(NivelUsuario.PLATINO);
+        }
     }
 }

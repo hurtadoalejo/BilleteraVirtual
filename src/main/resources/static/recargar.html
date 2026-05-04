@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recargar</title>
+
+  <style>
+    * {
+      user-select: none;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      display: flex;
+      height: 100vh;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(77, 130, 188, 0.6), transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(77, 130, 188, 0.6), transparent 40%),
+        radial-gradient(circle at 50% 50%, #4d82bc, #005187);
+      background-blend-mode: screen;
+      color: white;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: rgba(7, 68, 109, 0.25);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px 10px;
+    }
+
+    .nav-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 15px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      color: white;
+    }
+
+    .nav-item img {
+      width: 20px;
+      height: 20px;
+      opacity: 0.8;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .content {
+      flex: 1;
+      background: #F3F6FF;
+      color: #1e293b;
+      padding: 40px;
+      overflow-y: auto;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: auto;
+    }
+
+    .titulo {
+      font-size: 28px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+      gap: 15px;
+    }
+
+    .form-row label {
+      width: 40%;
+      font-size: 14px;
+      color: #64748b;
+    }
+
+    .form-row select,
+    .form-row input {
+      width: 60%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      outline: none;
+    }
+
+    .btn {
+      margin-top: 20px;
+      padding: 12px 25px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+      background: #4d82bc;
+      color: white;
+      display: block;
+      margin-left: auto;
+    }
+
+    .input-error {
+      animation: shake 0.3s;
+      border: 2px solid #ff9b9b !important;
+    }
+
+    #error-msg {
+      color: #ff6b6b;
+      font-size: 13px;
+      display: none;
+
+      width: 60%;
+      margin-left: auto;
+      margin-top: -10px;
+      margin-bottom: 10px;
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-4px);
+      }
+
+      75% {
+        transform: translateX(4px);
+      }
+    }
+
+    .popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+
+      background: rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(8px);
+
+      display: flex;
+      justify-content: center;
+      align-items: center;
+
+      z-index: 9999;
+
+    }
+
+    .popup-content {
+      background: rgba(77, 130, 188, 0.85);
+      backdrop-filter: blur(10px);
+      padding: 25px 30px;
+      border-radius: 20px;
+      text-align: center;
+      color: white;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .popup-content p {
+      margin-bottom: 20px;
+    }
+
+    .popup-content button {
+      padding: 10px 25px;
+      border: none;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
+      cursor: pointer;
+    }
+
+    .popup-content button:hover {
+      background: rgba(255, 255, 255, 0.4);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .input-group {
+      width: 60%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      outline: none;
+    }
+
+    #error-msg {
+      color: #ff6b6b;
+      font-size: 13px;
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 4px;
+      width: 100%;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="sidebar">
+    <div class="nav-group">
+      <a href="/home.html" class="nav-item"><img src="home.svg"><span>Inicio</span></a>
+      <a href="/billetera.html" class="nav-item"><img src="billeteras.svg"><span>Billeteras</span></a>
+      <a href="/recargar.html" class="nav-item"><img src="recargar.svg"><span>Recargar</span></a>
+      <a class="nav-item"><img src="retirar.svg"><span>Retirar</span></a>
+      <a class="nav-item"><img src="transferir.svg"><span>Transferir</span></a>
+      <a class="nav-item"><img src="historial.svg"><span>Historial</span></a>
+    </div>
+
+    <div class="nav-group">
+      <a href="/login.html" class="nav-item" onclick="logout()">
+        <img src="cerrar-sesion.svg">
+        <span>Cerrar sesión</span>
+      </a>
+    </div>
+  </nav>
+
+  <div class="content">
+    <div class="container">
+
+      <h1 class="titulo">Recargar Billetera</h1>
+
+      <div class="card">
+
+        <div class="form-row">
+          <label>Selecciona la billetera</label>
+          <select id="billeteraSelect"></select>
+        </div>
+
+        <div class="form-row">
+          <label>¿Cuánto dinero recargará?</label>
+
+          <div class="input-group">
+            <input type="number" id="valor">
+            <div id="error-msg">El valor debe ser mayor que 0</div>
+          </div>
+        </div>
+
+        <button class="btn" onclick="recargar()">Recargar</button>
+
+      </div>
+
+    </div>
+  </div>
+
+  <div id="popup" class="popup hidden">
+    <div class="popup-content">
+      <p id="popup-message"></p>
+      <button onclick="cerrarPopup()">Aceptar</button>
+    </div>
+  </div>
+
+  <script>
+    const usuario = JSON.parse(sessionStorage.getItem("usuario"));
+
+    if (!usuario) {
+      window.location.href = "/login.html";
+    }
+
+    async function cargarBilleteras() {
+      const res = await fetch(`http://localhost:8080/billeteras/${usuario.cedula}`);
+      const data = await res.json();
+
+      const select = document.getElementById("billeteraSelect");
+      select.innerHTML = "";
+
+      data.forEach(b => {
+        select.innerHTML += `<option value="${b.id}">${b.nombre}</option>`;
+      });
+    }
+
+    async function recargar() {
+      const valorInput = document.getElementById("valor");
+      const valor = parseFloat(valorInput.value);
+      const billeteraId = document.getElementById("billeteraSelect").value;
+
+      const errorMsg = document.getElementById("error-msg");
+
+      if (valor <= 0 || isNaN(valor)) {
+        errorMsg.style.display = "block";
+
+        valorInput.classList.remove("input-error");
+        void valorInput.offsetWidth;
+        valorInput.classList.add("input-error");
+
+        return;
+      }
+
+      errorMsg.style.display = "none";
+      valorInput.classList.remove("input-error");
+
+      try {
+        const res = await fetch(`http://localhost:8080/transacciones/recargar/${usuario.cedula}/${billeteraId}/${valor}`, {
+          method: "POST"
+        });
+
+        const mensaje = await res.text();
+        mostrarPopup(mensaje);
+
+        document.getElementById("valor").value = "";
+
+      } catch {
+        mostrarPopup("Error en la recarga");
+      }
+    }
+
+    function mostrarPopup(mensaje) {
+      document.getElementById("popup-message").textContent = mensaje;
+      document.getElementById("popup").classList.remove("hidden");
+    }
+
+    function cerrarPopup() {
+      document.getElementById("popup").classList.add("hidden");
+    }
+
+    function logout() {
+      sessionStorage.removeItem("usuario");
+    }
+
+    document.getElementById("valor").addEventListener("input", function () {
+      const valor = parseFloat(this.value);
+      const errorMsg = document.getElementById("error-msg");
+
+      if (valor > 0) {
+        errorMsg.style.display = "none";
+        this.classList.remove("input-error");
+      }
+    });
+
+    cargarBilleteras();
+  </script>
+
+</body>
+
+</html>

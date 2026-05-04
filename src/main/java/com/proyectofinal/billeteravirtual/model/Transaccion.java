@@ -8,8 +8,8 @@ public class Transaccion {
     private TipoTransaccion tipo;
     private double valor;
 
-    private Billetera billeteraOrigen;
-    private Billetera billeteraDestino;
+    private String billeteraOrigenId;
+    private String billeteraDestinoId;
 
     private EstadoTransaccion estado;
     private int puntosGenerados;
@@ -46,20 +46,20 @@ public class Transaccion {
         this.valor = valor;
     }
 
-    public Billetera getBilleteraOrigen() {
-        return billeteraOrigen;
+    public String getBilleteraOrigenId() {
+        return billeteraOrigenId;
     }
 
-    public void setBilleteraOrigen(Billetera billeteraOrigen) {
-        this.billeteraOrigen = billeteraOrigen;
+    public void setBilleteraOrigenId(String billeteraOrigenId) {
+        this.billeteraOrigenId = billeteraOrigenId;
     }
 
-    public Billetera getBilleteraDestino() {
-        return billeteraDestino;
+    public String getBilleteraDestinoId() {
+        return billeteraDestinoId;
     }
 
-    public void setBilleteraDestino(Billetera billeteraDestino) {
-        this.billeteraDestino = billeteraDestino;
+    public void setBilleteraDestinoId(String billeteraDestinoId) {
+        this.billeteraDestinoId = billeteraDestinoId;
     }
 
     public EstadoTransaccion getEstado() {
