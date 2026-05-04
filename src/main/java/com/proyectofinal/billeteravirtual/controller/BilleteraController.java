@@ -82,7 +82,6 @@ public class BilleteraController {
         return ResponseEntity.ok("Billetera actualizada correctamente");
     }
 
-    // 🔹 Eliminar billetera (solo si saldo = 0)
     @DeleteMapping("/{cedula}/{idBilletera}")
     public ResponseEntity<?> eliminarBilletera(
             @PathVariable String cedula,

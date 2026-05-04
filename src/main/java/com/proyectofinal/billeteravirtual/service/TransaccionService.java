@@ -31,7 +31,7 @@ public class TransaccionService {
             case PLATINO -> 3;
         };
 
-        return (int) (valor / 100) * (base + bonus);
+        return (int) (valor / 5000) * (base + bonus);
     }
 
     private void registrarTransaccion(

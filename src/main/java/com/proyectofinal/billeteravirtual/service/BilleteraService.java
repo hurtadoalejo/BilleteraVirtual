@@ -11,6 +11,7 @@ import java.util.Map;
 public class BilleteraService {
 
     private final UsuarioService usuarioService;
+    private static int contadorId = 0;
 
     public BilleteraService(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
@@ -23,11 +24,10 @@ public class BilleteraService {
 
         Map<String, Billetera> billeteras = usuario.getBilleteras();
 
-        if (billeteras.containsKey(billetera.getId())) {
-            return false;
-        }
+        billetera.setId("018" + String.format("%03d", contadorId++));
 
         billeteras.put(billetera.getId(), billetera);
+
         return true;
     }
 
