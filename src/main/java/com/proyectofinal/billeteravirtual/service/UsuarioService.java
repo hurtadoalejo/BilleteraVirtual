@@ -1,5 +1,7 @@
 package com.proyectofinal.billeteravirtual.service;
 
+import com.proyectofinal.billeteravirtual.model.Billetera;
+import com.proyectofinal.billeteravirtual.model.TipoBilletera;
 import com.proyectofinal.billeteravirtual.model.Usuario;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +14,22 @@ import java.util.Map;
 public class UsuarioService {
 
     private Map<String, Usuario> usuarios = new HashMap<>();
+
+    public UsuarioService() {
+        Usuario usuario = new Usuario();
+        usuario.setNombreCompleto("Usuario");
+        usuario.setCedula("123");
+        usuario.setCorreoElectronico("123");
+        usuario.setNumeroTelefonico("123");
+        usuario.setPassword("123");
+        Billetera billetera = new Billetera();
+        billetera.setId("123");
+        billetera.setNombre("Bille");
+        billetera.setTipo(TipoBilletera.AHORRO);
+        billetera.setSaldo(45000);
+        usuario.getBilleteras().put(billetera.getId(), billetera);
+        usuarios.put(usuario.getCedula(), usuario);
+    }
 
     public boolean registrarUsuario(Usuario usuario) {
         if (usuario == null) return false;
