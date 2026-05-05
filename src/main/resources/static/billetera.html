@@ -326,7 +326,7 @@
       <a href="/home.html" class="nav-item"><img src="home.svg"><span>Inicio</span></a>
       <a href="/billetera.html" class="nav-item"><img src="billeteras.svg"><span>Billeteras</span></a>
       <a href="/recargar.html" class="nav-item"><img src="recargar.svg"><span>Recargar</span></a>
-      <a class="nav-item"><img src="retirar.svg"><span>Retirar</span></a>
+      <a href="/retirar.html" class="nav-item"><img src="retirar.svg"><span>Retirar</span></a>
       <a class="nav-item"><img src="transferir.svg"><span>Transferir</span></a>
       <a class="nav-item"><img src="historial.svg"><span>Historial</span></a>
     </div>
@@ -421,10 +421,6 @@
       window.location.href = "/login.html";
     }
 
-    function generarId() {
-      return crypto.randomUUID();
-    }
-
     async function crearBilletera(event) {
       event.preventDefault();
 
@@ -442,7 +438,6 @@
       }
 
       const billetera = {
-        id: generarId(),
         nombre,
         tipo
       };

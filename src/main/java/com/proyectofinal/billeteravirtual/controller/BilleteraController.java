@@ -40,12 +40,6 @@ public class BilleteraController {
 
         List<Billetera> billeteras = billeteraService.listarBilleteras(cedula);
 
-        if (billeteras.isEmpty()) {
-            return ResponseEntity
-                    .status(HttpStatus.NOT_FOUND)
-                    .body("No hay billeteras");
-        }
-
         return ResponseEntity.ok(billeteras);
     }
 
