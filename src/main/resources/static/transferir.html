@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Recargar</title>
+  <title>Transferir</title>
 
   <style>
     * {
@@ -80,7 +80,13 @@
 
     .titulo {
       font-size: 28px;
-      margin-bottom: 30px;
+      margin-bottom: 5px;
+    }
+
+    .nota {
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 25px;
     }
 
     .card {
@@ -129,31 +135,36 @@
       border: 2px solid #ff9b9b !important;
     }
 
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-4px); }
+      75% { transform: translateX(4px); }
+    }
+
+    .input-group {
+      width: 60%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .input-group input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      outline: none;
+    }
+
     #error-msg {
       color: #ff6b6b;
       font-size: 13px;
       display: none;
-
-      width: 60%;
-      margin-left: auto;
-      margin-top: -10px;
-      margin-bottom: 10px;
-    }
-
-    @keyframes shake {
-
-      0%,
-      100% {
-        transform: translateX(0);
-      }
-
-      25% {
-        transform: translateX(-4px);
-      }
-
-      75% {
-        transform: translateX(4px);
-      }
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 4px;
+      width: 100%;
     }
 
     .popup {
@@ -162,16 +173,12 @@
       left: 0;
       width: 100%;
       height: 100%;
-
       background: rgba(0, 0, 0, 0.1);
       backdrop-filter: blur(8px);
-
       display: flex;
       justify-content: center;
       align-items: center;
-
       z-index: 9999;
-
     }
 
     .popup-content {
@@ -204,37 +211,12 @@
     .hidden {
       display: none;
     }
-
-    .input-group {
-      width: 60%;
-      display: flex;
-      flex-direction: column;
-      position: relative;
-    }
-
-    .input-group input {
-      width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      outline: none;
-    }
-
-    #error-msg {
-      color: #ff6b6b;
-      font-size: 13px;
-      display: none;
-      position: absolute;
-      top: 100%;
-      left: 0;
-      margin-top: 4px;
-      width: 100%;
-    }
   </style>
 </head>
 
 <body>
 
+  <!-- NAV (NO TOCADO) -->
   <nav class="sidebar">
     <div class="nav-group">
       <a href="/home.html" class="nav-item"><img src="home.svg"><span>Inicio</span></a>
@@ -256,7 +238,8 @@
   <div class="content">
     <div class="container">
 
-      <h1 class="titulo">Recargar Billetera</h1>
+      <h1 class="titulo">Transferir dinero</h1>
+      <div class="nota" id="notaComision"></div>
 
       <div class="card">
 
@@ -266,21 +249,26 @@
         </div>
 
         <div class="form-row">
-          <label>¿Cuánto dinero recargará?</label>
+          <label>Número de billetera destino</label>
+          <input type="number" id="destino">
+        </div>
 
+        <div class="form-row">
+          <label>¿Cuánto dinero transferirá?</label>
           <div class="input-group">
             <input type="number" id="valor">
-            <div id="error-msg">El valor debe ser mayor que 0</div>
+            <div id="error-msg"></div>
           </div>
         </div>
 
-        <button class="btn" onclick="recargar()">Recargar</button>
+        <button class="btn" onclick="transferir()">Transferir</button>
 
       </div>
 
     </div>
   </div>
 
+  <!-- POPUP (NO TOCADO) -->
   <div id="popup" class="popup hidden">
     <div class="popup-content">
       <p id="popup-message"></p>
@@ -295,9 +283,25 @@
       window.location.href = "/login.html";
     }
 
+    let billeteras = [];
+
+    function obtenerComision() {
+      switch (usuario.nivel) {
+        case "PLATA": return "0.4%";
+        case "ORO": return "0.3%";
+        case "PLATINO": return "0.1%";
+        default: return "0.5%";
+      }
+    }
+
+    document.getElementById("notaComision").textContent =
+      "Nota: Comisión por transferencia a otra persona será de " + obtenerComision();
+
     async function cargarBilleteras() {
       const res = await fetch(`http://localhost:8080/billeteras/${usuario.cedula}`);
       const data = await res.json();
+
+      billeteras = data;
 
       const select = document.getElementById("billeteraSelect");
       select.innerHTML = "";
@@ -307,20 +311,30 @@
       });
     }
 
-    async function recargar() {
+    async function transferir() {
       const valorInput = document.getElementById("valor");
       const valor = parseFloat(valorInput.value);
-      const billeteraId = document.getElementById("billeteraSelect").value;
-
+      const origenId = document.getElementById("billeteraSelect").value;
+      const destinoId = document.getElementById("destino").value;
       const errorMsg = document.getElementById("error-msg");
 
-      if (valor <= 0 || isNaN(valor)) {
-        errorMsg.style.display = "block";
+      const billetera = billeteras.find(b => b.id === origenId);
 
+      if (!valor || valor <= 0) {
+        errorMsg.textContent = "El valor debe ser mayor que 0";
+        errorMsg.style.display = "block";
         valorInput.classList.remove("input-error");
         void valorInput.offsetWidth;
         valorInput.classList.add("input-error");
+        return;
+      }
 
+      if (valor > billetera.saldo) {
+        errorMsg.textContent = "No hay suficiente saldo disponible";
+        errorMsg.style.display = "block";
+        valorInput.classList.remove("input-error");
+        void valorInput.offsetWidth;
+        valorInput.classList.add("input-error");
         return;
       }
 
@@ -328,7 +342,7 @@
       valorInput.classList.remove("input-error");
 
       try {
-        const res = await fetch(`http://localhost:8080/transacciones/recargar/${usuario.cedula}/${billeteraId}/${valor}`, {
+        const res = await fetch(`http://localhost:8080/transacciones/transferir/${usuario.cedula}/${origenId}/${destinoId}?valor=${valor}`, {
           method: "POST"
         });
 
@@ -336,9 +350,12 @@
         mostrarPopup(mensaje);
 
         document.getElementById("valor").value = "";
+        document.getElementById("destino").value = "";
+
+        cargarBilleteras();
 
       } catch {
-        mostrarPopup("Error en la recarga");
+        mostrarPopup("Error en la transferencia");
       }
     }
 
@@ -356,13 +373,10 @@
     }
 
     document.getElementById("valor").addEventListener("input", function () {
-      const valor = parseFloat(this.value);
       const errorMsg = document.getElementById("error-msg");
-
-      if (valor > 0) {
-        errorMsg.style.display = "none";
-        this.classList.remove("input-error");
-      }
+      errorMsg.style.display = "none";
+      errorMsg.textContent = "";
+      this.classList.remove("input-error");
     });
 
     cargarBilleteras();

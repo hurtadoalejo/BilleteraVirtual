@@ -43,6 +43,28 @@ public class UsuarioService {
         return true;
     }
 
+    public Billetera buscarBilleteraGlobal(String idBilletera) {
+
+        for (Usuario usuario : usuarios.values()) {
+            if (usuario.getBilleteras().containsKey(idBilletera)) {
+                return usuario.getBilleteras().get(idBilletera);
+            }
+        }
+
+        return null;
+    }
+
+    public Usuario buscarUsuarioPorBilletera(String idBilletera) {
+
+        for (Usuario usuario : usuarios.values()) {
+            if (usuario.getBilleteras().containsKey(idBilletera)) {
+                return usuario;
+            }
+        }
+
+        return null;
+    }
+
     public Usuario buscarUsuarioPorCedula(String cedula) {
         return usuarios.get(cedula);
     }

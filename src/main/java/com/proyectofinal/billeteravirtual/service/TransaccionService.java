@@ -102,4 +102,32 @@ public class TransaccionService {
 
         return true;
     }
+
+    public int transferir(String cedula, String idOrigen, String idDestino, double valor) {
+
+        Usuario usuarioOrigen = usuarioService.buscarUsuarioPorCedula(cedula);
+
+        if (idOrigen.equals(idDestino)) return 3;
+
+        Billetera origen = usuarioOrigen.getBilleteras().get(idOrigen);
+
+        Billetera destino = usuarioService.buscarBilleteraGlobal(idDestino);
+        if (destino == null) return 2;
+
+        Usuario usuarioDestino = usuarioService.buscarUsuarioPorBilletera(idDestino);
+        if (usuarioDestino == null) return 2;
+
+        if (origen.getSaldo() < valor) return 1;
+
+        origen.setSaldo(origen.getSaldo() - valor);
+        destino.setSaldo(destino.getSaldo() + valor);
+
+        registrarTransaccion(usuarioOrigen, origen, destino, valor, TipoTransaccion.TRANSFERENCIA);
+
+        if (!usuarioOrigen.getCedula().equals(usuarioDestino.getCedula())) {
+            registrarTransaccion(usuarioDestino, origen, destino, valor, TipoTransaccion.TRANSFERENCIA);
+        }
+
+        return 4;
+    }
 }

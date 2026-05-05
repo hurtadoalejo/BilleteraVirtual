@@ -48,4 +48,22 @@ public class TransaccionController {
 
         return ResponseEntity.ok("Retiro realizado correctamente");
     }
+
+    @PostMapping("/transferir/{cedula}")
+    public ResponseEntity<?> transferir(
+            @PathVariable String cedula,
+            @RequestParam String origen,
+            @RequestParam String destino,
+            @RequestParam double valor) {
+
+        int resultado = transaccionService.transferir(cedula, origen, destino, valor);
+
+        return switch (resultado) {
+            case 1 -> ResponseEntity.status(HttpStatus.CONFLICT).body("Saldo insuficiente");
+            case 2 -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("La billetera destino no existe");
+            case 3 -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No puedes transferir a la misma billetera");
+            case 4 -> ResponseEntity.ok("Transferencia realizada correctamente");
+            default -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error en la transferencia");
+        };
+    }
 }
