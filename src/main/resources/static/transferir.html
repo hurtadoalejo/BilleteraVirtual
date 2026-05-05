@@ -136,9 +136,19 @@
     }
 
     @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-4px); }
-      75% { transform: translateX(4px); }
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      25% {
+        transform: translateX(-4px);
+      }
+
+      75% {
+        transform: translateX(4px);
+      }
     }
 
     .input-group {
@@ -211,12 +221,17 @@
     .hidden {
       display: none;
     }
+
+    input[readonly] {
+      background: #f1f5f9;
+      color: #64748b;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 
 <body>
 
-  <!-- NAV (NO TOCADO) -->
   <nav class="sidebar">
     <div class="nav-group">
       <a href="/home.html" class="nav-item"><img src="home.svg"><span>Inicio</span></a>
@@ -261,6 +276,11 @@
           </div>
         </div>
 
+        <div class="form-row">
+          <label>Total a descontar</label>
+          <input type="text" id="total" readonly>
+        </div>
+
         <button class="btn" onclick="transferir()">Transferir</button>
 
       </div>
@@ -268,7 +288,6 @@
     </div>
   </div>
 
-  <!-- POPUP (NO TOCADO) -->
   <div id="popup" class="popup hidden">
     <div class="popup-content">
       <p id="popup-message"></p>
@@ -329,7 +348,10 @@
         return;
       }
 
-      if (valor > billetera.saldo) {
+      const comision = calcularComision(valor);
+      const total = valor + comision;
+
+      if (total > billetera.saldo) {
         errorMsg.textContent = "No hay suficiente saldo disponible";
         errorMsg.style.display = "block";
         valorInput.classList.remove("input-error");
@@ -338,21 +360,41 @@
         return;
       }
 
+      if (origenId === destinoId) {
+        mostrarPopup("No puedes transferir a la misma billetera");
+        return;
+      }
+
       errorMsg.style.display = "none";
       valorInput.classList.remove("input-error");
 
       try {
-        const res = await fetch(`http://localhost:8080/transacciones/transferir/${usuario.cedula}/${origenId}/${destinoId}?valor=${valor}`, {
-          method: "POST"
-        });
+        const res = await fetch(
+          `http://localhost:8080/transacciones/transferir/${usuario.cedula}?origen=${origenId}&destino=${destinoId}&valor=${valor}`,
+          { method: "POST" }
+        );
 
         const mensaje = await res.text();
         mostrarPopup(mensaje);
 
-        document.getElementById("valor").value = "";
-        document.getElementById("destino").value = "";
+        if (res.ok) {
 
-        cargarBilleteras();
+          const resUser = await fetch(`http://localhost:8080/usuarios/${usuario.cedula}`);
+          const usuarioActualizado = await resUser.json();
+
+          sessionStorage.setItem("usuario", JSON.stringify(usuarioActualizado));
+
+          Object.assign(usuario, usuarioActualizado);
+
+          document.getElementById("notaComision").textContent =
+            "Nota: Comisión por transferencia a otra persona será de " + obtenerComision();
+
+          document.getElementById("valor").value = "";
+          document.getElementById("destino").value = "";
+          document.getElementById("total").value = "";
+
+          cargarBilleteras();
+        }
 
       } catch {
         mostrarPopup("Error en la transferencia");
@@ -372,12 +414,52 @@
       sessionStorage.removeItem("usuario");
     }
 
-    document.getElementById("valor").addEventListener("input", function () {
+    function calcularComision(valor) {
+      let porcentaje = 0.005;
+
+      switch (usuario.nivel) {
+        case "PLATA": porcentaje = 0.004; break;
+        case "ORO": porcentaje = 0.003; break;
+        case "PLATINO": porcentaje = 0.001; break;
+      }
+
+      return valor * porcentaje;
+    }
+
+    function esBilleteraPropia(destinoId) {
+      return billeteras.some(b => String(b.id) === String(destinoId));
+    }
+
+    function actualizarTotal() {
+      const valorInput = document.getElementById("valor");
+      const totalInput = document.getElementById("total");
       const errorMsg = document.getElementById("error-msg");
+
+      const valor = parseFloat(valorInput.value);
+      const destinoId = document.getElementById("destino").value;
+
       errorMsg.style.display = "none";
       errorMsg.textContent = "";
-      this.classList.remove("input-error");
-    });
+      valorInput.classList.remove("input-error");
+
+      if (!valor || valor <= 0) {
+        totalInput.value = "";
+        return;
+      }
+
+      let total = valor;
+
+      if (!esBilleteraPropia(destinoId)) {
+        const comision = calcularComision(valor);
+        total += comision;
+      }
+
+      totalInput.value = total.toFixed(2);
+    }
+
+    document.getElementById("valor").addEventListener("input", actualizarTotal);
+    document.getElementById("destino").addEventListener("input", actualizarTotal);
+    document.getElementById("billeteraSelect").addEventListener("change", actualizarTotal);
 
     cargarBilleteras();
   </script>

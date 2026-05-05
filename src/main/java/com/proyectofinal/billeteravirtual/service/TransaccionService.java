@@ -106,10 +106,12 @@ public class TransaccionService {
     public int transferir(String cedula, String idOrigen, String idDestino, double valor) {
 
         Usuario usuarioOrigen = usuarioService.buscarUsuarioPorCedula(cedula);
+        if (usuarioOrigen == null) return 2;
 
         if (idOrigen.equals(idDestino)) return 3;
 
         Billetera origen = usuarioOrigen.getBilleteras().get(idOrigen);
+        if (origen == null) return 2;
 
         Billetera destino = usuarioService.buscarBilleteraGlobal(idDestino);
         if (destino == null) return 2;
@@ -117,9 +119,15 @@ public class TransaccionService {
         Usuario usuarioDestino = usuarioService.buscarUsuarioPorBilletera(idDestino);
         if (usuarioDestino == null) return 2;
 
-        if (origen.getSaldo() < valor) return 1;
+        if (valor <= 0) return 1;
 
-        origen.setSaldo(origen.getSaldo() - valor);
+        double porcentaje = obtenerComision(usuarioOrigen.getNivel());
+        double comision = valor * porcentaje;
+        double totalDescontar = valor + comision;
+
+        if (origen.getSaldo() < totalDescontar) return 1;
+
+        origen.setSaldo(origen.getSaldo() - totalDescontar);
         destino.setSaldo(destino.getSaldo() + valor);
 
         registrarTransaccion(usuarioOrigen, origen, destino, valor, TipoTransaccion.TRANSFERENCIA);
@@ -129,5 +137,14 @@ public class TransaccionService {
         }
 
         return 4;
+    }
+
+    private double obtenerComision(NivelUsuario nivel) {
+        return switch (nivel) {
+            case BRONCE -> 0.005;
+            case PLATA -> 0.004;
+            case ORO -> 0.003;
+            case PLATINO -> 0.001;
+        };
     }
 }
