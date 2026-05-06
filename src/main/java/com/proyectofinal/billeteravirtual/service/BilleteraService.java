@@ -15,6 +15,10 @@ public class BilleteraService {
 
     public BilleteraService(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
+        Billetera billetera = new Billetera();
+        billetera.setNombre("Nequi");
+        billetera.setTipo(TipoBilletera.AHORRO);
+        agregarBilletera("1092850037", billetera);
     }
 
     public boolean agregarBilletera(String cedula, Billetera billetera) {

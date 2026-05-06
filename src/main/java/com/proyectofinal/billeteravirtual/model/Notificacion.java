@@ -5,9 +5,7 @@ public class Notificacion {
 
     private String id;
     private String mensaje;
-    private TipoNotificacion tipo;
     private LocalDateTime fecha;
-    private boolean leida;
 
     public String getId() {
         return id;
@@ -25,27 +23,11 @@ public class Notificacion {
         this.mensaje = mensaje;
     }
 
-    public TipoNotificacion getTipo() {
-        return tipo;
-    }
-
-    public void setTipo(TipoNotificacion tipo) {
-        this.tipo = tipo;
-    }
-
     public LocalDateTime getFecha() {
         return fecha;
     }
 
     public void setFecha(LocalDateTime fecha) {
         this.fecha = fecha;
-    }
-
-    public boolean isLeida() {
-        return leida;
-    }
-
-    public void setLeida(boolean leida) {
-        this.leida = leida;
     }
 }

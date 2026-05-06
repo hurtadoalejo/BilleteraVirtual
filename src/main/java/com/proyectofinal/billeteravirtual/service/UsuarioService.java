@@ -18,18 +18,12 @@ public class UsuarioService {
 
     public UsuarioService() {
         Usuario usuario = new Usuario();
-        usuario.setNombreCompleto("Usuario");
-        usuario.setCedula("123");
-        usuario.setCorreoElectronico("123");
-        usuario.setNumeroTelefonico("123");
-        usuario.setPassword("123");
-        Billetera billetera = new Billetera();
-        billetera.setId("123");
-        billetera.setNombre("Bille");
-        billetera.setTipo(TipoBilletera.AHORRO);
-        billetera.setSaldo(45000);
-        usuario.getBilleteras().put(billetera.getId(), billetera);
-        usuarios.put(usuario.getCedula(), usuario);
+        usuario.setNombreCompleto("Alejandro Hurtado");
+        usuario.setCedula("1092850037");
+        usuario.setCorreoElectronico("alejohg2911@gmail.com");
+        usuario.setNumeroTelefonico("3161971519");
+        usuario.setPassword("alejohg");
+        registrarUsuario(usuario);
     }
 
     public boolean registrarUsuario(Usuario usuario) {

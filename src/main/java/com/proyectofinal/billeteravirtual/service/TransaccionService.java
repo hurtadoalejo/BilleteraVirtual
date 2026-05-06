@@ -10,9 +10,11 @@ import java.util.UUID;
 @Service
 public class TransaccionService {
     private final UsuarioService usuarioService;
+    private final EmailService emailService;
 
-    public TransaccionService(UsuarioService usuarioService) {
+    public TransaccionService(UsuarioService usuarioService, EmailService emailService) {
         this.usuarioService = usuarioService;
+        this.emailService = emailService;
     }
 
     private int calcularPuntos(double valor, TipoTransaccion tipo, NivelUsuario nivel) {
@@ -91,6 +93,12 @@ public class TransaccionService {
 
         registrarTransaccion(usuario,null, billetera, valor, 0, TipoTransaccion.RECARGA, true);
 
+        try {
+            enviarCorreoTransaccion(usuario, TipoTransaccion.RECARGA, valor, null, billetera, null);
+        } catch (Exception e) {
+            System.out.println("Error enviando correo: " + e.getMessage());
+        }
+
         return true;
     }
 
@@ -107,6 +115,12 @@ public class TransaccionService {
         billetera.setSaldo(billetera.getSaldo() - valor);
 
         registrarTransaccion(usuario, billetera, null, valor, 0, TipoTransaccion.RETIRO, true);
+
+        try {
+            enviarCorreoTransaccion(usuario, TipoTransaccion.RETIRO, valor, billetera, null, null);
+        } catch (Exception e) {
+            System.out.println("Error enviando correo: " + e.getMessage());
+        }
 
         return true;
     }
@@ -144,6 +158,15 @@ public class TransaccionService {
             registrarTransaccion(usuarioDestino, origen, destino, valor, comision, TipoTransaccion.TRANSFERENCIA, false);
         }
 
+        try {
+            enviarCorreoTransaccion(usuarioOrigen, TipoTransaccion.TRANSFERENCIA, valor, origen, destino, usuarioDestino);
+
+            enviarCorreoTransferenciaRecibida(usuarioOrigen, usuarioDestino, valor);
+
+        } catch (Exception e) {
+            System.out.println("Error enviando correo: " + e.getMessage());
+        }
+
         return 4;
     }
 
@@ -162,5 +185,50 @@ public class TransaccionService {
         if (usuario == null) return null;
 
         return usuario.getHistorialTransacciones();
+    }
+
+    private void enviarCorreoTransaccion(
+            Usuario usuario,
+            TipoTransaccion tipo,
+            double valor,
+            Billetera origen,
+            Billetera destino,
+            Usuario usuarioDestino
+    ) {
+
+        String asunto = "Notificación de transacción";
+
+        String mensaje = "Hola " + usuario.getNombreCompleto() + ",\n\n";
+
+        switch (tipo) {
+            case RECARGA ->
+                    mensaje += "Recargaste $" + valor +
+                            " a tu billetera " + destino.getId() + ".";
+
+            case RETIRO ->
+                    mensaje += "Retiraste $" + valor +
+                            " desde tu billetera " + origen.getId() + ".";
+
+            case TRANSFERENCIA ->
+                    mensaje += "Transferiste $" + valor +
+                            " desde tu billetera " + origen.getId() +
+                            " a " + usuarioDestino.getNombreCompleto() + ".";
+        }
+
+        mensaje += "\n\nGracias por usar Billetera Virtual \uD83D\uDC99";
+
+        emailService.enviarCorreo(usuario.getCorreoElectronico(), asunto, mensaje);
+    }
+
+    private void enviarCorreoTransferenciaRecibida(Usuario origen, Usuario destino, double valor) {
+        if (origen.getCedula().equals(destino.getCedula())) return;
+
+        String asunto = "Transferencia recibida";
+
+        String mensaje = "Hola " + destino.getNombreCompleto() + ",\n\n" +
+                "Has recibido $" + valor + " de " + origen.getNombreCompleto() + ".\n\n" +
+                "Gracias por usar Billetera Virtual.";
+
+        emailService.enviarCorreo(destino.getCorreoElectronico(), asunto, mensaje);
     }
 }
