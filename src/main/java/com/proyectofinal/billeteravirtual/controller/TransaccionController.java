@@ -66,4 +66,12 @@ public class TransaccionController {
             default -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error en la transferencia");
         };
     }
+
+    @GetMapping("/historial/{cedula}")
+    public ResponseEntity<?> obtenerHistorial(@PathVariable String cedula) {
+
+        var historial = transaccionService.obtenerHistorial(cedula);
+
+        return ResponseEntity.ok(historial);
+    }
 }

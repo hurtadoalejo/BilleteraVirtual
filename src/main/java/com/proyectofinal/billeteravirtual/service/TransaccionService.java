@@ -4,6 +4,7 @@ import com.proyectofinal.billeteravirtual.model.*;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -153,5 +154,13 @@ public class TransaccionService {
             case ORO -> 0.003;
             case PLATINO -> 0.001;
         };
+    }
+
+    public List<Transaccion> obtenerHistorial(String cedula) {
+        Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
+
+        if (usuario == null) return null;
+
+        return usuario.getHistorialTransacciones();
     }
 }

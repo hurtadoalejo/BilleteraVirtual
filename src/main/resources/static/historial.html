@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Historial</title>
+
+  <style>
+    * {
+      user-select: none;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      display: flex;
+      height: 100vh;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(77, 130, 188, 0.6), transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(77, 130, 188, 0.6), transparent 40%),
+        radial-gradient(circle at 50% 50%, #4d82bc, #005187);
+      background-blend-mode: screen;
+      color: white;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: rgba(7, 68, 109, 0.25);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px 10px;
+    }
+
+    .nav-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 15px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      color: white;
+    }
+
+    .nav-item img {
+      width: 20px;
+      height: 20px;
+      opacity: 0.8;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .content {
+      flex: 1;
+      background: #F3F6FF;
+      color: #1e293b;
+      padding: 40px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .titulo {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .filtros {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: flex-end;
+    }
+
+    .filtro {
+      display: flex;
+      flex-direction: column;
+      font-size: 13px;
+      color: #64748b;
+      justify-content: flex-end;
+    }
+
+    #lista {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+
+    .filtro select,
+    .filtro input {
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      margin-top: 5px;
+      width: 160px;
+    }
+
+    .btn {
+      padding: 10px 18px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+      background: #4d82bc;
+      color: white;
+    }
+
+    .transaccion {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8fafc;
+      padding: 15px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+
+    .popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .popup-content {
+      background: rgba(77, 130, 188, 0.85);
+      backdrop-filter: blur(10px);
+      padding: 25px 30px;
+      border-radius: 20px;
+      text-align: center;
+      color: white;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .popup-content button {
+      margin-top: 15px;
+      padding: 10px 25px;
+      border: none;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .detalle-box {
+      background: white;
+      color: black;
+      padding: 25px;
+      border-radius: 20px;
+      width: 400px;
+      position: relative;
+    }
+
+    .cerrar {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .lista-animada {
+      opacity: 1;
+      transform: translateY(0);
+      transition: all 0.3s ease;
+    }
+
+    .lista-animada.fade {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    .paginacion {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding-top: 15px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="sidebar">
+    <div class="nav-group">
+      <a href="/home.html" class="nav-item"><img src="home.svg"><span>Inicio</span></a>
+      <a href="/billetera.html" class="nav-item"><img src="billeteras.svg"><span>Billeteras</span></a>
+      <a href="/recargar.html" class="nav-item"><img src="recargar.svg"><span>Recargar</span></a>
+      <a href="/retirar.html" class="nav-item"><img src="retirar.svg"><span>Retirar</span></a>
+      <a href="/transferir.html" class="nav-item"><img src="transferir.svg"><span>Transferir</span></a>
+      <a href="/historial.html" class="nav-item"><img src="historial.svg"><span>Historial</span></a>
+    </div>
+
+    <div class="nav-group">
+      <a href="/login.html" class="nav-item" onclick="logout()">
+        <img src="cerrar-sesion.svg">
+        <span>Cerrar sesión</span>
+      </a>
+    </div>
+  </nav>
+
+  <div class="content">
+    <div class="container">
+
+      <h1 class="titulo">Historial de Transacciones</h1>
+
+      <div class="card filtros">
+        <div class="filtro">
+          <label>Tipo</label>
+          <select id="tipo">
+            <option value="">Todos</option>
+            <option value="RECARGA">Recarga</option>
+            <option value="RETIRO">Retiro</option>
+            <option value="TRANSFERENCIA">Transferencia</option>
+          </select>
+        </div>
+
+        <div class="filtro">
+          <label>Fecha inicio</label>
+          <input type="date" id="fechaInicio">
+        </div>
+
+        <div class="filtro">
+          <label>Fecha fin</label>
+          <input type="date" id="fechaFin">
+        </div>
+
+        <button class="btn" onclick="limpiar()">Limpiar</button>
+      </div>
+
+      <div id="lista"></div>
+      <div id="paginacion" class="paginacion"></div>
+    </div>
+  </div>
+
+  <div id="detalle" class="popup hidden">
+    <div class="detalle-box">
+      <span class="cerrar" onclick="cerrarDetalle()">×</span>
+      <div id="detalleContenido"></div>
+    </div>
+  </div>
+
+  <script>
+    const usuario = JSON.parse(sessionStorage.getItem("usuario"));
+    let transacciones = [];
+
+    let paginaActual = 1;
+    const porPagina = 5;
+
+    if (!usuario) window.location.href = "/login.html";
+
+    async function cargar() {
+      const res = await fetch(`http://localhost:8080/transacciones/historial/${usuario.cedula}`);
+      transacciones = await res.json();
+
+      transacciones.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+
+      paginaActual = 1;
+      render(true);
+    }
+
+    function obtenerFiltradas() {
+      const tipo = document.getElementById("tipo").value;
+      const inicio = document.getElementById("fechaInicio").value;
+      const fin = document.getElementById("fechaFin").value;
+
+      return transacciones.filter(t => {
+        const fecha = t.fecha.split("T")[0];
+
+        if (tipo && t.tipo !== tipo) return false;
+        if (inicio && fecha < inicio) return false;
+        if (fin && fecha > fin) return false;
+
+        return true;
+      });
+    }
+
+    function render(sinAnimacion = false) {
+      const lista = document.getElementById("lista");
+
+      if (!sinAnimacion) {
+        lista.classList.add("fade");
+        setTimeout(() => dibujar(), 200);
+      } else {
+        dibujar();
+      }
+
+      function dibujar() {
+        lista.classList.remove("fade");
+        lista.classList.add("lista-animada");
+
+        lista.innerHTML = "";
+
+        const filtradas = obtenerFiltradas();
+
+        const inicio = (paginaActual - 1) * porPagina;
+        const fin = inicio + porPagina;
+
+        const pagina = filtradas.slice(inicio, fin);
+
+        pagina.forEach(t => {
+          lista.innerHTML += `
+          <div class="transaccion">
+            <div>
+              <b>${t.tipo}</b><br>
+              ${formatearFecha(t.fecha)} - 
+              <span style="color: ${t.tipo === 'RECARGA' ? 'green' : 'red'}; font-weight: bold;">
+                $${t.valor}
+              </span>
+            </div>
+            <button class="btn" onclick='verDetalle(${JSON.stringify(t)})'>Detalles</button>
+          </div>
+        `;
+        });
+
+        renderPaginacion(filtradas.length);
+      }
+    }
+
+    function renderPaginacion(total) {
+      const cont = document.getElementById("paginacion");
+      cont.innerHTML = "";
+
+      const totalPaginas = Math.ceil(total / porPagina);
+
+      if (totalPaginas <= 1) return;
+
+      cont.innerHTML = `
+      <button class="btn" onclick="cambiarPagina(-1)" ${paginaActual === 1 ? 'disabled' : ''}>←</button>
+      <span style="align-self:center;">Página ${paginaActual} de ${totalPaginas}</span>
+      <button class="btn" onclick="cambiarPagina(1)" ${paginaActual === totalPaginas ? 'disabled' : ''}>→</button>
+    `;
+    }
+
+    function cambiarPagina(dir) {
+      paginaActual += dir;
+      render();
+    }
+
+    function verDetalle(t) {
+      document.getElementById("detalleContenido").innerHTML = `
+      <p><b>ID:</b> ${t.id}</p>
+      <p><b>Tipo:</b> ${t.tipo}</p>
+      <p><b>Fecha:</b> ${formatearFecha(t.fecha)}</p>
+      <p><b>Valor:</b> $${t.valor}</p>
+      <p><b>Comisión:</b> $${t.comision || 0}</p>
+      <p><b>Billetera origen:</b> ${t.billeteraOrigenId || '-'}</p>
+      <p><b>Billetera destino:</b> ${t.billeteraDestinoId || '-'}</p>
+      <p><b>Estado:</b> ${t.estado}</p>
+    `;
+      document.getElementById("detalle").classList.remove("hidden");
+    }
+
+    // 🔥 FORMATO PERFECTO (SIN BUG DE a. m.)
+    function formatearFecha(fechaISO) {
+      const f = new Date(fechaISO);
+
+      const dia = f.getDate();
+      const mes = f.toLocaleString("es-CO", { month: "long" });
+      const anio = f.getFullYear();
+
+      let horas = f.getHours();
+      const minutos = String(f.getMinutes()).padStart(2, "0");
+      const segundos = String(f.getSeconds()).padStart(2, "0");
+
+      const ampm = horas >= 12 ? "p.m." : "a.m.";
+      horas = horas % 12 || 12;
+
+      return `${dia} de ${mes} ${anio}, ${horas}:${minutos}:${segundos} ${ampm}`;
+    }
+
+    function cerrarDetalle() {
+      document.getElementById("detalle").classList.add("hidden");
+    }
+
+    function limpiar() {
+      document.getElementById("tipo").value = "";
+      document.getElementById("fechaInicio").value = "";
+      document.getElementById("fechaFin").value = "";
+
+      document.getElementById("fechaFin").min = "";
+      document.getElementById("fechaInicio").max = "";
+
+      paginaActual = 1;
+      render();
+    }
+
+    document.getElementById("fechaInicio").addEventListener("change", e => {
+      const inicio = e.target.value;
+      const finInput = document.getElementById("fechaFin");
+
+      finInput.min = inicio;
+
+      if (finInput.value && finInput.value < inicio) {
+        finInput.value = "";
+      }
+
+      paginaActual = 1;
+      render();
+    });
+
+    document.getElementById("fechaFin").addEventListener("change", e => {
+      const fin = e.target.value;
+
+      document.getElementById("fechaInicio").max = fin;
+
+      paginaActual = 1;
+      render();
+    });
+
+    document.getElementById("tipo").addEventListener("change", () => {
+      paginaActual = 1;
+      render();
+    });
+
+    function logout() {
+      sessionStorage.removeItem("usuario");
+    }
+
+    cargar();
+  </script>
+
+</body>
+
+</html>
