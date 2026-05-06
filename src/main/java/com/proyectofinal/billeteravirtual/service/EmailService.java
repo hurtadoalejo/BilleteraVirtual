@@ -1,7 +1,9 @@
 package com.proyectofinal.billeteravirtual.service;
+
+import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -11,12 +13,20 @@ public class EmailService {
     private JavaMailSender mailSender;
 
     public void enviarCorreo(String destino, String asunto, String mensaje) {
-        SimpleMailMessage mail = new SimpleMailMessage();
+        try {
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
 
-        mail.setTo(destino);
-        mail.setSubject(asunto);
-        mail.setText(mensaje);
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, "UTF-8");
 
-        mailSender.send(mail);
+            helper.setTo(destino);
+            helper.setSubject(asunto);
+
+            helper.setText(mensaje, true);
+
+            mailSender.send(mimeMessage);
+
+        } catch (Exception e) {
+            System.out.println("Error enviando correo: " + e.getMessage());
+        }
     }
 }

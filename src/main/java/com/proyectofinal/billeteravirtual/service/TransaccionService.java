@@ -3,8 +3,11 @@ package com.proyectofinal.billeteravirtual.service;
 import com.proyectofinal.billeteravirtual.model.*;
 import org.springframework.stereotype.Service;
 
+import java.text.NumberFormat;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -94,7 +97,7 @@ public class TransaccionService {
         registrarTransaccion(usuario,null, billetera, valor, 0, TipoTransaccion.RECARGA, true);
 
         try {
-            enviarCorreoTransaccion(usuario, TipoTransaccion.RECARGA, valor, null, billetera, null);
+            enviarCorreoTransaccion(usuario, TipoTransaccion.RECARGA, valor, 0, null, billetera, null);
         } catch (Exception e) {
             System.out.println("Error enviando correo: " + e.getMessage());
         }
@@ -117,7 +120,7 @@ public class TransaccionService {
         registrarTransaccion(usuario, billetera, null, valor, 0, TipoTransaccion.RETIRO, true);
 
         try {
-            enviarCorreoTransaccion(usuario, TipoTransaccion.RETIRO, valor, billetera, null, null);
+            enviarCorreoTransaccion(usuario, TipoTransaccion.RETIRO, valor, 0, billetera, null, null);
         } catch (Exception e) {
             System.out.println("Error enviando correo: " + e.getMessage());
         }
@@ -159,9 +162,9 @@ public class TransaccionService {
         }
 
         try {
-            enviarCorreoTransaccion(usuarioOrigen, TipoTransaccion.TRANSFERENCIA, valor, origen, destino, usuarioDestino);
+            enviarCorreoTransaccion(usuarioOrigen, TipoTransaccion.TRANSFERENCIA, valor, comision, origen, destino, usuarioDestino);
 
-            enviarCorreoTransferenciaRecibida(usuarioOrigen, usuarioDestino, valor);
+            enviarCorreoTransferenciaRecibida(usuarioOrigen, usuarioDestino, valor, destino);
 
         } catch (Exception e) {
             System.out.println("Error enviando correo: " + e.getMessage());
@@ -191,6 +194,7 @@ public class TransaccionService {
             Usuario usuario,
             TipoTransaccion tipo,
             double valor,
+            double comision,
             Billetera origen,
             Billetera destino,
             Usuario usuarioDestino
@@ -198,37 +202,81 @@ public class TransaccionService {
 
         String asunto = "Notificación de transacción";
 
-        String mensaje = "Hola " + usuario.getNombreCompleto() + ",\n\n";
+        String fechaFormateada = formatearFecha(LocalDateTime.now());
+        String valorFormateado = formatearMoneda(valor);
+
+        String mensaje = "<div style='font-family:Arial, sans-serif; max-width:500px; margin:auto; padding:20px; border:1px solid #e5e7eb; border-radius:10px;'>";
+
+        mensaje += "<h2 style='color:#4d82bc; text-align:center;'>Billetera Virtual</h2>";
+
+        mensaje += "<p>Hola <b>" + usuario.getNombreCompleto() + "</b>,</p>";
 
         switch (tipo) {
             case RECARGA ->
-                    mensaje += "Recargaste $" + valor +
-                            " a tu billetera " + destino.getId() + ".";
+                    mensaje += "<p>Has recargado <b style='color:green;'>" + valorFormateado +
+                            "</b> a tu billetera <b>" + destino.getId() + "</b>.</p>";
 
             case RETIRO ->
-                    mensaje += "Retiraste $" + valor +
-                            " desde tu billetera " + origen.getId() + ".";
+                    mensaje += "<p>Has retirado <b style='color:red;'>" + valorFormateado +
+                            "</b> desde tu billetera <b>" + origen.getId() + "</b>.</p>";
 
             case TRANSFERENCIA ->
-                    mensaje += "Transferiste $" + valor +
-                            " desde tu billetera " + origen.getId() +
-                            " a " + usuarioDestino.getNombreCompleto() + ".";
+                    mensaje += "<p>Has transferido <b style='color:red;'>" + valorFormateado +
+                            "</b> desde la billetera <b>" + origen.getId() +
+                            "</b> a <b>" + usuarioDestino.getNombreCompleto() + "</b>.</p>" +
+                            "<p>Comisión: <b style='color:red;'>" + formatearMoneda(comision) + "</b></p>";
         }
 
-        mensaje += "\n\nGracias por usar Billetera Virtual \uD83D\uDC99";
+        mensaje += "<p><b>Fecha:</b> " + fechaFormateada + "</p>";
+
+        mensaje += "<hr style='margin:20px 0;'>";
+
+        mensaje += "<p style='color:gray; font-size:12px; text-align:center;'>Gracias por usar Billetera Virtual</p>";
+
+        mensaje += "</div>";
 
         emailService.enviarCorreo(usuario.getCorreoElectronico(), asunto, mensaje);
     }
 
-    private void enviarCorreoTransferenciaRecibida(Usuario origen, Usuario destino, double valor) {
+    private void enviarCorreoTransferenciaRecibida(Usuario origen, Usuario destino, double valor, Billetera billeteraDestino) {
+
         if (origen.getCedula().equals(destino.getCedula())) return;
 
         String asunto = "Transferencia recibida";
 
-        String mensaje = "Hola " + destino.getNombreCompleto() + ",\n\n" +
-                "Has recibido $" + valor + " de " + origen.getNombreCompleto() + ".\n\n" +
-                "Gracias por usar Billetera Virtual.";
+        String fechaFormateada = formatearFecha(LocalDateTime.now());
+        String valorFormateado = formatearMoneda(valor);
+
+        String mensaje = "<div style='font-family:Arial, sans-serif; max-width:500px; margin:auto; padding:20px; border:1px solid #e5e7eb; border-radius:10px;'>";
+
+        mensaje += "<h2 style='color:#4d82bc; text-align:center;'>Billetera Virtual</h2>";
+
+        mensaje += "<p>Hola <b>" + destino.getNombreCompleto() + "</b>,</p>";
+
+        mensaje += "<p>Has recibido <b style='color:green;'>" + valorFormateado +
+                "</b> de <b>" + origen.getNombreCompleto() +
+                "</b> en tu billetera <b>" + billeteraDestino.getId() + "</b>.</p>";
+
+        mensaje += "<p><b>Fecha:</b> " + fechaFormateada + "</p>";
+
+        mensaje += "<hr style='margin:20px 0;'>";
+
+        mensaje += "<p style='color:gray; font-size:12px; text-align:center;'>Gracias por usar Billetera Virtual</p>";
+
+        mensaje += "</div>";
 
         emailService.enviarCorreo(destino.getCorreoElectronico(), asunto, mensaje);
+    }
+
+    private String formatearFecha(LocalDateTime fecha) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy, hh:mm:ss a", new Locale("es", "CO"));
+        return fecha.format(formatter)
+                .replace("a. m.", "a.m.")
+                .replace("p. m.", "p.m.");
+    }
+
+    private String formatearMoneda(double valor) {
+        NumberFormat formato = NumberFormat.getCurrencyInstance(new Locale("es", "CO"));
+        return formato.format(valor);
     }
 }

@@ -313,6 +313,16 @@
       document.getElementById("cedula").value = "";
       document.getElementById("password").value = "";
     };
+
+    function limpiarError() {
+      errorMsg.style.display = "none";
+
+      cedulaInput.parentElement.classList.remove("input-error");
+      passwordInput.parentElement.classList.remove("input-error");
+    }
+
+    cedulaInput.addEventListener("input", limpiarError);
+    passwordInput.addEventListener("input", limpiarError);
   </script>
 </body>
 
