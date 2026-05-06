@@ -7,6 +7,7 @@ public class Transaccion {
     private LocalDateTime fecha;
     private TipoTransaccion tipo;
     private double valor;
+    private double comision;
 
     private String billeteraOrigenId;
     private String billeteraDestinoId;
@@ -78,4 +79,11 @@ public class Transaccion {
         this.puntosGenerados = puntosGenerados;
     }
 
+    public double getComision() {
+        return comision;
+    }
+
+    public void setComision(double comision) {
+        this.comision = comision;
+    }
 }

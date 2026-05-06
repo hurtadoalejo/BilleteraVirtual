@@ -4,7 +4,6 @@ public class Beneficio {
 
     private String id;
     private String nombre;
-    private TipoBeneficio tipo;
     private double valor;
     private int costoPuntos;
 
@@ -22,14 +21,6 @@ public class Beneficio {
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
-    }
-
-    public TipoBeneficio getTipo() {
-        return tipo;
-    }
-
-    public void setTipo(TipoBeneficio tipo) {
-        this.tipo = tipo;
     }
 
     public double getValor() {

@@ -39,26 +39,33 @@ public class TransaccionService {
             Billetera origen,
             Billetera destino,
             double valor,
-            TipoTransaccion tipo
+            double comision,
+            TipoTransaccion tipo,
+            boolean generarPuntos
     ) {
         Transaccion t = new Transaccion();
         t.setId(UUID.randomUUID().toString());
         t.setFecha(LocalDateTime.now());
         t.setTipo(tipo);
         t.setValor(valor);
+        t.setComision(comision);
 
         t.setBilleteraOrigenId(origen != null ? origen.getId() : null);
         t.setBilleteraDestinoId(destino != null ? destino.getId() : null);
 
         t.setEstado(EstadoTransaccion.COMPLETADA);
 
-        int puntos = calcularPuntos(valor, tipo, usuario.getNivel());
-        t.setPuntosGenerados(puntos);
+        if (generarPuntos) {
+            int puntos = calcularPuntos(valor, tipo, usuario.getNivel());
+            t.setPuntosGenerados(puntos);
 
-        usuario.setPuntos(usuario.getPuntos() + puntos);
-        usuario.setPuntosAcumulados(usuario.getPuntosAcumulados() + puntos);
+            usuario.setPuntos(usuario.getPuntos() + puntos);
+            usuario.setPuntosAcumulados(usuario.getPuntosAcumulados() + puntos);
 
-        usuarioService.actualizarNivelUsuario(usuario);
+            usuarioService.actualizarNivelUsuario(usuario);
+        } else {
+            t.setPuntosGenerados(0);
+        }
 
         if (origen != null) {
             origen.getTransacciones().add(t);
@@ -81,7 +88,7 @@ public class TransaccionService {
 
         billetera.setSaldo(billetera.getSaldo() + valor);
 
-        registrarTransaccion(usuario,null, billetera, valor, TipoTransaccion.RECARGA);
+        registrarTransaccion(usuario,null, billetera, valor, 0, TipoTransaccion.RECARGA, true);
 
         return true;
     }
@@ -98,7 +105,7 @@ public class TransaccionService {
 
         billetera.setSaldo(billetera.getSaldo() - valor);
 
-        registrarTransaccion(usuario, billetera, null, valor, TipoTransaccion.RETIRO);
+        registrarTransaccion(usuario, billetera, null, valor, 0, TipoTransaccion.RETIRO, true);
 
         return true;
     }
@@ -130,10 +137,10 @@ public class TransaccionService {
         origen.setSaldo(origen.getSaldo() - totalDescontar);
         destino.setSaldo(destino.getSaldo() + valor);
 
-        registrarTransaccion(usuarioOrigen, origen, destino, valor, TipoTransaccion.TRANSFERENCIA);
+        registrarTransaccion(usuarioOrigen, origen, destino, valor, comision, TipoTransaccion.TRANSFERENCIA, true);
 
         if (!usuarioOrigen.getCedula().equals(usuarioDestino.getCedula())) {
-            registrarTransaccion(usuarioDestino, origen, destino, valor, TipoTransaccion.TRANSFERENCIA);
+            registrarTransaccion(usuarioDestino, origen, destino, valor, comision, TipoTransaccion.TRANSFERENCIA, false);
         }
 
         return 4;
