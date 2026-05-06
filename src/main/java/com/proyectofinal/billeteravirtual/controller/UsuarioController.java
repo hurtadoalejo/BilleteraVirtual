@@ -46,9 +46,7 @@ public class UsuarioController {
     }
 
     @PutMapping("/{cedula}")
-    public ResponseEntity<?> actualizarUsuario(
-            @PathVariable String cedula,
-            @RequestBody Usuario usuarioActualizado) {
+    public ResponseEntity<?> actualizarUsuario(@PathVariable String cedula, @RequestBody Usuario usuarioActualizado) {
 
         boolean actualizado = usuarioService.actualizarUsuario(cedula, usuarioActualizado);
 

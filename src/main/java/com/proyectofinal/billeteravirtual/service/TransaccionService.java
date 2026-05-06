@@ -40,14 +40,7 @@ public class TransaccionService {
         return (int) (valor / 5000) * (base + bonus);
     }
 
-    private void registrarTransaccion(
-            Usuario usuario,
-            Billetera origen,
-            Billetera destino,
-            double valor,
-            double comision,
-            TipoTransaccion tipo,
-            boolean generarPuntos
+    private void registrarTransaccion(Usuario usuario, Billetera origen, Billetera destino, double valor, double comision, TipoTransaccion tipo, boolean generarPuntos
     ) {
         Transaccion t = new Transaccion();
         t.setId(UUID.randomUUID().toString());
@@ -84,17 +77,23 @@ public class TransaccionService {
         usuario.getHistorialTransacciones().add(t);
     }
 
-    public boolean recargar(String cedula, String idBilletera, double valor) {
+    public ResultadoTransaccion recargar(String cedula, String idBilletera, double valor) {
 
         Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
-        if (usuario == null) return false;
+        if (usuario == null) return new ResultadoTransaccion(false, false, null);
 
         Billetera billetera = usuario.getBilleteras().get(idBilletera);
-        if (billetera == null) return false;
+        if (billetera == null) return new ResultadoTransaccion(false, false, null);
+
+        NivelUsuario nivelAntes = usuario.getNivel();
 
         billetera.setSaldo(billetera.getSaldo() + valor);
 
-        registrarTransaccion(usuario,null, billetera, valor, 0, TipoTransaccion.RECARGA, true);
+        registrarTransaccion(usuario, null, billetera, valor, 0, TipoTransaccion.RECARGA, true);
+
+        NivelUsuario nivelDespues = usuario.getNivel();
+
+        boolean subioNivel = nivelDespues != nivelAntes;
 
         try {
             enviarCorreoTransaccion(usuario, TipoTransaccion.RECARGA, valor, 0, null, billetera, null);
@@ -102,22 +101,28 @@ public class TransaccionService {
             System.out.println("Error enviando correo: " + e.getMessage());
         }
 
-        return true;
+        return new ResultadoTransaccion(true, subioNivel, nivelDespues);
     }
 
-    public boolean retirar(String cedula, String idBilletera, double valor) {
+    public ResultadoTransaccion retirar(String cedula, String idBilletera, double valor) {
 
         Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
-        if (usuario == null) return false;
+        if (usuario == null) return new ResultadoTransaccion(false, false, null);
 
         Billetera billetera = usuario.getBilleteras().get(idBilletera);
-        if (billetera == null) return false;
+        if (billetera == null) return new ResultadoTransaccion(false, false, null);
 
-        if (billetera.getSaldo() < valor) return false;
+        if (billetera.getSaldo() < valor)
+            return new ResultadoTransaccion(false, false, null);
+
+        NivelUsuario nivelAntes = usuario.getNivel();
 
         billetera.setSaldo(billetera.getSaldo() - valor);
 
         registrarTransaccion(usuario, billetera, null, valor, 0, TipoTransaccion.RETIRO, true);
+
+        NivelUsuario nivelDespues = usuario.getNivel();
+        boolean subioNivel = nivelDespues != nivelAntes;
 
         try {
             enviarCorreoTransaccion(usuario, TipoTransaccion.RETIRO, valor, 0, billetera, null, null);
@@ -125,32 +130,41 @@ public class TransaccionService {
             System.out.println("Error enviando correo: " + e.getMessage());
         }
 
-        return true;
+        return new ResultadoTransaccion(true, subioNivel, nivelDespues);
     }
 
-    public int transferir(String cedula, String idOrigen, String idDestino, double valor) {
+    public ResultadoTransaccion transferir(String cedula, String idOrigen, String idDestino, double valor) {
 
         Usuario usuarioOrigen = usuarioService.buscarUsuarioPorCedula(cedula);
-        if (usuarioOrigen == null) return 2;
+        if (usuarioOrigen == null)
+            return new ResultadoTransaccion(false, false, null, 2);
 
-        if (idOrigen.equals(idDestino)) return 3;
+        if (idOrigen.equals(idDestino))
+            return new ResultadoTransaccion(false, false, null, 3);
 
         Billetera origen = usuarioOrigen.getBilleteras().get(idOrigen);
-        if (origen == null) return 2;
+        if (origen == null)
+            return new ResultadoTransaccion(false, false, null, 2);
 
         Billetera destino = usuarioService.buscarBilleteraGlobal(idDestino);
-        if (destino == null) return 2;
+        if (destino == null)
+            return new ResultadoTransaccion(false, false, null, 2);
 
         Usuario usuarioDestino = usuarioService.buscarUsuarioPorBilletera(idDestino);
-        if (usuarioDestino == null) return 2;
+        if (usuarioDestino == null)
+            return new ResultadoTransaccion(false, false, null, 2);
 
-        if (valor <= 0) return 1;
+        if (valor <= 0)
+            return new ResultadoTransaccion(false, false, null, 1);
 
         double porcentaje = obtenerComision(usuarioOrigen.getNivel());
         double comision = valor * porcentaje;
         double totalDescontar = valor + comision;
 
-        if (origen.getSaldo() < totalDescontar) return 1;
+        if (origen.getSaldo() < totalDescontar)
+            return new ResultadoTransaccion(false, false, null, 1);
+
+        NivelUsuario nivelAntes = usuarioOrigen.getNivel();
 
         origen.setSaldo(origen.getSaldo() - totalDescontar);
         destino.setSaldo(destino.getSaldo() + valor);
@@ -161,16 +175,17 @@ public class TransaccionService {
             registrarTransaccion(usuarioDestino, origen, destino, valor, comision, TipoTransaccion.TRANSFERENCIA, false);
         }
 
+        NivelUsuario nivelDespues = usuarioOrigen.getNivel();
+        boolean subioNivel = nivelDespues != nivelAntes;
+
         try {
             enviarCorreoTransaccion(usuarioOrigen, TipoTransaccion.TRANSFERENCIA, valor, comision, origen, destino, usuarioDestino);
-
             enviarCorreoTransferenciaRecibida(usuarioOrigen, usuarioDestino, valor, destino);
-
         } catch (Exception e) {
             System.out.println("Error enviando correo: " + e.getMessage());
         }
 
-        return 4;
+        return new ResultadoTransaccion(true, subioNivel, nivelDespues);
     }
 
     private double obtenerComision(NivelUsuario nivel) {
@@ -190,14 +205,7 @@ public class TransaccionService {
         return usuario.getHistorialTransacciones();
     }
 
-    private void enviarCorreoTransaccion(
-            Usuario usuario,
-            TipoTransaccion tipo,
-            double valor,
-            double comision,
-            Billetera origen,
-            Billetera destino,
-            Usuario usuarioDestino
+    private void enviarCorreoTransaccion(Usuario usuario, TipoTransaccion tipo, double valor, double comision, Billetera origen, Billetera destino, Usuario usuarioDestino
     ) {
 
         String asunto = "Notificación de transacción";

@@ -18,9 +18,7 @@ public class BilleteraController {
     private BilleteraService billeteraService;
 
     @PostMapping("/{cedula}")
-    public ResponseEntity<?> crearBilletera(
-            @PathVariable String cedula,
-            @RequestBody Billetera billetera) {
+    public ResponseEntity<?> crearBilletera(@PathVariable String cedula, @RequestBody Billetera billetera) {
 
         boolean creada = billeteraService.agregarBilletera(cedula, billetera);
 
@@ -44,9 +42,7 @@ public class BilleteraController {
     }
 
     @GetMapping("/{cedula}/{idBilletera}")
-    public ResponseEntity<?> buscarBilletera(
-            @PathVariable String cedula,
-            @PathVariable String idBilletera) {
+    public ResponseEntity<?> buscarBilletera(@PathVariable String cedula, @PathVariable String idBilletera) {
 
         Billetera billetera = billeteraService.buscarBilletera(cedula, idBilletera);
 
@@ -60,10 +56,7 @@ public class BilleteraController {
     }
 
     @PutMapping("/{cedula}/{idBilletera}")
-    public ResponseEntity<?> actualizarBilletera(
-            @PathVariable String cedula,
-            @PathVariable String idBilletera,
-            @RequestBody Billetera datos) {
+    public ResponseEntity<?> actualizarBilletera(@PathVariable String cedula, @PathVariable String idBilletera, @RequestBody Billetera datos) {
 
         boolean actualizada = billeteraService.actualizarBilletera(cedula, idBilletera, datos);
 
@@ -77,9 +70,7 @@ public class BilleteraController {
     }
 
     @DeleteMapping("/{cedula}/{idBilletera}")
-    public ResponseEntity<?> eliminarBilletera(
-            @PathVariable String cedula,
-            @PathVariable String idBilletera) {
+    public ResponseEntity<?> eliminarBilletera(@PathVariable String cedula, @PathVariable String idBilletera) {
 
         boolean eliminada = billeteraService.eliminarBilletera(cedula, idBilletera);
 

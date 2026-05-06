@@ -297,6 +297,7 @@
 
   <script>
     const usuario = JSON.parse(sessionStorage.getItem("usuario"));
+    let nivelPendiente = null;
 
     if (!usuario) {
       window.location.href = "/login.html";
@@ -374,8 +375,12 @@
           { method: "POST" }
         );
 
-        const mensaje = await res.text();
-        mostrarPopup(mensaje);
+        const data = await res.json();
+        mostrarPopup("Transferencia realizada correctamente");
+
+        if (data.subioNivel) {
+          nivelPendiente = data.nuevoNivel;
+        }
 
         if (res.ok) {
 
@@ -408,6 +413,13 @@
 
     function cerrarPopup() {
       document.getElementById("popup").classList.add("hidden");
+
+      if (nivelPendiente) {
+        setTimeout(() => {
+          mostrarPopup("¡Felicidades! Has ascendido al nivel " + nivelPendiente);
+          nivelPendiente = null;
+        }, 300);
+      }
     }
 
     function logout() {

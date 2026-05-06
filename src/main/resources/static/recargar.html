@@ -290,6 +290,7 @@
 
   <script>
     const usuario = JSON.parse(sessionStorage.getItem("usuario"));
+    let mensajeNivelPendiente = null;
 
     if (!usuario) {
       window.location.href = "/login.html";
@@ -332,8 +333,13 @@
           method: "POST"
         });
 
-        const mensaje = await res.text();
-        mostrarPopup(mensaje);
+        const data = await res.json();
+
+        mostrarPopup("Recarga realizada correctamente");
+
+        if (data.subioNivel) {
+          mensajeNivelPendiente = `¡Felicidades! Has ascendido al nivel ${data.nuevoNivel}`;
+        }
 
         document.getElementById("valor").value = "";
 
@@ -349,6 +355,13 @@
 
     function cerrarPopup() {
       document.getElementById("popup").classList.add("hidden");
+
+      if (mensajeNivelPendiente) {
+        setTimeout(() => {
+          mostrarPopup(mensajeNivelPendiente);
+          mensajeNivelPendiente = null;
+        }, 200);
+      }
     }
 
     function logout() {
