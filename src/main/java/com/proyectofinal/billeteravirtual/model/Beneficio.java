@@ -1,11 +1,14 @@
 package com.proyectofinal.billeteravirtual.model;
 
+import java.time.LocalDateTime;
+
 public class Beneficio {
 
     private String id;
-    private String nombre;
-    private double valor;
     private int costoPuntos;
+    private LocalDateTime fecha;
+    private double dineroCanjeado;
+    private Billetera billeteraDestino;
 
     public String getId() {
         return id;
@@ -15,27 +18,35 @@ public class Beneficio {
         this.id = id;
     }
 
-    public String getNombre() {
-        return nombre;
-    }
-
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
-    }
-
-    public double getValor() {
-        return valor;
-    }
-
-    public void setValor(double valor) {
-        this.valor = valor;
-    }
-
     public int getCostoPuntos() {
         return costoPuntos;
     }
 
     public void setCostoPuntos(int costoPuntos) {
         this.costoPuntos = costoPuntos;
+    }
+
+    public double getDineroCanjeado() {
+        return dineroCanjeado;
+    }
+
+    public void setDineroCanjeado(double dineroCanjeado) {
+        this.dineroCanjeado = dineroCanjeado;
+    }
+
+    public Billetera getBilleteraDestino() {
+        return billeteraDestino;
+    }
+
+    public void setBilleteraDestino(Billetera billeteraDestino) {
+        this.billeteraDestino = billeteraDestino;
+    }
+
+    public LocalDateTime getFecha() {
+        return fecha;
+    }
+
+    public void setFecha(LocalDateTime fecha) {
+        this.fecha = fecha;
     }
 }

@@ -70,12 +70,21 @@
       background: #F3F6FF;
       color: #1e293b;
       padding: 40px;
-      overflow-y: auto;
+      overflow: hidden;
+
+      display: flex;
+      flex-direction: column;
     }
 
     .container {
       max-width: 900px;
       margin: auto;
+
+      display: flex;
+      flex-direction: column;
+
+      height: 100%;
+      width: 100%;
     }
 
     .titulo {
@@ -124,6 +133,37 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+    }
+
+    .lista-animada {
+      opacity: 1;
+      transform: translateY(0);
+      transition: all 0.3s ease;
+    }
+
+    .lista-animada.fade {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    .paginacion {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding-top: 20px;
+    }
+
+    .lista-billeteras {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+
+      flex: 1;
+      overflow-y: auto;
+
+      padding-right: 5px;
+
+      min-height: 0;
     }
 
     .billetera-info {
@@ -329,6 +369,7 @@
       <a href="/retirar.html" class="nav-item"><img src="retirar.svg"><span>Retirar</span></a>
       <a href="/transferir.html" class="nav-item"><img src="transferir.svg"><span>Transferir</span></a>
       <a href="historial.html" class="nav-item"><img src="historial.svg"><span>Historial</span></a>
+      <a href="canjear.html" class="nav-item"><img src="canjear.svg"><span>Canjear</span></a>
     </div>
 
     <div class="nav-group">
@@ -363,6 +404,7 @@
       </form>
 
       <div class="lista-billeteras" id="listaBilleteras"></div>
+      <div id="paginacion" class="paginacion"></div>
 
     </div>
   </div>
@@ -417,6 +459,9 @@
     const usuario = JSON.parse(sessionStorage.getItem("usuario"));
     let listaActualBilleteras = [];
 
+    let paginaActual = 1;
+    const porPagina = 3;
+
     if (!usuario) {
       window.location.href = "/login.html";
     }
@@ -467,33 +512,119 @@
       try {
         const res = await fetch(`http://localhost:8080/billeteras/${usuario.cedula}`);
         const data = await res.json();
+
         listaActualBilleteras = data;
 
-        const contenedor = document.getElementById("listaBilleteras");
+        paginaActual = 1;
+
+        renderBilleteras(true);
+
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderBilleteras(sinAnimacion = false) {
+
+      const contenedor = document.getElementById("listaBilleteras");
+
+      if (!sinAnimacion) {
+        contenedor.classList.add("fade");
+
+        setTimeout(() => dibujar(), 200);
+
+      } else {
+        dibujar();
+      }
+
+      function dibujar() {
+
+        contenedor.classList.remove("fade");
+        contenedor.classList.add("lista-animada");
+
         contenedor.innerHTML = "";
 
-        data.forEach(b => {
+        const inicio = (paginaActual - 1) * porPagina;
+        const fin = inicio + porPagina;
+
+        const pagina = listaActualBilleteras.slice(inicio, fin);
+
+        pagina.forEach(b => {
+
           contenedor.innerHTML += `
         <div class="billetera-item">
           <div class="billetera-info">
             <span class="billetera-nombre">${b.nombre}</span>
-            <span class="billetera-meta" style="font-weight:bold; color:#334155;">Número de billetera: ${b.id}</span>
+
+            <span class="billetera-meta" style="font-weight:bold; color:#334155;">
+              Número de billetera: ${b.id}
+            </span>
+
             <span class="billetera-meta">${formatearTipo(b.tipo)}</span>
-            <span class="billetera-meta">Saldo: $${(b.saldo || 0).toLocaleString()}</span>
-            <span class="billetera-meta">Estado: ${b.estado}</span>
+
+            <span class="billetera-meta">
+              Saldo: $${(b.saldo || 0).toLocaleString()}
+            </span>
+
+            <span class="billetera-meta">
+              Estado: ${b.estado}
+            </span>
           </div>
 
           <div style="display:flex; gap:10px;">
-            <button class="btn" onclick="editarBilletera('${b.id}', '${b.nombre}', '${b.tipo}')">Editar</button>
-            <button class="btn" style="background:#ff6b6b;" onclick="eliminarBilletera('${b.id}')">Eliminar</button>
+            <button class="btn"
+              onclick="editarBilletera('${b.id}', '${b.nombre}', '${b.tipo}')">
+              Editar
+            </button>
+
+            <button class="btn"
+              style="background:#ff6b6b;"
+              onclick="eliminarBilletera('${b.id}')">
+              Eliminar
+            </button>
           </div>
         </div>
       `;
         });
 
-      } catch (e) {
-        console.error(e);
+        renderPaginacion();
       }
+    }
+
+    function renderPaginacion() {
+
+      const cont = document.getElementById("paginacion");
+
+      cont.innerHTML = "";
+
+      const totalPaginas = Math.ceil(listaActualBilleteras.length / porPagina);
+
+      if (totalPaginas <= 1) return;
+
+      cont.innerHTML = `
+        <button class="btn"
+          onclick="cambiarPagina(-1)"
+          ${paginaActual === 1 ? "disabled" : ""}>
+          ←
+        </button>
+
+        <span style="align-self:center;">
+          Página ${paginaActual} de ${totalPaginas}
+        </span>
+
+        <button class="btn"
+          onclick="cambiarPagina(1)"
+          ${paginaActual === totalPaginas ? "disabled" : ""}>
+          →
+        </button>
+        `;
+    }
+
+    function cambiarPagina(dir) {
+
+      paginaActual += dir;
+
+      renderBilleteras();
     }
 
     function eliminarBilletera(id) {
