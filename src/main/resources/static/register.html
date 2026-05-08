@@ -289,7 +289,9 @@
         <div class="form-field" style="margin-bottom: 15px;">
           <label class="field-label">Cédula</label>
           <div class="input-container">
-            <input type="text" id="cedula" class="form-input" placeholder="Ej. 1092850037" required>
+            <input type="text" inputmode="numeric" pattern="[0-9]{7,10}"
+              oninput="this.value = this.value.replace(/[^0-9]/g, '')" id="cedula" minlength="7" maxlength="10"
+              class="form-input" placeholder="Ej. 1092850037" required>
           </div>
         </div>
 
@@ -303,7 +305,9 @@
         <div class="form-field">
           <label class="field-label">Número telefónico</label>
           <div class="input-container">
-            <input type="text" id="numeroTelefonico" class="form-input" placeholder="Ej. 3161971519" required>
+            <input type="text" inputmode="numeric" pattern="[0-9]{10,10}"
+              oninput="this.value = this.value.replace(/[^0-9]/g, '')" minlength="10" maxlength="10"
+              id="numeroTelefonico" class="form-input" placeholder="Ej. 3161971519" required>
           </div>
         </div>
 
@@ -386,6 +390,11 @@
 
     form.addEventListener("submit", function (e) {
       e.preventDefault();
+
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
 
       if (password.value !== confirmPassword.value) {
         validarPassword();

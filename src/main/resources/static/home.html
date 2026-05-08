@@ -370,7 +370,9 @@
 
             <div class="form-field">
               <label>Cédula</label>
-              <input type="text" id="cedula" disabled>
+              <input type="text" inputmode="numeric" pattern="[0-9]{7,10}"
+                oninput="this.value = this.value.replace(/[^0-9]/g, '')" id="cedula" minlength="7" maxlength="10"
+                id="cedula" disabled>
             </div>
 
             <div class="form-field">
@@ -380,7 +382,9 @@
 
             <div class="form-field">
               <label>Número telefónico</label>
-              <input type="text" id="numeroTelefonico" required>
+              <input type="text" inputmode="numeric" pattern="[0-9]{10,10}"
+                oninput="this.value = this.value.replace(/[^0-9]/g, '')" id="cedula" minlength="10" maxlength="10"
+                id="numeroTelefonico" required>
             </div>
 
             <div class="form-field">
@@ -531,6 +535,11 @@
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
 
       const nuevaPassword = document.getElementById("nuevaPassword").value;
       const confirmarPassword = document.getElementById("confirmarPassword").value;
