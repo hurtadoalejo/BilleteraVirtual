@@ -76,12 +76,12 @@
     }
 
     .container {
-      max-width: 700px;
-      width: 100%;
+      max-width: 900px;
       margin: auto;
       display: flex;
       flex-direction: column;
       height: 100%;
+      width: 100%;
     }
 
     .titulo {
@@ -98,21 +98,15 @@
     .card {
       background: white;
       border-radius: 20px;
-      padding: 30px;
+      padding: 25px;
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
       margin-bottom: 25px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .card:last-child {
-      flex: 1;
-      min-height: 0;
     }
 
     .form-row {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       margin-bottom: 20px;
       gap: 15px;
     }
@@ -133,7 +127,7 @@
     }
 
     .btn {
-      padding: 10px 18px;
+      padding: 10px 20px;
       border-radius: 20px;
       border: none;
       cursor: pointer;
@@ -148,8 +142,30 @@
 
     .canjear-btn {
       margin-top: 20px;
-      display: block;
       margin-left: auto;
+      display: block;
+    }
+
+    .input-group {
+      width: 60%;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .input-group input {
+      width: 100%;
+    }
+
+    #error-msg {
+      color: #ff6b6b;
+      font-size: 13px;
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 4px;
+      width: 100%;
     }
 
     .input-error {
@@ -173,26 +189,59 @@
       }
     }
 
-    .input-group {
-      width: 60%;
+    .lista {
       display: flex;
       flex-direction: column;
-      position: relative;
+      gap: 15px;
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 5px;
+      min-height: 0;
     }
 
-    .input-group input {
-      width: 100%;
+    .historial-item {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    #error-msg {
-      color: #ff6b6b;
+    .historial-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .historial-fecha {
+      font-weight: bold;
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+
+    .historial-meta {
       font-size: 13px;
-      display: none;
-      position: absolute;
-      top: 100%;
-      left: 0;
-      margin-top: 4px;
-      width: 100%;
+      color: #64748b;
+    }
+
+    .lista-animada {
+      opacity: 1;
+      transform: translateY(0);
+      transition: all 0.3s ease;
+    }
+
+    .lista-animada.fade {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    .paginacion {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      padding-top: 20px;
     }
 
     .popup {
@@ -245,49 +294,6 @@
       color: #64748b;
       cursor: not-allowed;
     }
-
-    #lista {
-      flex: 1;
-      overflow-y: auto;
-      padding-right: 5px;
-      min-height: 0;
-    }
-
-    .historial-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #f8fafc;
-      padding: 15px;
-      border-radius: 12px;
-      margin-bottom: 10px;
-    }
-
-    .historial-meta {
-      color: #64748b;
-      font-size: 14px;
-      margin-top: 4px;
-    }
-
-    .lista-animada {
-      opacity: 1;
-      transform: translateY(0);
-      transition: all 0.3s ease;
-    }
-
-    .lista-animada.fade {
-      opacity: 0;
-      transform: translateY(10px);
-    }
-
-    .paginacion {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 10px;
-      padding-top: 15px;
-      min-height: 45px;
-    }
   </style>
 </head>
 
@@ -336,7 +342,7 @@
           <label>Puntos a canjear</label>
 
           <div class="input-group">
-            <input type="number" id="puntos">
+            <input type="text" inputmode="numeric" oninput="formatearMiles(this)" id="puntos">
             <div id="error-msg"></div>
           </div>
 
@@ -353,17 +359,9 @@
 
       </div>
 
-      <div class="card">
+      <div id="lista" class="lista"></div>
 
-        <h3 style="margin-bottom:20px;">
-          Historial
-        </h3>
-
-        <div id="lista"></div>
-
-        <div id="paginacion" class="paginacion"></div>
-
-      </div>
+      <div id="paginacion" class="paginacion"></div>
 
     </div>
 
@@ -397,7 +395,7 @@
     let beneficios = [];
 
     let paginaActual = 1;
-    const porPagina = 5;
+    const porPagina = 3;
 
     async function actualizarUsuario() {
 
@@ -490,24 +488,24 @@
           lista.innerHTML += `
             <div class="historial-item">
 
-              <div>
+              <div class="historial-info">
 
-                <strong>
+                <span class="historial-fecha">
                   ${formatearFecha(b.fecha)}
-                </strong>
+                </span>
 
-                <div class="historial-meta">
-                  Puntos gastados: ${b.costoPuntos}
-                </div>
+                <span class="historial-meta">
+                  Puntos gastados: ${b.costoPuntos.toLocaleString("es-CO")}
+                </span>
 
-                <div class="historial-meta">
-                  Dinero canjeado: $${b.dineroCanjeado}
-                </div>
+                <span class="historial-meta">
+                  Dinero canjeado: $${b.dineroCanjeado.toLocaleString("es-CO")}
+                </span>
 
-                <div class="historial-meta">
+                <span class="historial-meta">
                   Billetera destino:
                   ${b.billeteraDestino.nombre}
-                </div>
+                </span>
 
               </div>
 
@@ -566,9 +564,7 @@
 
     function actualizarDinero() {
 
-      const puntos = parseInt(
-        document.getElementById("puntos").value
-      );
+      const puntos = parseInt(document.getElementById("puntos").value.replace(/\./g, ""));
 
       if (!puntos || puntos <= 0) {
 
@@ -578,7 +574,7 @@
       }
 
       document.getElementById("dinero").value =
-        "$" + (puntos * 5);
+        "$" + (puntos * 5).toLocaleString("es-CO");
     }
 
     async function canjear() {
@@ -587,7 +583,7 @@
         document.getElementById("puntos");
 
       const puntos =
-        parseInt(puntosInput.value);
+        parseInt(puntosInput.value.replace(/\./g, ""));
 
       const billeteraId =
         document.getElementById("billeteraSelect").value;
@@ -721,6 +717,21 @@
         ${dia} de ${mes} ${anio},
         ${horas}:${minutos} ${ampm}
       `;
+    }
+
+    function formatearMiles(input) {
+      let valor = input.value.replace(/\./g, "");
+      valor = valor.replace(/[^0-9]/g, "");
+
+      if (valor === "") {
+        input.value = "";
+        actualizarDinero();
+        return;
+      }
+
+      input.value = Number(valor).toLocaleString("es-CO");
+
+      actualizarDinero();
     }
 
     document.getElementById("puntos")

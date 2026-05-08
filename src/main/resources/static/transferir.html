@@ -266,13 +266,13 @@
 
         <div class="form-row">
           <label>Número de billetera destino</label>
-          <input type="number" id="destino">
+          <input type="text" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" id="destino">
         </div>
 
         <div class="form-row">
           <label>¿Cuánto dinero transferirá?</label>
           <div class="input-group">
-            <input type="number" id="valor">
+            <input type="text" inputmode="numeric" oninput="formatearMiles(this)" id="valor">
             <div id="error-msg"></div>
           </div>
         </div>
@@ -334,7 +334,7 @@
 
     async function transferir() {
       const valorInput = document.getElementById("valor");
-      const valor = parseFloat(valorInput.value);
+      const valor = parseFloat(valorInput.value.replace(/\./g, ""));
       const origenId = document.getElementById("billeteraSelect").value;
       const destinoId = document.getElementById("destino").value;
       const errorMsg = document.getElementById("error-msg");
@@ -436,7 +436,7 @@
         case "PLATINO": porcentaje = 0.001; break;
       }
 
-      return valor * porcentaje;
+      return Math.round(valor * porcentaje);
     }
 
     function esBilleteraPropia(destinoId) {
@@ -448,7 +448,7 @@
       const totalInput = document.getElementById("total");
       const errorMsg = document.getElementById("error-msg");
 
-      const valor = parseFloat(valorInput.value);
+      const valor = parseFloat(valorInput.value.replace(/\./g, ""));
       const destinoId = document.getElementById("destino").value;
 
       errorMsg.style.display = "none";
@@ -467,7 +467,24 @@
         total += comision;
       }
 
-      totalInput.value = total.toFixed(2);
+      totalInput.value =
+        Math.round(total).toLocaleString("es-CO");
+    }
+
+    function formatearMiles(input) {
+
+      let valor = input.value.replace(/\./g, "");
+      valor = valor.replace(/[^0-9]/g, "");
+
+      if (valor === "") {
+        input.value = "";
+        actualizarTotal();
+        return;
+      }
+
+      input.value = Number(valor).toLocaleString("es-CO");
+
+      actualizarTotal();
     }
 
     document.getElementById("valor").addEventListener("input", actualizarTotal);

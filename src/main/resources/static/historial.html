@@ -348,7 +348,7 @@
               <b>${t.tipo}</b><br>
               ${formatearFecha(t.fecha)} - 
               <span style="color: ${t.tipo === 'RECARGA' ? 'green' : 'red'}; font-weight: bold;">
-                $${t.valor}
+                $${formatearNumero(t.valor)}
               </span>
             </div>
             <button class="btn" onclick='verDetalle(${JSON.stringify(t)})'>Detalles</button>
@@ -385,8 +385,8 @@
       <p><b>ID:</b> ${t.id}</p>
       <p><b>Tipo:</b> ${t.tipo}</p>
       <p><b>Fecha:</b> ${formatearFecha(t.fecha)}</p>
-      <p><b>Valor:</b> $${t.valor}</p>
-      <p><b>Comisión:</b> $${t.comision || 0}</p>
+      <p><b>Valor:</b> $${formatearNumero(t.valor)}</p>
+      <p><b>Comisión:</b> $${formatearNumero(t.comision || 0)}</p>
       <p><b>Billetera origen:</b> ${t.billeteraOrigenId || '-'}</p>
       <p><b>Billetera destino:</b> ${t.billeteraDestinoId || '-'}</p>
       <p><b>Estado:</b> ${t.estado}</p>
@@ -394,7 +394,6 @@
       document.getElementById("detalle").classList.remove("hidden");
     }
 
-    // 🔥 FORMATO PERFECTO (SIN BUG DE a. m.)
     function formatearFecha(fechaISO) {
       const f = new Date(fechaISO);
 
@@ -410,6 +409,10 @@
       horas = horas % 12 || 12;
 
       return `${dia} de ${mes} ${anio}, ${horas}:${minutos}:${segundos} ${ampm}`;
+    }
+
+    function formatearNumero(valor) {
+      return Number(valor).toLocaleString("es-CO");
     }
 
     function cerrarDetalle() {

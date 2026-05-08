@@ -270,7 +270,7 @@
           <label>¿Cuánto dinero recargará?</label>
 
           <div class="input-group">
-            <input type="number" id="valor">
+            <input type="text" inputmode="numeric" oninput="formatearMiles(this)" id="valor">
             <div id="error-msg">El valor debe ser mayor que 0</div>
           </div>
         </div>
@@ -297,6 +297,18 @@
       window.location.href = "/login.html";
     }
 
+    function formatearMiles(input) {
+      let valor = input.value.replace(/\./g, "");
+      valor = valor.replace(/[^0-9]/g, "");
+
+      if (valor === "") {
+        input.value = "";
+        return;
+      }
+
+      input.value = Number(valor).toLocaleString("es-CO");
+    }
+
     async function cargarBilleteras() {
       const res = await fetch(`http://localhost:8080/billeteras/${usuario.cedula}`);
       const data = await res.json();
@@ -311,7 +323,7 @@
 
     async function recargar() {
       const valorInput = document.getElementById("valor");
-      const valor = parseFloat(valorInput.value);
+      const valor = parseFloat(valorInput.value.replace(/\./g, ""));
       const billeteraId = document.getElementById("billeteraSelect").value;
 
       const errorMsg = document.getElementById("error-msg");
@@ -370,7 +382,7 @@
     }
 
     document.getElementById("valor").addEventListener("input", function () {
-      const valor = parseFloat(this.value);
+      const valor = parseFloat(this.value.replace(/\./g, ""));
       const errorMsg = document.getElementById("error-msg");
 
       if (valor > 0) {
