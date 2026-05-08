@@ -1,8 +1,6 @@
 package com.proyectofinal.billeteravirtual.model;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Usuario {
@@ -21,6 +19,7 @@ public class Usuario {
     private List<Beneficio> listaBeneficios = new LinkedList<>();
     private Map<String, Billetera> billeteras = new HashMap<>();
     private List<Notificacion> notificaciones;
+    private Stack<Transaccion> pilaReversiones = new Stack<>();
 
     public String getNombreCompleto() {
         return nombreCompleto;
@@ -118,6 +117,14 @@ public class Usuario {
         this.puntosAcumulados = puntosAcumulados;
     }
 
+    public Stack<Transaccion> getPilaReversiones() {
+        return pilaReversiones;
+    }
+
+    public void setPilaReversiones(Stack<Transaccion> pilaReversiones) {
+        this.pilaReversiones = pilaReversiones;
+    }
+
     @JsonProperty("saldoTotal")
     public double getSaldoTotal() {
         if (billeteras == null || billeteras.isEmpty()) return 0;
@@ -125,21 +132,5 @@ public class Usuario {
         return billeteras.values().stream()
                 .mapToDouble(Billetera::getSaldo)
                 .sum();
-    }
-
-    @Override
-    public String toString() {
-        return "Usuario{" +
-                "nombreCompleto='" + nombreCompleto + '\'' +
-                ", cedula='" + cedula + '\'' +
-                ", correoElectronico='" + correoElectronico + '\'' +
-                ", numeroTelefonico='" + numeroTelefonico + '\'' +
-                ", password='" + password + '\'' +
-                ", puntos=" + puntos +
-                ", nivel=" + nivel +
-                ", billeteras=" + billeteras +
-                ", historialTransacciones=" + historialTransacciones +
-                ", notificaciones=" + notificaciones +
-                '}';
     }
 }

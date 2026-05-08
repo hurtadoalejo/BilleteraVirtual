@@ -271,6 +271,12 @@
         <button class="btn" onclick="limpiar()">Limpiar</button>
       </div>
 
+      <div style="margin-bottom:20px;">
+        <button class="btn" onclick="confirmarReversionUltima()">
+          Revertir Última Transferencia
+        </button>
+      </div>
+
       <div id="lista"></div>
       <div id="paginacion" class="paginacion"></div>
     </div>
@@ -280,6 +286,18 @@
     <div class="detalle-box">
       <span class="cerrar" onclick="cerrarDetalle()">×</span>
       <div id="detalleContenido"></div>
+    </div>
+  </div>
+
+  <div id="popupConfirmacion" class="popup hidden">
+    <div class="popup-content">
+      <p id="mensajeConfirmacion"></p>
+      <div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
+        <button id="btnConfirmar">Confirmar</button>
+        <button id="btnCancelar" onclick="cerrarPopupConfirmacion()">
+          Cancelar
+        </button>
+      </div>
     </div>
   </div>
 
@@ -382,15 +400,29 @@
 
     function verDetalle(t) {
       document.getElementById("detalleContenido").innerHTML = `
-      <p><b>ID:</b> ${t.id}</p>
-      <p><b>Tipo:</b> ${t.tipo}</p>
-      <p><b>Fecha:</b> ${formatearFecha(t.fecha)}</p>
-      <p><b>Valor:</b> $${formatearNumero(t.valor)}</p>
-      <p><b>Comisión:</b> $${formatearNumero(t.comision || 0)}</p>
-      <p><b>Billetera origen:</b> ${t.billeteraOrigenId || '-'}</p>
-      <p><b>Billetera destino:</b> ${t.billeteraDestinoId || '-'}</p>
-      <p><b>Estado:</b> ${t.estado}</p>
-    `;
+        <p><b>ID:</b> ${t.id}</p>
+        <p><b>Tipo:</b> ${t.tipo}</p>
+        <p><b>Fecha:</b> ${formatearFecha(t.fecha)}</p>
+        <p><b>Valor:</b> $${formatearNumero(t.valor)}</p>
+        <p><b>Comisión:</b> $${formatearNumero(t.comision || 0)}</p>
+        <p><b>Billetera origen:</b> ${t.billeteraOrigenId || '-'}</p>
+        <p><b>Billetera destino:</b> ${t.billeteraDestinoId || '-'}</p>
+        <p><b>Estado:</b> ${t.estado}</p>
+
+        ${t.tipo === "TRANSFERENCIA" &&
+          t.estado !== "REVERTIDA"
+          ? `
+              <button 
+                class="btn"
+                style="margin-top:20px;"
+                onclick="confirmarReversion('${t.id}', '${t.fecha}')"
+              >
+                Revertir Transferencia
+              </button>
+            `
+          : ""
+        }
+      `;
       document.getElementById("detalle").classList.remove("hidden");
     }
 
@@ -417,6 +449,214 @@
 
     function cerrarDetalle() {
       document.getElementById("detalle").classList.add("hidden");
+    }
+
+    function cerrarPopupConfirmacion() {
+      document.getElementById("popupConfirmacion")
+        .classList.add("hidden");
+    }
+
+    function mostrarPopup(mensaje) {
+
+      document.getElementById("mensajeConfirmacion")
+        .innerText = mensaje;
+
+      const btnConfirmar =
+        document.getElementById("btnConfirmar");
+
+      const btnCancelar =
+        document.getElementById("btnCancelar");
+
+      btnConfirmar.style.display = "inline-block";
+      btnCancelar.style.display = "none";
+
+      btnConfirmar.innerText = "Aceptar";
+      btnConfirmar.onclick = () => {
+        cerrarPopupConfirmacion();
+      };
+
+      document.getElementById("popupConfirmacion")
+        .classList.remove("hidden");
+    }
+
+    function confirmarReversionUltima() {
+      const transferencias = transacciones.filter(t =>
+        t.tipo === "TRANSFERENCIA" &&
+        t.estado !== "REVERTIDA"
+      );
+
+      if (transferencias.length === 0) {
+        mostrarPopup("No hay transferencias válidas para revertir");
+        return;
+      }
+
+      const ultima = transferencias[0];
+
+      const diferencia =
+        (new Date() - new Date(ultima.fecha)) / 1000;
+
+      if (diferencia > 60) {
+        mostrarPopup("No hay transferencias válidas para revertir");
+        return;
+      }
+
+      document.getElementById("mensajeConfirmacion")
+        .innerText =
+        "¿Deseas revertir la última transferencia?";
+
+      const btn = document.getElementById("btnConfirmar");
+
+      btn.style.display = "inline-block";
+
+      btn.onclick = async () => {
+        await revertirUltimaTransferencia();
+      };
+
+      document.getElementById("btnCancelar")
+        .style.display = "inline-block";
+      document.getElementById("popupConfirmacion")
+        .classList.remove("hidden");
+    }
+
+    async function revertirUltimaTransferencia() {
+
+      cerrarPopupConfirmacion();
+
+      const nivelAnterior = usuario.nivel;
+
+      const res = await fetch(
+        `http://localhost:8080/transacciones/revertir/${usuario.cedula}`,
+        {
+          method: "POST"
+        }
+      );
+
+      const mensaje = await res.text();
+
+      if (!res.ok) {
+        mostrarPopup(mensaje);
+        return;
+      }
+
+      await cargar();
+
+      mostrarPopupConfirmacionFinal(
+        mensaje,
+        async () => {
+          await verificarDescensoNivel(nivelAnterior);
+        }
+      );
+    }
+
+    function confirmarReversion(id, fecha) {
+
+      const diferencia =
+        (new Date() - new Date(fecha)) / 1000;
+
+      if (diferencia > 60) {
+
+        mostrarPopup(
+          "No se puede revertir una transferencia si ya pasó más de 1 minuto"
+        );
+
+        return;
+      }
+
+      document.getElementById("mensajeConfirmacion")
+        .innerText =
+        "¿Deseas revertir esta transferencia?";
+
+      const btn = document.getElementById("btnConfirmar");
+
+      btn.style.display = "inline-block";
+
+      btn.onclick = async () => {
+        await revertirTransferencia(id);
+      };
+
+      document.getElementById("btnCancelar")
+        .style.display = "inline-block";
+      document.getElementById("popupConfirmacion")
+        .classList.remove("hidden");
+    }
+
+    async function revertirTransferencia(id) {
+      cerrarPopupConfirmacion();
+
+      const nivelAnterior = usuario.nivel;
+
+      const res = await fetch(
+        `http://localhost:8080/transacciones/revertir/${usuario.cedula}/${id}`,
+        {
+          method: "POST"
+        }
+      );
+
+      const mensaje = await res.text();
+
+      if (!res.ok) {
+        mostrarPopup(mensaje);
+        return;
+      }
+
+      await cargar();
+
+      mostrarPopupConfirmacionFinal(
+        mensaje,
+        async () => {
+          await verificarDescensoNivel(nivelAnterior);
+        }
+      );
+    }
+
+    function mostrarPopupConfirmacionFinal(mensaje, callback = null) {
+      document.getElementById("mensajeConfirmacion")
+        .innerText = mensaje;
+
+      const btn =
+        document.getElementById("btnConfirmar");
+
+      btn.style.display = "inline-block";
+      btnCancelar.style.display = "none";
+      btn.innerText = "Aceptar";
+
+      btn.onclick = async () => {
+
+        cerrarPopupConfirmacion();
+
+        if (callback) {
+          await callback();
+        }
+      };
+
+      document.getElementById("popupConfirmacion")
+        .classList.remove("hidden");
+    }
+
+    async function verificarDescensoNivel(
+      nivelAnterior
+    ) {
+
+      const res = await fetch(
+        `http://localhost:8080/usuarios/${usuario.cedula}`
+      );
+
+      const usuarioActualizado = await res.json();
+
+      if (usuarioActualizado.nivel !== nivelAnterior) {
+
+        usuario.nivel =
+          usuarioActualizado.nivel;
+
+        sessionStorage.setItem(
+          "usuario",
+          JSON.stringify(usuario)
+        );
+
+        mostrarPopup(
+          `Lo lamentamos, has descendido al nivel ${usuarioActualizado.nivel}`
+        );
+      }
     }
 
     function limpiar() {

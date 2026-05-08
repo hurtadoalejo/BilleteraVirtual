@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
+import java.util.Stack;
 import java.util.UUID;
 
 @Service
@@ -40,7 +41,7 @@ public class TransaccionService {
         return (int) (valor / 5000) * (base + bonus);
     }
 
-    private void registrarTransaccion(Usuario usuario, Billetera origen, Billetera destino, double valor, double comision, TipoTransaccion tipo, boolean generarPuntos
+    private Transaccion registrarTransaccion(Usuario usuario, Billetera origen, Billetera destino, double valor, double comision, TipoTransaccion tipo, boolean generarPuntos
     ) {
         Transaccion t = new Transaccion();
         t.setId(UUID.randomUUID().toString());
@@ -75,6 +76,7 @@ public class TransaccionService {
         }
 
         usuario.getHistorialTransacciones().add(t);
+        return t;
     }
 
     public ResultadoTransaccion recargar(String cedula, String idBilletera, double valor) {
@@ -157,8 +159,13 @@ public class TransaccionService {
         if (valor <= 0)
             return new ResultadoTransaccion(false, false, null, 1);
 
-        double porcentaje = obtenerComision(usuarioOrigen.getNivel());
-        double comision = valor * porcentaje;
+        boolean mismaPersona = usuarioOrigen.getCedula().equals(usuarioDestino.getCedula());
+        double comision = 0;
+        if (!mismaPersona) {
+            double porcentaje = obtenerComision(usuarioOrigen.getNivel());
+            comision = valor * porcentaje;
+        }
+
         double totalDescontar = valor + comision;
 
         if (origen.getSaldo() < totalDescontar)
@@ -169,7 +176,8 @@ public class TransaccionService {
         origen.setSaldo(origen.getSaldo() - totalDescontar);
         destino.setSaldo(destino.getSaldo() + valor);
 
-        registrarTransaccion(usuarioOrigen, origen, destino, valor, comision, TipoTransaccion.TRANSFERENCIA, true);
+        Transaccion t = registrarTransaccion(usuarioOrigen, origen, destino, valor, comision, TipoTransaccion.TRANSFERENCIA, true);
+        usuarioOrigen.getPilaReversiones().push(t);
 
         if (!usuarioOrigen.getCedula().equals(usuarioDestino.getCedula())) {
             registrarTransaccion(usuarioDestino, origen, destino, valor, comision, TipoTransaccion.TRANSFERENCIA, false);
@@ -186,6 +194,85 @@ public class TransaccionService {
         }
 
         return new ResultadoTransaccion(true, subioNivel, nivelDespues);
+    }
+
+    private boolean procesarReversion(Usuario usuario, Transaccion transaccion) {
+        if (transaccion == null) {
+            return false;
+        }
+
+        if (transaccion.getTipo() != TipoTransaccion.TRANSFERENCIA) {
+            return false;
+        }
+
+        if (transaccion.getEstado() == EstadoTransaccion.REVERTIDA) {
+            return false;
+        }
+
+        long segundos = java.time.Duration.between(transaccion.getFecha(), LocalDateTime.now()).getSeconds();
+        if (segundos > 60) {
+            return false;
+        }
+
+        Billetera origen = usuarioService.buscarBilleteraGlobal(transaccion.getBilleteraOrigenId());
+        Billetera destino = usuarioService.buscarBilleteraGlobal(transaccion.getBilleteraDestinoId());
+        if (origen == null || destino == null) {
+            return false;
+        }
+
+        if (destino.getSaldo() < transaccion.getValor()) {
+            return false;
+        }
+
+        double totalDevolver = transaccion.getValor() + transaccion.getComision();
+
+        destino.setSaldo(destino.getSaldo() - transaccion.getValor());
+        origen.setSaldo(origen.getSaldo() + totalDevolver);
+
+        usuario.setPuntos(usuario.getPuntos() - transaccion.getPuntosGenerados());
+        usuario.setPuntosAcumulados(usuario.getPuntosAcumulados() - transaccion.getPuntosGenerados());
+
+        usuarioService.actualizarNivelUsuario(usuario);
+
+        transaccion.setEstado(EstadoTransaccion.REVERTIDA);
+
+        return true;
+    }
+
+    public boolean revertirUltimaTransferencia(String cedula) {
+        Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
+        if (usuario == null) {
+            return false;
+        }
+
+        Stack<Transaccion> pila = usuario.getPilaReversiones();
+        if (pila.isEmpty()) {
+            return false;
+        }
+
+        Transaccion t = pila.peek();
+        boolean revertida = procesarReversion(usuario, t);
+
+        if (revertida) {
+            pila.pop();
+        }
+
+        return revertida;
+    }
+
+    public boolean revertirTransferencia(String cedula, String idTransaccion) {
+        Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
+        if (usuario == null) {
+            return false;
+        }
+
+        for (Transaccion t : usuario.getHistorialTransacciones()) {
+            if (t.getId().equals(idTransaccion)) {
+                return procesarReversion(usuario, t);
+            }
+        }
+
+        return false;
     }
 
     private double obtenerComision(NivelUsuario nivel) {
