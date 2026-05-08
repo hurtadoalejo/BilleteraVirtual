@@ -2,9 +2,8 @@ package com.proyectofinal.billeteravirtual.service;
 
 import com.proyectofinal.billeteravirtual.model.*;
 import org.springframework.stereotype.Service;
+import com.proyectofinal.billeteravirtual.util.ArrayList;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -43,12 +42,17 @@ public class BilleteraService {
         return usuario.getBilleteras().get(idBilletera);
     }
 
-    public List<Billetera> listarBilleteras(String cedula) {
+    public ArrayList<Billetera> listarBilleteras(String cedula) {
         Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
 
         if (usuario == null) return new ArrayList<>();
 
-        return new ArrayList<>(usuario.getBilleteras().values());
+        ArrayList<Billetera> lista = new ArrayList<>();
+        for (Billetera b : usuario.getBilleteras().values()) {
+            lista.add(b);
+        }
+
+        return lista;
     }
 
     public boolean actualizarBilletera(String cedula, String idBilletera, Billetera datos) {

@@ -1,6 +1,5 @@
 package com.proyectofinal.billeteravirtual.model;
-import java.util.LinkedList;
-import java.util.List;
+import com.proyectofinal.billeteravirtual.util.ArrayList;
 
 public class Billetera {
 
@@ -10,7 +9,7 @@ public class Billetera {
     private double saldo = 0;
     private EstadoBilletera estado = EstadoBilletera.ACTIVA;
 
-    private List<Transaccion> transacciones = new LinkedList<Transaccion>();
+    private ArrayList<Transaccion> transacciones = new ArrayList<>();
 
     public String getId() {
         return id;
@@ -52,11 +51,11 @@ public class Billetera {
         this.estado = estado;
     }
 
-    public List<Transaccion> getTransacciones() {
+    public ArrayList<Transaccion> getTransacciones() {
         return transacciones;
     }
 
-    public void setTransacciones(List<Transaccion> transacciones) {
+    public void setTransacciones(ArrayList<Transaccion> transacciones) {
         this.transacciones = transacciones;
     }
 

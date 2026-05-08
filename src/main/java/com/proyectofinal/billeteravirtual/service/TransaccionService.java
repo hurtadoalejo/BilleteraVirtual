@@ -1,14 +1,14 @@
 package com.proyectofinal.billeteravirtual.service;
 
 import com.proyectofinal.billeteravirtual.model.*;
+import com.proyectofinal.billeteravirtual.util.ArrayList;
+import com.proyectofinal.billeteravirtual.util.Stack;
 import org.springframework.stereotype.Service;
 
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import java.util.Locale;
-import java.util.Stack;
 import java.util.UUID;
 
 @Service
@@ -284,7 +284,7 @@ public class TransaccionService {
         };
     }
 
-    public List<Transaccion> obtenerHistorial(String cedula) {
+    public ArrayList<Transaccion> obtenerHistorial(String cedula) {
         Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
 
         if (usuario == null) return null;

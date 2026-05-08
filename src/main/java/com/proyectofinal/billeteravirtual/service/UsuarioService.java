@@ -2,13 +2,11 @@ package com.proyectofinal.billeteravirtual.service;
 
 import com.proyectofinal.billeteravirtual.model.Billetera;
 import com.proyectofinal.billeteravirtual.model.NivelUsuario;
-import com.proyectofinal.billeteravirtual.model.TipoBilletera;
 import com.proyectofinal.billeteravirtual.model.Usuario;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+import com.proyectofinal.billeteravirtual.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -63,8 +61,14 @@ public class UsuarioService {
         return usuarios.get(cedula);
     }
 
-    public List<Usuario> listarUsuarios() {
-        return new ArrayList<>(usuarios.values());
+    public ArrayList<Usuario> listarUsuarios() {
+        ArrayList<Usuario> lista = new ArrayList<>();
+
+        for (Usuario usuario : usuarios.values()) {
+            lista.add(usuario);
+        }
+
+        return lista;
     }
 
     public boolean actualizarUsuario(String cedula, Usuario datosActualizados) {

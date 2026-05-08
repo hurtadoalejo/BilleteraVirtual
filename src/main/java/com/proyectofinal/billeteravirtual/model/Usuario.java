@@ -1,7 +1,11 @@
 package com.proyectofinal.billeteravirtual.model;
-import java.util.*;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.proyectofinal.billeteravirtual.util.ArrayList;
+import com.proyectofinal.billeteravirtual.util.Stack;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class Usuario {
 
@@ -15,10 +19,10 @@ public class Usuario {
     private int puntosAcumulados = 0;
     private NivelUsuario nivel = NivelUsuario.BRONCE;
 
-    private List<Transaccion> historialTransacciones = new LinkedList<>();
-    private List<Beneficio> listaBeneficios = new LinkedList<>();
+    private ArrayList<Transaccion> historialTransacciones = new ArrayList<>();
+    private ArrayList<Beneficio> listaBeneficios = new ArrayList<>();
     private Map<String, Billetera> billeteras = new HashMap<>();
-    private List<Notificacion> notificaciones;
+    private ArrayList<Notificacion> notificaciones = new ArrayList<>();
     private Stack<Transaccion> pilaReversiones = new Stack<>();
 
     public String getNombreCompleto() {
@@ -69,6 +73,14 @@ public class Usuario {
         this.puntos = puntos;
     }
 
+    public int getPuntosAcumulados() {
+        return puntosAcumulados;
+    }
+
+    public void setPuntosAcumulados(int puntosAcumulados) {
+        this.puntosAcumulados = puntosAcumulados;
+    }
+
     public NivelUsuario getNivel() {
         return nivel;
     }
@@ -77,12 +89,20 @@ public class Usuario {
         this.nivel = nivel;
     }
 
-    public List<Transaccion> getHistorialTransacciones() {
+    public ArrayList<Transaccion> getHistorialTransacciones() {
         return historialTransacciones;
     }
 
-    public void setHistorialTransacciones(List<Transaccion> historialTransacciones) {
+    public void setHistorialTransacciones(ArrayList<Transaccion> historialTransacciones) {
         this.historialTransacciones = historialTransacciones;
+    }
+
+    public ArrayList<Beneficio> getListaBeneficios() {
+        return listaBeneficios;
+    }
+
+    public void setListaBeneficios(ArrayList<Beneficio> listaBeneficios) {
+        this.listaBeneficios = listaBeneficios;
     }
 
     public Map<String, Billetera> getBilleteras() {
@@ -93,28 +113,12 @@ public class Usuario {
         this.billeteras = billeteras;
     }
 
-    public List<Notificacion> getNotificaciones() {
+    public ArrayList<Notificacion> getNotificaciones() {
         return notificaciones;
     }
 
-    public void setNotificaciones(List<Notificacion> notificaciones) {
+    public void setNotificaciones(ArrayList<Notificacion> notificaciones) {
         this.notificaciones = notificaciones;
-    }
-
-    public List<Beneficio> getListaBeneficios() {
-        return listaBeneficios;
-    }
-
-    public void setListaBeneficios(List<Beneficio> listaBeneficios) {
-        this.listaBeneficios = listaBeneficios;
-    }
-
-    public int getPuntosAcumulados() {
-        return puntosAcumulados;
-    }
-
-    public void setPuntosAcumulados(int puntosAcumulados) {
-        this.puntosAcumulados = puntosAcumulados;
     }
 
     public Stack<Transaccion> getPilaReversiones() {
