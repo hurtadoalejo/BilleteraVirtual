@@ -3,12 +3,11 @@ package com.proyectofinal.billeteravirtual.service;
 import com.proyectofinal.billeteravirtual.model.Beneficio;
 import com.proyectofinal.billeteravirtual.model.Billetera;
 import com.proyectofinal.billeteravirtual.model.Usuario;
+import com.proyectofinal.billeteravirtual.util.ArrayList;
 
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -74,7 +73,7 @@ public class BeneficioService {
         return beneficio;
     }
 
-    public List<Beneficio> obtenerHistorial(String cedula) {
+    public ArrayList<Beneficio> obtenerHistorial(String cedula) {
 
         Usuario usuario = usuarioService
                 .buscarUsuarioPorCedula(cedula);

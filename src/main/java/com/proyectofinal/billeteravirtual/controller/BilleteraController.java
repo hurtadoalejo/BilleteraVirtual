@@ -2,6 +2,7 @@ package com.proyectofinal.billeteravirtual.controller;
 
 import com.proyectofinal.billeteravirtual.model.Billetera;
 import com.proyectofinal.billeteravirtual.service.BilleteraService;
+import com.proyectofinal.billeteravirtual.util.ArrayList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,8 +15,11 @@ import java.util.List;
 @RequestMapping("/billeteras")
 public class BilleteraController {
 
-    @Autowired
-    private BilleteraService billeteraService;
+    private final BilleteraService billeteraService;
+
+    public BilleteraController(BilleteraService billeteraService) {
+        this.billeteraService = billeteraService;
+    }
 
     @PostMapping("/{cedula}")
     public ResponseEntity<?> crearBilletera(@PathVariable String cedula, @RequestBody Billetera billetera) {
@@ -36,7 +40,11 @@ public class BilleteraController {
     @GetMapping("/{cedula}")
     public ResponseEntity<?> listarBilleteras(@PathVariable String cedula) {
 
-        List<Billetera> billeteras = billeteraService.listarBilleteras(cedula);
+        ArrayList<Billetera> billeterasPropias = billeteraService.listarBilleteras(cedula);
+        java.util.ArrayList<Billetera> billeteras = new java.util.ArrayList<>();
+        for (Billetera billetera : billeterasPropias) {
+            billeteras.add(billetera);
+        }
 
         return ResponseEntity.ok(billeteras);
     }

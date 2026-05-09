@@ -292,13 +292,39 @@
   <div id="popup" class="popup hidden">
     <div class="popup-content">
       <p id="popup-message"></p>
-      <button onclick="cerrarPopup()">Aceptar</button>
+
+      <div style="display:flex; gap:10px; justify-content:center;">
+        <button id="btnAceptar" onclick="cerrarPopup()">
+          Aceptar
+        </button>
+
+        <button id="btnDeshacer" class="hidden" onclick="mostrarConfirmacionReversion()">
+          Deshacer transferencia
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="popupConfirmacion" class="popup hidden">
+    <div class="popup-content">
+      <p>¿Deseas deshacer esta transferencia?</p>
+
+      <div style="display:flex; gap:10px; justify-content:center;">
+        <button onclick="confirmarReversion()">
+          Sí
+        </button>
+
+        <button onclick="cerrarPopupConfirmacion()">
+          No
+        </button>
+      </div>
     </div>
   </div>
 
   <script>
     const usuario = JSON.parse(sessionStorage.getItem("usuario"));
     let nivelPendiente = null;
+    let timeoutReversion = null;
 
     if (!usuario) {
       window.location.href = "/login.html";
@@ -378,6 +404,7 @@
 
         const data = await res.json();
         mostrarPopup("Transferencia realizada correctamente");
+        mostrarBotonDeshacer();
 
         if (data.subioNivel) {
           nivelPendiente = data.nuevoNivel;
@@ -412,6 +439,34 @@
       document.getElementById("popup").classList.remove("hidden");
     }
 
+    function mostrarBotonDeshacer() {
+
+      const btn = document.getElementById("btnDeshacer");
+
+      btn.classList.remove("hidden");
+
+      clearTimeout(timeoutReversion);
+
+      setTimeout(() => {btn.classList.add("hidden");}, 60000);
+    }
+
+    function mostrarConfirmacionReversion() {
+      document.getElementById("popupConfirmacion")
+        .classList.remove("hidden");
+    }
+
+    function cerrarPopupConfirmacion() {
+      document.getElementById("popupConfirmacion")
+        .classList.add("hidden");
+    }
+
+    async function confirmarReversion() {
+
+      cerrarPopupConfirmacion();
+
+      await revertirUltimaTransferencia();
+    }
+
     function cerrarPopup() {
       document.getElementById("popup").classList.add("hidden");
 
@@ -421,6 +476,7 @@
           nivelPendiente = null;
         }, 300);
       }
+      document.getElementById("btnDeshacer").classList.add("hidden");
     }
 
     function logout() {
@@ -485,6 +541,36 @@
       input.value = Number(valor).toLocaleString("es-CO");
 
       actualizarTotal();
+    }
+
+    async function revertirUltimaTransferencia() {
+      try {
+        const res = await fetch(
+          `http://localhost:8080/transacciones/revertir/${usuario.cedula}`,
+          {
+            method: "POST"
+          }
+        );
+
+        const mensaje = await res.text();
+
+        if (!res.ok) {
+          mostrarPopup(mensaje);
+          return;
+        }
+
+        nivelPendiente = null;
+        mostrarPopup(mensaje);
+
+        document.getElementById("btnDeshacer").classList.add("hidden");
+        clearTimeout(timeoutReversion);
+
+        await cargarBilleteras();
+
+      } catch {
+
+        mostrarPopup("Error al revertir transferencia");
+      }
     }
 
     document.getElementById("valor").addEventListener("input", actualizarTotal);

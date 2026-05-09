@@ -1,8 +1,10 @@
 package com.proyectofinal.billeteravirtual.controller;
 
 import com.proyectofinal.billeteravirtual.model.ResultadoTransaccion;
+import com.proyectofinal.billeteravirtual.model.Transaccion;
 import com.proyectofinal.billeteravirtual.service.TransaccionService;
 
+import com.proyectofinal.billeteravirtual.util.ArrayList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,8 +15,11 @@ import org.springframework.http.HttpStatus;
 @RequestMapping("/transacciones")
 public class TransaccionController {
 
-    @Autowired
-    private TransaccionService transaccionService;
+    private final TransaccionService transaccionService;
+
+    public TransaccionController(TransaccionService transaccionService) {
+        this.transaccionService = transaccionService;
+    }
 
     @PostMapping("/recargar/{cedula}/{idBilletera}/{valor}")
     public ResponseEntity<?> recargar(@PathVariable String cedula, @PathVariable String idBilletera, @PathVariable double valor) {
@@ -84,8 +89,13 @@ public class TransaccionController {
 
     @GetMapping("/historial/{cedula}")
     public ResponseEntity<?> obtenerHistorial(@PathVariable String cedula) {
-        var historial = transaccionService.obtenerHistorial(cedula);
+        ArrayList<Transaccion> historial = transaccionService.obtenerHistorial(cedula);
+        java.util.ArrayList<Transaccion> respuesta = new java.util.ArrayList<>();
 
-        return ResponseEntity.ok(historial);
+        for (Transaccion transaccion : historial) {
+            respuesta.add(transaccion);
+        }
+
+        return ResponseEntity.ok(respuesta);
     }
 }

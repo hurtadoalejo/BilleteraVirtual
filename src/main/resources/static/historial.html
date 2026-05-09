@@ -271,12 +271,6 @@
         <button class="btn" onclick="limpiar()">Limpiar</button>
       </div>
 
-      <div style="margin-bottom:20px;">
-        <button class="btn" onclick="confirmarReversionUltima()">
-          Revertir Última Transferencia
-        </button>
-      </div>
-
       <div id="lista"></div>
       <div id="paginacion" class="paginacion"></div>
     </div>
@@ -479,75 +473,6 @@
         .classList.remove("hidden");
     }
 
-    function confirmarReversionUltima() {
-      const transferencias = transacciones.filter(t =>
-        t.tipo === "TRANSFERENCIA" &&
-        t.estado !== "REVERTIDA"
-      );
-
-      if (transferencias.length === 0) {
-        mostrarPopup("No hay transferencias válidas para revertir");
-        return;
-      }
-
-      const ultima = transferencias[0];
-
-      const diferencia =
-        (new Date() - new Date(ultima.fecha)) / 1000;
-
-      if (diferencia > 60) {
-        mostrarPopup("No hay transferencias válidas para revertir");
-        return;
-      }
-
-      document.getElementById("mensajeConfirmacion")
-        .innerText =
-        "¿Deseas revertir la última transferencia?";
-
-      const btn = document.getElementById("btnConfirmar");
-
-      btn.style.display = "inline-block";
-
-      btn.onclick = async () => {
-        await revertirUltimaTransferencia();
-      };
-
-      document.getElementById("btnCancelar")
-        .style.display = "inline-block";
-      document.getElementById("popupConfirmacion")
-        .classList.remove("hidden");
-    }
-
-    async function revertirUltimaTransferencia() {
-
-      cerrarPopupConfirmacion();
-
-      const nivelAnterior = usuario.nivel;
-
-      const res = await fetch(
-        `http://localhost:8080/transacciones/revertir/${usuario.cedula}`,
-        {
-          method: "POST"
-        }
-      );
-
-      const mensaje = await res.text();
-
-      if (!res.ok) {
-        mostrarPopup(mensaje);
-        return;
-      }
-
-      await cargar();
-
-      mostrarPopupConfirmacionFinal(
-        mensaje,
-        async () => {
-          await verificarDescensoNivel(nivelAnterior);
-        }
-      );
-    }
-
     function confirmarReversion(id, fecha) {
 
       const diferencia =
@@ -600,6 +525,7 @@
       }
 
       await cargar();
+      cerrarDetalle();
 
       mostrarPopupConfirmacionFinal(
         mensaje,

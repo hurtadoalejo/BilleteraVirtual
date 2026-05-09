@@ -20,6 +20,7 @@ public class Usuario {
     private NivelUsuario nivel = NivelUsuario.BRONCE;
 
     private ArrayList<Transaccion> historialTransacciones = new ArrayList<>();
+    private ArrayList<TransaccionProgramada>  transaccionesProgramadas = new ArrayList<>();
     private ArrayList<Beneficio> listaBeneficios = new ArrayList<>();
     private Map<String, Billetera> billeteras = new HashMap<>();
     private ArrayList<Notificacion> notificaciones = new ArrayList<>();
@@ -127,6 +128,14 @@ public class Usuario {
 
     public void setPilaReversiones(Stack<Transaccion> pilaReversiones) {
         this.pilaReversiones = pilaReversiones;
+    }
+
+    public ArrayList<TransaccionProgramada> getTransaccionesProgramadas() {
+        return transaccionesProgramadas;
+    }
+
+    public void setTransaccionesProgramadas(ArrayList<TransaccionProgramada> transaccionesProgramadas) {
+        this.transaccionesProgramadas = transaccionesProgramadas;
     }
 
     @JsonProperty("saldoTotal")
