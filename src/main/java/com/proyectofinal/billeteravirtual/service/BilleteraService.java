@@ -17,7 +17,13 @@ public class BilleteraService {
         Billetera billetera = new Billetera();
         billetera.setNombre("Nequi");
         billetera.setTipo(TipoBilletera.AHORRO);
+
+        Billetera billetera2 = new Billetera();
+        billetera2.setNombre("Davi");
+        billetera2.setTipo(TipoBilletera.AHORRO);
+
         agregarBilletera("1092850037", billetera);
+        agregarBilletera("1036448546", billetera2);
     }
 
     public boolean agregarBilletera(String cedula, Billetera billetera) {

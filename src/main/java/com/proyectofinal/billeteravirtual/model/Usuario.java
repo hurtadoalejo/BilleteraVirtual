@@ -7,7 +7,7 @@ import com.proyectofinal.billeteravirtual.util.Stack;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Usuario {
+public class Usuario implements Comparable<Usuario>{
 
     private String nombreCompleto;
     private String cedula;
@@ -23,7 +23,6 @@ public class Usuario {
     private ArrayList<TransaccionProgramada>  transaccionesProgramadas = new ArrayList<>();
     private ArrayList<Beneficio> listaBeneficios = new ArrayList<>();
     private Map<String, Billetera> billeteras = new HashMap<>();
-    private ArrayList<Notificacion> notificaciones = new ArrayList<>();
     private Stack<Transaccion> pilaReversiones = new Stack<>();
 
     public String getNombreCompleto() {
@@ -114,14 +113,6 @@ public class Usuario {
         this.billeteras = billeteras;
     }
 
-    public ArrayList<Notificacion> getNotificaciones() {
-        return notificaciones;
-    }
-
-    public void setNotificaciones(ArrayList<Notificacion> notificaciones) {
-        this.notificaciones = notificaciones;
-    }
-
     public Stack<Transaccion> getPilaReversiones() {
         return pilaReversiones;
     }
@@ -136,6 +127,14 @@ public class Usuario {
 
     public void setTransaccionesProgramadas(ArrayList<TransaccionProgramada> transaccionesProgramadas) {
         this.transaccionesProgramadas = transaccionesProgramadas;
+    }
+
+    @Override
+    public int compareTo(Usuario o) {
+        int cmp = Integer.compare(o.puntosAcumulados, this.puntosAcumulados);
+        if (cmp != 0) return cmp;
+
+        return this.cedula.compareTo(o.cedula);
     }
 
     @JsonProperty("saldoTotal")

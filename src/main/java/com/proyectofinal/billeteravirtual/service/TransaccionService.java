@@ -61,7 +61,7 @@ public class TransaccionService {
 
             usuario.setPuntos(usuario.getPuntos() + puntos);
             usuario.setPuntosAcumulados(usuario.getPuntosAcumulados() + puntos);
-
+            usuarioService.actualizarRankingUsuario(usuario);
             usuarioService.actualizarNivelUsuario(usuario);
         } else {
             t.setPuntosGenerados(0);
@@ -80,7 +80,6 @@ public class TransaccionService {
     }
 
     public ResultadoTransaccion recargar(String cedula, String idBilletera, double valor) {
-
         Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
         if (usuario == null) return new ResultadoTransaccion(false, false, null);
 
@@ -231,7 +230,7 @@ public class TransaccionService {
 
         usuario.setPuntos(usuario.getPuntos() - transaccion.getPuntosGenerados());
         usuario.setPuntosAcumulados(usuario.getPuntosAcumulados() - transaccion.getPuntosGenerados());
-
+        usuarioService.actualizarRankingUsuario(usuario);
         usuarioService.actualizarNivelUsuario(usuario);
 
         transaccion.setEstado(EstadoTransaccion.REVERTIDA);

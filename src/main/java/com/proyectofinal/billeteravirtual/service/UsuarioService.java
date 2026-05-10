@@ -16,14 +16,20 @@ public class UsuarioService {
         this.sistema = sistema;
 
         Usuario usuario = new Usuario();
-
         usuario.setNombreCompleto("Alejandro Hurtado");
         usuario.setCedula("1092850037");
         usuario.setCorreoElectronico("alejohg2911@gmail.com");
         usuario.setNumeroTelefonico("3161971519");
         usuario.setPassword("alejohg");
+        Usuario usuario2 = new Usuario();
+        usuario2.setNombreCompleto("Veronica Ibarra");
+        usuario2.setCedula("1036448546");
+        usuario2.setCorreoElectronico("alejandro.hurtadog@uqvirtual.edu.co");
+        usuario2.setNumeroTelefonico("3161971519");
+        usuario2.setPassword("alejohg");
 
         registrarUsuario(usuario);
+        registrarUsuario(usuario2);
     }
 
     public boolean registrarUsuario(Usuario usuario) {
@@ -35,6 +41,7 @@ public class UsuarioService {
             return false;
         }
         sistema.getUsuarios().put(usuario.getCedula(), usuario);
+        sistema.getUsuariosPorPuntos().add(usuario);
 
         return true;
     }
@@ -106,5 +113,19 @@ public class UsuarioService {
         } else {
             usuario.setNivel(NivelUsuario.PLATINO);
         }
+    }
+
+    public void actualizarRankingUsuario(Usuario usuario) {
+        sistema.getUsuariosPorPuntos().remove(usuario);
+        sistema.getUsuariosPorPuntos().add(usuario);
+    }
+
+    public ArrayList<Usuario> obtenerRankingUsuarios() {
+        ArrayList<Usuario> lista = new ArrayList<>();
+        for (Usuario usuario : sistema.getUsuariosPorPuntos()) {
+            lista.add(usuario);
+        }
+
+        return lista;
     }
 }

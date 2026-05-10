@@ -1,6 +1,5 @@
 package com.proyectofinal.billeteravirtual.controller;
 
-import com.proyectofinal.billeteravirtual.model.EstadoTransaccion;
 import com.proyectofinal.billeteravirtual.model.TransaccionProgramada;
 import com.proyectofinal.billeteravirtual.model.TipoTransaccion;
 import com.proyectofinal.billeteravirtual.model.Usuario;
@@ -8,7 +7,6 @@ import com.proyectofinal.billeteravirtual.service.TransaccionProgramadaService;
 import com.proyectofinal.billeteravirtual.service.UsuarioService;
 
 import com.proyectofinal.billeteravirtual.util.ArrayList;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -33,13 +31,12 @@ public class TransaccionProgramadaController {
 
         Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
         LocalDateTime fechaEjecucion = LocalDateTime.parse(fecha);
-
         boolean creado = transaccionProgramadaService.programarTransaccion(usuario, tipo, valor, origen, destino, fechaEjecucion);
 
         if (!creado) {
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
-                    .body("No se pudo programar la transacción");
+                    .body("La transaccion se debe programar mínimo un minuto después de la hora actual.");
         }
 
         return ResponseEntity.ok("Transacción programada correctamente");

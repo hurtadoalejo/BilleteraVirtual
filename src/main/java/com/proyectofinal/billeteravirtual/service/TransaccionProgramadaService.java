@@ -78,7 +78,7 @@ public class TransaccionProgramadaService {
 
         switch (t.getTipo()) {
             case RECARGA -> {
-                ResultadoTransaccion resultado = transaccionService.recargar(cedula, t.getBilleteraDestinoId(), t.getValor());
+                ResultadoTransaccion resultado = transaccionService.recargar(cedula, t.getBilleteraOrigenId(), t.getValor());
                 exito = resultado.isOk();
             }
 
