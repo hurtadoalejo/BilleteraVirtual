@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usuarios</title>
+
+  <style>
+    * {
+      user-select: none;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      display: flex;
+      height: 100vh;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(77, 130, 188, 0.6), transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(77, 130, 188, 0.6), transparent 40%),
+        radial-gradient(circle at 50% 50%, #4d82bc, #005187);
+      background-blend-mode: screen;
+      color: white;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: rgba(7, 68, 109, 0.25);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px 10px;
+    }
+
+    .nav-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 15px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      color: white;
+    }
+
+    .nav-item img {
+      width: 20px;
+      height: 20px;
+      opacity: 0.8;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .content {
+      flex: 1;
+      background: #F3F6FF;
+      color: #1e293b;
+      padding: 35px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+    }
+
+    .titulo {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .busqueda {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #ccc;
+      outline: none;
+    }
+
+    #lista {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .usuario {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8fafc;
+      padding: 18px;
+      border-radius: 14px;
+      margin-bottom: 12px;
+    }
+
+    .usuario-info {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      flex: 1;
+      font-size: 13px;
+    }
+
+    .label {
+      color: #64748b;
+      font-size: 11px;
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .value {
+      font-weight: bold;
+      color: #1e293b;
+    }
+
+    .btn {
+      padding: 10px 18px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+      background: #4d82bc;
+      color: white;
+    }
+
+    .btn-delete {
+      background: #ef4444;
+    }
+
+    .paginacion {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding-top: 15px;
+    }
+
+    .lista-animada {
+      opacity: 1;
+      transform: translateY(0);
+      transition: all 0.3s ease;
+    }
+
+    .lista-animada.fade {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    .popup {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .popup-content {
+      background: rgba(77, 130, 188, 0.85);
+      backdrop-filter: blur(10px);
+      padding: 25px 30px;
+      border-radius: 20px;
+      text-align: center;
+      color: white;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
+    }
+
+    .popup-content button {
+      margin-top: 15px;
+      padding: 10px 25px;
+      border: none;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.3);
+      color: white;
+      cursor: pointer;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="sidebar">
+
+    <div class="nav-group">
+      <a href="/dashboard.html" class="nav-item"><img src="dashboard.svg"><span>Dashboard</span></a>
+      <a href="/usuarios.html" class="nav-item"><img src="usuarios.svg"><span>Usuarios</span></a>
+      <a href="/billeteras.html" class="nav-item"><img src="billeteras.svg"><span>Billeteras</span></a>
+      <a href="/transacciones.html" class="nav-item"><img src="transacciones.svg"><span>Transacciones</span></a>
+      <a href="/ranking.html" class="nav-item"><img src="ranking.svg"><span>Ranking</span></a>
+      <a href="/reporte.html" class="nav-item"><img src="reporte.svg"><span>Reporte</span></a>
+    </div>
+
+    <div class="nav-group">
+      <a href="/login.html" class="nav-item" onclick="logout()">
+        <img src="cerrar-sesion.svg">
+        <span>Cerrar sesión</span>
+      </a>
+    </div>
+
+  </nav>
+
+  <div class="content">
+
+    <div class="container">
+
+      <h1 class="titulo">Usuarios registrados</h1>
+
+      <div class="card">
+        <input type="text" id="buscarCedula" class="busqueda" placeholder="Buscar por cédula...">
+      </div>
+
+      <div id="lista"></div>
+
+      <div id="paginacion" class="paginacion"></div>
+
+    </div>
+
+  </div>
+
+  <div id="popup" class="popup hidden">
+    <div class="popup-content">
+      <p id="popupMensaje"></p>
+
+      <div style="margin-top:20px; display:flex; gap:10px; justify-content:center;">
+        <button id="btnConfirmar">Confirmar</button>
+        <button onclick="cerrarPopup()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let usuarios = [];
+    let paginaActual = 1;
+    const porPagina = 4;
+
+    const formatoCOP = new Intl.NumberFormat("es-CO");
+
+    async function cargarUsuarios(recargaAutomatica = false) {
+      const textoBusqueda = document.getElementById("buscarCedula").value;
+      const res = await fetch("http://localhost:8080/usuarios");
+      usuarios = await res.json();
+      document.getElementById("buscarCedula").value = textoBusqueda;
+
+      if (!recargaAutomatica) {
+        paginaActual = 1;
+      }
+
+      render(true);
+    }
+
+    function obtenerFiltrados() {
+
+      const texto =
+        document.getElementById("buscarCedula")
+          .value
+          .trim();
+
+      return usuarios.filter(u =>
+        u.cedula.includes(texto)
+      );
+    }
+
+    function render(sinAnimacion = false) {
+
+      const lista =
+        document.getElementById("lista");
+
+      if (!sinAnimacion) {
+
+        lista.classList.add("fade");
+
+        setTimeout(() => dibujar(), 200);
+
+      } else {
+
+        dibujar();
+      }
+
+      function dibujar() {
+
+        lista.classList.remove("fade");
+
+        lista.classList.add("lista-animada");
+
+        const filtrados =
+          obtenerFiltrados();
+
+        const inicio =
+          (paginaActual - 1) * porPagina;
+
+        const fin = inicio + porPagina;
+
+        const pagina =
+          filtrados.slice(inicio, fin);
+
+        lista.innerHTML = "";
+
+        pagina.forEach(u => {
+
+          const recargas =
+            u.historialTransacciones
+              .filter(t => t.tipo === "RECARGA")
+              .length;
+
+          const retiros =
+            u.historialTransacciones
+              .filter(t => t.tipo === "RETIRO")
+              .length;
+
+          const transferencias =
+            u.historialTransacciones
+              .filter(t => t.tipo === "TRANSFERENCIA")
+              .length;
+
+          lista.innerHTML += `
+            <div class="usuario">
+
+              <div class="usuario-info">
+
+                <div>
+                  <span class="label">Nombre</span>
+                  <span class="value">${u.nombreCompleto}</span>
+                </div>
+
+                <div>
+                  <span class="label">Cédula</span>
+                  <span class="value">${u.cedula}</span>
+                </div>
+
+                <div>
+                  <span class="label">Puntos</span>
+                  <span class="value">${u.puntos}</span>
+                </div>
+
+                <div>
+                  <span class="label">Nivel</span>
+                  <span class="value">${u.nivel}</span>
+                </div>
+
+                <div>
+                  <span class="label">Recargas</span>
+                  <span class="value">${recargas}</span>
+                </div>
+
+                <div>
+                  <span class="label">Retiros</span>
+                  <span class="value">${retiros}</span>
+                </div>
+
+                <div>
+                  <span class="label">Transferencias</span>
+                  <span class="value">${transferencias}</span>
+                </div>
+
+                <div>
+                  <span class="label">Saldo total</span>
+                  <span class="value">
+                    $ ${formatoCOP.format(u.saldoTotal)}
+                  </span>
+                </div>
+
+              </div>
+
+              <button
+                class="btn btn-delete"
+                onclick="confirmarEliminar('${u.cedula}')"
+              >
+                Eliminar
+              </button>
+
+            </div>
+          `;
+        });
+
+        renderPaginacion(filtrados.length);
+      }
+    }
+
+    function renderPaginacion(total) {
+
+      const cont =
+        document.getElementById("paginacion");
+
+      cont.innerHTML = "";
+
+      const totalPaginas =
+        Math.ceil(total / porPagina);
+
+      if (totalPaginas <= 1) return;
+
+      cont.innerHTML = `
+        <button
+          class="btn"
+          onclick="cambiarPagina(-1)"
+          ${paginaActual === 1 ? 'disabled' : ''}
+        >
+          ←
+        </button>
+
+        <span style="align-self:center;">
+          Página ${paginaActual} de ${totalPaginas}
+        </span>
+
+        <button
+          class="btn"
+          onclick="cambiarPagina(1)"
+          ${paginaActual === totalPaginas ? 'disabled' : ''}
+        >
+          →
+        </button>
+      `;
+    }
+
+    function cambiarPagina(dir) {
+
+      paginaActual += dir;
+
+      render();
+    }
+
+    function confirmarEliminar(cedula) {
+
+      document.getElementById("popupMensaje")
+        .innerText =
+        "¿Deseas eliminar este usuario?";
+
+      document.getElementById("btnConfirmar")
+        .onclick = async () => {
+          await eliminarUsuario(cedula);
+        };
+
+      document.getElementById("popup")
+        .classList.remove("hidden");
+    }
+
+    async function eliminarUsuario(cedula) {
+
+      cerrarPopup();
+
+      const res = await fetch(
+        `http://localhost:8080/usuarios/${cedula}`,
+        {
+          method: "DELETE"
+        }
+      );
+
+      if (!res.ok) {
+        alert("No se pudo eliminar");
+        return;
+      }
+
+      await cargarUsuarios();
+    }
+
+    function cerrarPopup() {
+
+      document.getElementById("popup")
+        .classList.add("hidden");
+    }
+
+    document.getElementById("buscarCedula")
+      .addEventListener("input", () => {
+
+        paginaActual = 1;
+
+        render();
+      });
+
+    function logout() {
+      sessionStorage.removeItem("usuario");
+    }
+
+    cargarUsuarios();
+
+    setInterval(() => {
+      cargarUsuarios(true);
+    }, 5000);
+
+  </script>
+
+</body>
+
+</html>

@@ -1,9 +1,6 @@
 package com.proyectofinal.billeteravirtual.service;
 
-import com.proyectofinal.billeteravirtual.model.Billetera;
-import com.proyectofinal.billeteravirtual.model.NivelUsuario;
-import com.proyectofinal.billeteravirtual.model.SistemaBilletera;
-import com.proyectofinal.billeteravirtual.model.Usuario;
+import com.proyectofinal.billeteravirtual.model.*;
 import org.springframework.stereotype.Service;
 import com.proyectofinal.billeteravirtual.util.ArrayList;
 
@@ -70,11 +67,32 @@ public class UsuarioService {
         return sistema.getUsuarios().get(cedula);
     }
 
-    public ArrayList<Usuario> listarUsuarios() {
-        ArrayList<Usuario> lista = new ArrayList<>();
+    public java.util.ArrayList<UsuarioResponse> listarUsuarios() {
+        java.util.ArrayList<UsuarioResponse> lista = new java.util.ArrayList<>();
 
         for (Usuario usuario : sistema.getUsuarios().values()) {
-            lista.add(usuario);
+            UsuarioResponse response = new UsuarioResponse();
+            response.setNombreCompleto(usuario.getNombreCompleto());
+            response.setCedula(usuario.getCedula());
+            response.setNivel(usuario.getNivel());
+            response.setPuntos(usuario.getPuntosAcumulados());
+
+            double saldoTotal = 0;
+
+            for (Billetera billetera : usuario.getBilleteras().values()) {
+                saldoTotal += billetera.getSaldo();
+            }
+
+            response.setSaldoTotal(saldoTotal);
+
+            java.util.ArrayList<Transaccion> historial = new java.util.ArrayList<>();
+            for (Transaccion transaccion : usuario.getHistorialTransacciones()) {
+                historial.add(transaccion);
+            }
+
+            response.setHistorialTransacciones(historial);
+
+            lista.add(response);
         }
 
         return lista;
@@ -95,7 +113,11 @@ public class UsuarioService {
     }
 
     public boolean eliminarUsuario(String cedula) {
-        return sistema.getUsuarios().remove(cedula) != null;
+        Usuario usuario = sistema.getUsuarios().remove(cedula);
+        if (usuario == null) return false;
+        sistema.getUsuariosPorPuntos().remove(usuario);
+
+        return true;
     }
 
     public void actualizarNivelUsuario(Usuario usuario) {

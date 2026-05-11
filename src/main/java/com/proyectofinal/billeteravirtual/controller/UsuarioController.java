@@ -23,7 +23,6 @@ public class UsuarioController {
     public ResponseEntity<?> registrarUsuario(@RequestBody Usuario usuario) {
 
         boolean creado = usuarioService.registrarUsuario(usuario);
-
         if (!creado) {
             return ResponseEntity
                     .status(HttpStatus.CONFLICT)
@@ -37,7 +36,6 @@ public class UsuarioController {
 
     @GetMapping("/{cedula}")
     public ResponseEntity<?> buscarUsuario(@PathVariable String cedula) {
-
         Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
 
         if (usuario == null) {
@@ -50,7 +48,6 @@ public class UsuarioController {
 
     @PutMapping("/{cedula}")
     public ResponseEntity<?> actualizarUsuario(@PathVariable String cedula, @RequestBody Usuario usuarioActualizado) {
-
         boolean actualizado = usuarioService.actualizarUsuario(cedula, usuarioActualizado);
 
         if (!actualizado) {
@@ -63,7 +60,6 @@ public class UsuarioController {
 
     @DeleteMapping("/{cedula}")
     public ResponseEntity<?> eliminarUsuario(@PathVariable String cedula) {
-
         boolean eliminado = usuarioService.eliminarUsuario(cedula);
 
         if (!eliminado) {
@@ -76,7 +72,6 @@ public class UsuarioController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Usuario usuario) {
-
         Usuario encontrado = usuarioService.buscarUsuarioPorCedula(usuario.getCedula());
 
         if (encontrado != null &&
@@ -87,5 +82,10 @@ public class UsuarioController {
         return ResponseEntity
                 .status(HttpStatus.UNAUTHORIZED)
                 .body("Credenciales incorrectas");
+    }
+
+    @GetMapping
+    public ResponseEntity<?> listarUsuarios() {
+        return ResponseEntity.ok(usuarioService.listarUsuarios());
     }
 }
