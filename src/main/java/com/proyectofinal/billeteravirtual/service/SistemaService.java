@@ -86,7 +86,6 @@ public class SistemaService {
         java.util.ArrayList<Transaccion> resultado = new java.util.ArrayList<>();
 
         int limite = Math.min(3, orden.size());
-
         for (int i = 0; i < limite; i++) {
             resultado.add(orden.get(i));
         }
@@ -109,21 +108,15 @@ public class SistemaService {
     }
 
     public DashboardResponse getDashboard() {
-        DashboardResponse dto = new DashboardResponse();
+        DashboardResponse response = new DashboardResponse();
 
-        dto.setTotalUsuarios(getTotalUsuarios());
-        dto.setTotalBilleteras(getTotalBilleteras());
-        dto.setTotalTransacciones(getTotalTransacciones());
-        dto.setDineroMovilizado(getDineroMovilizado());
+        response.setTotalUsuarios(getTotalUsuarios());
+        response.setTotalBilleteras(getTotalBilleteras());
+        response.setTotalTransacciones(getTotalTransacciones());
+        response.setDineroMovilizado(getDineroMovilizado());
+        response.setUltimasTransacciones(getUltimasTransacciones());
+        response.setTopUsuarios(getTopUsuarios());
 
-        dto.setUltimasTransacciones(
-                getUltimasTransacciones()
-        );
-
-        dto.setTopUsuarios(
-                getTopUsuarios()
-        );
-
-        return dto;
+        return response;
     }
 }

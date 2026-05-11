@@ -32,8 +32,8 @@ public class BilleteraService {
         if (usuario == null || billetera == null) return false;
 
         Map<String, Billetera> billeteras = usuario.getBilleteras();
-
         billetera.setId("018" + String.format("%03d", contadorId++));
+        billetera.setUsuario(usuario);
 
         billeteras.put(billetera.getId(), billetera);
 
@@ -75,17 +75,12 @@ public class BilleteraService {
 
     public boolean eliminarBilletera(String cedula, String idBilletera) {
         Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
-
         if (usuario == null) return false;
 
         Billetera billetera = usuario.getBilleteras().get(idBilletera);
-
         if (billetera == null) return false;
 
-        if (billetera.getSaldo() > 0) {
-            return false;
-        }
-
+        if (billetera.getSaldo() > 0) return false;
         usuario.getBilleteras().remove(idBilletera);
         return true;
     }

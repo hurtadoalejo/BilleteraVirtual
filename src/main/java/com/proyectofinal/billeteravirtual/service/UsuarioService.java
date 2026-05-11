@@ -78,13 +78,11 @@ public class UsuarioService {
             response.setPuntos(usuario.getPuntosAcumulados());
 
             double saldoTotal = 0;
-
             for (Billetera billetera : usuario.getBilleteras().values()) {
                 saldoTotal += billetera.getSaldo();
             }
 
             response.setSaldoTotal(saldoTotal);
-
             java.util.ArrayList<Transaccion> historial = new java.util.ArrayList<>();
             for (Transaccion transaccion : usuario.getHistorialTransacciones()) {
                 historial.add(transaccion);

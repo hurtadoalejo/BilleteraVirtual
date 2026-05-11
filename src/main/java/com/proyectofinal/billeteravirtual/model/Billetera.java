@@ -1,4 +1,5 @@
 package com.proyectofinal.billeteravirtual.model;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.proyectofinal.billeteravirtual.util.ArrayList;
 
 public class Billetera {
@@ -6,6 +7,8 @@ public class Billetera {
     private String id;
     private String nombre;
     private TipoBilletera tipo;
+    @JsonIgnore
+    private Usuario usuario;
     private double saldo = 0;
     private EstadoBilletera estado = EstadoBilletera.ACTIVA;
 
@@ -57,6 +60,14 @@ public class Billetera {
 
     public void setTransacciones(ArrayList<Transaccion> transacciones) {
         this.transacciones = transacciones;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
     }
 
     @Override

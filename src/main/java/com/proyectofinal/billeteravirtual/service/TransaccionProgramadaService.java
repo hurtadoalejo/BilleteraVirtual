@@ -14,16 +14,17 @@ public class TransaccionProgramadaService {
     private final SistemaBilletera sistemaBilletera;
     private final TransaccionService transaccionService;
     private final UsuarioService usuarioService;
+    private final NotificacionService notificacionService;
 
-    public TransaccionProgramadaService(SistemaBilletera sistemaBilletera, TransaccionService transaccionService, UsuarioService usuarioService) {
+    public TransaccionProgramadaService(SistemaBilletera sistemaBilletera, TransaccionService transaccionService, UsuarioService usuarioService, NotificacionService notificacionService) {
         this.sistemaBilletera = sistemaBilletera;
         this.transaccionService = transaccionService;
         this.usuarioService = usuarioService;
+        this.notificacionService = notificacionService;
     }
 
     public ResultadoTransaccion programarTransaccion(Usuario usuario, TipoTransaccion tipo, double valor, String billeteraOrigenId, String billeteraDestinoId, LocalDateTime fechaEjecucion) {
         Billetera origen = usuario.getBilleteras().get(billeteraOrigenId);
-
         if (tipo == TipoTransaccion.RETIRO) {
             if (origen.getSaldo() < valor) {
                 return new ResultadoTransaccion(false, false, null, 1
@@ -67,6 +68,7 @@ public class TransaccionProgramadaService {
         t.setEstado(EstadoTransaccion.PENDIENTE);
         sistemaBilletera.getColaProgramadas().add(t);
         usuario.getTransaccionesProgramadas().add(t);
+        notificarProgramacion(usuario, tipo, valor, billeteraOrigenId, billeteraDestinoId, fechaEjecucion);
 
         return new ResultadoTransaccion(true, false, null);
     }
@@ -149,5 +151,30 @@ public class TransaccionProgramadaService {
 
     public SistemaBilletera getSistemaBilletera() {
         return sistemaBilletera;
+    }
+
+    private void notificarProgramacion(Usuario usuario, TipoTransaccion tipo, double valor, String billeteraOrigenId, String billeteraDestinoId, LocalDateTime fechaEjecucion) {
+        switch (tipo) {
+            case RECARGA -> {
+                Billetera billetera = usuario.getBilleteras().get(billeteraOrigenId);
+                notificacionService.enviarRecargaProgramada(usuario, billetera, valor, fechaEjecucion);
+            }
+
+            case RETIRO -> {
+                Billetera billetera = usuario.getBilleteras().get(billeteraOrigenId);
+                notificacionService.enviarRetiroProgramado(usuario, billetera, valor, fechaEjecucion);
+            }
+
+            case TRANSFERENCIA -> {
+                Billetera origen = usuario.getBilleteras().get(billeteraOrigenId);
+                Billetera destino = usuarioService.buscarBilleteraGlobal(billeteraDestinoId);
+
+                Usuario usuarioDestino = usuarioService.buscarUsuarioPorBilletera(billeteraDestinoId);
+
+                if (usuarioDestino != null && origen != null && destino != null) {
+                    notificacionService.enviarTransferenciaProgramada(usuario, usuarioDestino, origen, destino, valor, fechaEjecucion);
+                }
+            }
+        }
     }
 }
