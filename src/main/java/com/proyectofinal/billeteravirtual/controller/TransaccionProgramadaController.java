@@ -1,5 +1,6 @@
 package com.proyectofinal.billeteravirtual.controller;
 
+import com.proyectofinal.billeteravirtual.model.ResultadoTransaccion;
 import com.proyectofinal.billeteravirtual.model.TransaccionProgramada;
 import com.proyectofinal.billeteravirtual.model.TipoTransaccion;
 import com.proyectofinal.billeteravirtual.model.Usuario;
@@ -28,15 +29,18 @@ public class TransaccionProgramadaController {
 
     @PostMapping("/programar")
     public ResponseEntity<?> programar(@RequestParam String cedula, @RequestParam TipoTransaccion tipo, @RequestParam double valor, @RequestParam(required = false) String origen, @RequestParam(required = false) String destino, @RequestParam String fecha) {
-
         Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
         LocalDateTime fechaEjecucion = LocalDateTime.parse(fecha);
-        boolean creado = transaccionProgramadaService.programarTransaccion(usuario, tipo, valor, origen, destino, fechaEjecucion);
 
-        if (!creado) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body("La transaccion se debe programar mínimo un minuto después de la hora actual.");
+        ResultadoTransaccion resultado = transaccionProgramadaService.programarTransaccion(usuario, tipo, valor, origen, destino, fechaEjecucion);
+
+        if (!resultado.isOk()) {
+            return switch (resultado.getCodigoError()) {
+                case 1 -> ResponseEntity.status(HttpStatus.CONFLICT).body("Saldo insuficiente");
+                case 2 -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("La billetera destino no existe");
+                case 3 -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No puedes transferir a la misma billetera");
+                default -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al programar transacción");
+            };
         }
 
         return ResponseEntity.ok("Transacción programada correctamente");

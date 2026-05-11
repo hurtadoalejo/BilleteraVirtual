@@ -60,6 +60,7 @@ public class TransaccionController {
                 case 3 -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No puedes transferir a la misma billetera");
                 default -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error en la transferencia");
             };
+
         }
 
         return ResponseEntity.ok(resultado);

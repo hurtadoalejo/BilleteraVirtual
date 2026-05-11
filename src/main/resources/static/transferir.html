@@ -403,6 +403,12 @@
           { method: "POST" }
         );
 
+        if (!res.ok) {
+          const mensaje = await res.text();
+          mostrarPopup(mensaje);
+          return;
+        }
+
         const data = await res.json();
         mostrarPopup("Transferencia realizada correctamente");
         mostrarBotonDeshacer();
@@ -430,8 +436,8 @@
           cargarBilleteras();
         }
 
-      } catch {
-        mostrarPopup("Error en la transferencia");
+      } catch (error) {
+        mostrarPopup(error);
       }
     }
 
@@ -448,7 +454,7 @@
 
       clearTimeout(timeoutReversion);
 
-      setTimeout(() => {btn.classList.add("hidden");}, 60000);
+      setTimeout(() => { btn.classList.add("hidden"); }, 60000);
     }
 
     function mostrarConfirmacionReversion() {

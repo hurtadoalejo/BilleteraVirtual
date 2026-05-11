@@ -224,19 +224,24 @@
       document.getElementById("transacciones").innerText = data.totalTransacciones;
       document.getElementById("dinero").innerText = "$ " + formatoCOP.format(data.dineroMovilizado);
 
-      document.getElementById("ultimas").innerHTML = data.ultimasTransacciones.map(t =>
-        `<div class="item">
-          <b>${t.tipo}</b><br>
-          <span class="small">${formatearFecha(t.fecha)}</span><br>
-          Valor: $ ${formatoCOP.format(t.valor)}
-        </div>`
-      ).join("");
+      document.getElementById("ultimas").innerHTML = data.ultimasTransacciones
+        .map(t => {
+          const valorFormateado = formatoCOP.format(Number(t.valor));
+          return `
+            <div class="item">
+              <b>${t.tipo}</b><br>
+              <span class="small">${formatearFecha(t.fecha)}</span><br>
+              Valor: $ ${valorFormateado}
+            </div>
+          `;
+        })
+        .join("");
 
       document.getElementById("top").innerHTML = data.topUsuarios.map(u =>
         `<div class="item">
           <b>${u.nombreCompleto}</b><br>
           <span class="small">Cédula: ${u.cedula}</span><br>
-          <span class="small">${u.nivel}</span><br>
+          <span class="small">Nivel: ${u.nivel}</span><br>
           Puntos: ${u.puntos}
         </div>`
       ).join("");

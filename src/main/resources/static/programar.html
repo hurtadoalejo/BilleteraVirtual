@@ -507,9 +507,15 @@
 
       const valorInput = document.getElementById("valor");
 
-      const valor = parseFloat(valorInput.value.replace(/\./g, ""));
+      const valor = parseFloat(
+        valorInput.value.replace(/\./g, "")
+      );
 
-      const errorMsg = document.getElementById("error-msg");
+      const errorMsg =
+        document.getElementById("error-msg");
+
+      const billetera =
+        billeteras.find(b => String(b.id) === String(origen));
 
       if (!valor || valor <= 0) {
 
@@ -534,16 +540,69 @@
         return;
       }
 
-      if (tipoActual === "TRANSFERENCIA" && !destino) {
-
-        mostrarPopup(
-          "Debes ingresar una billetera destino"
-        );
+      if (tipoActual === "TRANSFERENCIA" && origen === destino) {
+        mostrarPopup("No puedes transferir a la misma billetera");
 
         return;
       }
 
+      if (tipoActual === "TRANSFERENCIA") {
+        let porcentaje = 0.005;
+        switch (usuario.nivel) {
+          case "PLATA":
+            porcentaje = 0.004;
+            break;
+
+          case "ORO":
+            porcentaje = 0.003;
+            break;
+
+          case "PLATINO":
+            porcentaje = 0.001;
+            break;
+        }
+
+        const comision =
+          Math.round(valor * porcentaje);
+
+        const total =
+          valor + comision;
+
+        if (total > billetera.saldo) {
+
+          errorMsg.textContent =
+            "No hay suficiente saldo disponible";
+
+          errorMsg.style.display = "block";
+
+          valorInput.classList.remove("input-error");
+          void valorInput.offsetWidth;
+          valorInput.classList.add("input-error");
+
+          return;
+        }
+      }
+
+      if (tipoActual === "RETIRO") {
+
+        if (valor > billetera.saldo) {
+
+          errorMsg.textContent =
+            "No hay suficiente saldo disponible";
+
+          errorMsg.style.display = "block";
+
+          valorInput.classList.remove("input-error");
+          void valorInput.offsetWidth;
+          valorInput.classList.add("input-error");
+
+          return;
+        }
+      }
+
       errorMsg.style.display = "none";
+
+      valorInput.classList.remove("input-error");
 
       try {
 
