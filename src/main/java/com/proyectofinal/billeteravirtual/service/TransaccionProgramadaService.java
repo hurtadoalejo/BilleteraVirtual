@@ -144,6 +144,13 @@ public class TransaccionProgramadaService {
                     return false;
                 }
                 t.setEstado(EstadoTransaccion.CANCELADA);
+
+                try {
+                    notificacionService.enviarCancelacionProgramada(usuario, t);
+                } catch (Exception e) {
+                    System.out.println("Error enviando correo: " + e.getMessage());
+                }
+
                 return true;
             }
         }

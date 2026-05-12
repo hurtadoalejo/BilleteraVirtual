@@ -50,6 +50,39 @@ public class NotificacionService {
         emailService.enviarCorreo(origen.getCorreoElectronico(), "Transferencia programada", mensaje);
     }
 
+    public void enviarCancelacionProgramada(Usuario usuario, TransaccionProgramada transaccion) {
+        String mensaje = construirHtmlCancelacion(usuario, transaccion);
+
+        emailService.enviarCorreo(usuario.getCorreoElectronico(), "Transacción programada cancelada", mensaje);
+    }
+
+    private String construirHtmlCancelacion(Usuario usuario, TransaccionProgramada t) {
+        String fecha = formatearFecha(t.getFechaEjecucion());
+
+        String tipo = switch (t.getTipo()) {
+            case RECARGA -> "La recarga";
+            case RETIRO -> "El retiro";
+            case TRANSFERENCIA -> "La transferencia";
+        };
+
+        String programado = switch (t.getTipo()) {
+            case RECARGA, TRANSFERENCIA -> "programada";
+            case RETIRO -> "programado";
+        };
+
+        return "<div style='font-family:Arial,sans-serif;max-width:500px;margin:auto;padding:20px;border:1px solid #e5e7eb;border-radius:10px;'>" +
+                "<h2 style='color:#4d82bc;text-align:center;'>Billetera Virtual</h2>" +
+                "<p>Hola <b>" + usuario.getNombreCompleto() + "</b>,</p>" +
+                "<p>" + tipo +
+                " " + programado +
+                " para la fecha <b>" + fecha +
+                "</b> fue cancelad" + (t.getTipo() == TipoTransaccion.RETIRO ? "o" : "a") +
+                " correctamente.</p>" +
+                "<hr style='margin:20px 0;'>" +
+                "<p style='color:gray;font-size:12px;text-align:center;'>Gracias por usar Billetera Virtual</p>" +
+                "</div>";
+    }
+
     private String construirHtml(Usuario usuario, TipoTransaccion tipo, double valor, double comision, Billetera origen, Billetera destino, Usuario usuarioDestino, boolean programada, LocalDateTime fechaRef) {
         String valorFormateado = formatearMoneda(valor);
         String fecha = formatearFecha(fechaRef);
