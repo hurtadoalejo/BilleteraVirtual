@@ -52,16 +52,34 @@ public class TransaccionController {
     @PostMapping("/transferir/{cedula}")
     public ResponseEntity<?> transferir(@PathVariable String cedula, @RequestParam String origen, @RequestParam String destino, @RequestParam double valor) {
         ResultadoTransaccion resultado = transaccionService.transferir(cedula, origen, destino, valor, null);
+
         if (!resultado.isOk()) {
             return switch (resultado.getCodigoError()) {
-                case 1 -> ResponseEntity.status(HttpStatus.CONFLICT).body("Saldo insuficiente");
-                case 2 -> ResponseEntity.status(HttpStatus.NOT_FOUND).body("La billetera destino no existe");
-                case 3 -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No puedes transferir a la misma billetera");
-                default -> ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error en la transferencia");
+                case SALDO_INSUFICIENTE ->
+                        ResponseEntity.status(HttpStatus.CONFLICT).body("Saldo insuficiente");
+
+                case USUARIO_NO_ENCONTRADO ->
+                        ResponseEntity.status(HttpStatus.NOT_FOUND).body("El usuario no existe");
+
+                case USUARIO_DESTINO_NO_ENCONTRADO ->
+                        ResponseEntity.status(HttpStatus.NOT_FOUND).body("El usuario destino no existe");
+
+                case BILLETERA_ORIGEN_NO_ENCONTRADA ->
+                        ResponseEntity.status(HttpStatus.NOT_FOUND).body("La billetera origen no existe");
+
+                case BILLETERA_DESTINO_NO_ENCONTRADA ->
+                        ResponseEntity.status(HttpStatus.NOT_FOUND).body("La billetera destino no existe");
+
+                case MISMA_BILLETERA ->
+                        ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No puedes transferir a la misma billetera");
+
+                case VALOR_INVALIDO ->
+                        ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El valor ingresado es inválido");
+
+                default ->
+                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error en la transferencia");
             };
-
         }
-
         return ResponseEntity.ok(resultado);
     }
 

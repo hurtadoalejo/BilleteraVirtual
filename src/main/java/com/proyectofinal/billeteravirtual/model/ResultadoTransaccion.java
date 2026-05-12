@@ -4,7 +4,7 @@ public class ResultadoTransaccion {
     private boolean ok;
     private boolean subioNivel;
     private NivelUsuario nuevoNivel;
-    private int codigoError;
+    private CodigoResultadoTransaccion codigoError;
 
     public ResultadoTransaccion() {
     }
@@ -15,7 +15,7 @@ public class ResultadoTransaccion {
         this.nuevoNivel = nuevoNivel;
     }
 
-    public ResultadoTransaccion(boolean ok, boolean subioNivel, NivelUsuario nuevoNivel, int codigoError) {
+    public ResultadoTransaccion(boolean ok, boolean subioNivel, NivelUsuario nuevoNivel, CodigoResultadoTransaccion codigoError) {
         this.ok = ok;
         this.subioNivel = subioNivel;
         this.nuevoNivel = nuevoNivel;
@@ -25,7 +25,7 @@ public class ResultadoTransaccion {
     public boolean isOk() { return ok; }
     public boolean isSubioNivel() { return subioNivel; }
     public NivelUsuario getNuevoNivel() { return nuevoNivel; }
-    public int getCodigoError() {
+    public CodigoResultadoTransaccion getCodigoError() {
         return codigoError;
     }
 
@@ -38,7 +38,7 @@ public class ResultadoTransaccion {
     public void setNuevoNivel(NivelUsuario nuevoNivel) {
         this.nuevoNivel = nuevoNivel;
     }
-    public void setCodigoError(int codigoError) {
+    public void setCodigoError(CodigoResultadoTransaccion codigoError) {
         this.codigoError = codigoError;
     }
 }

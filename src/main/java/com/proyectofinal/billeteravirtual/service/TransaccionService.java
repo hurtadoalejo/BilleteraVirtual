@@ -25,12 +25,12 @@ public class TransaccionService {
         Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
 
         if (usuario == null) {
-            return new ResultadoTransaccion(false, false, null);
+            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.USUARIO_NO_ENCONTRADO);
         }
 
         Billetera billetera = usuario.getBilleteras().get(idBilletera);
         if (billetera == null) {
-            return new ResultadoTransaccion(false, false, null);
+            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.BILLETERA_ORIGEN_NO_ENCONTRADA);
         }
 
         NivelUsuario nivelAntes = usuario.getNivel();
@@ -46,23 +46,23 @@ public class TransaccionService {
             System.out.println("Error enviando correo: " + e.getMessage());
         }
 
-        return new ResultadoTransaccion(true, subioNivel, nivelDespues);
+        return new ResultadoTransaccion(true, subioNivel, nivelDespues, CodigoResultadoTransaccion.SIN_ERROR);
     }
 
     public ResultadoTransaccion retirar(String cedula, String idBilletera, double valor) {
         Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
 
         if (usuario == null) {
-            return new ResultadoTransaccion(false, false, null);
+            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.USUARIO_NO_ENCONTRADO);
         }
 
         Billetera billetera = usuario.getBilleteras().get(idBilletera);
         if (billetera == null) {
-            return new ResultadoTransaccion(false, false, null);
+            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.BILLETERA_ORIGEN_NO_ENCONTRADA);
         }
 
         if (billetera.getSaldo() < valor) {
-            return new ResultadoTransaccion(false, false, null);
+            return new ResultadoTransaccion(false, false, null,  CodigoResultadoTransaccion.SALDO_INSUFICIENTE);
         }
 
         NivelUsuario nivelAntes = usuario.getNivel();
@@ -81,43 +81,42 @@ public class TransaccionService {
             System.out.println("Error enviando correo: " + e.getMessage());
         }
 
-        return new ResultadoTransaccion(true, subioNivel, nivelDespues
-        );
+        return new ResultadoTransaccion(true, subioNivel, nivelDespues, CodigoResultadoTransaccion.SIN_ERROR);
     }
 
     public ResultadoTransaccion transferir(String cedula, String idOrigen, String idDestino, double valor, Double comisionPrevia) {
         Usuario usuarioOrigen = usuarioService.buscarUsuarioPorCedula(cedula);
         if (usuarioOrigen == null) {
-            return new ResultadoTransaccion(false, false, null, 2);
+            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.USUARIO_NO_ENCONTRADO);
         }
 
         if (idOrigen.equals(idDestino)) {
-            return new ResultadoTransaccion(false, false, null, 3);
+            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.MISMA_BILLETERA);
         }
 
         Billetera origen = usuarioOrigen.getBilleteras().get(idOrigen);
         if (origen == null) {
-            return new ResultadoTransaccion(false, false, null, 2);
+            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.BILLETERA_ORIGEN_NO_ENCONTRADA);
         }
 
         Billetera destino = usuarioService.buscarBilleteraGlobal(idDestino);
         if (destino == null) {
-            return new ResultadoTransaccion(false, false, null, 2);
+            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.BILLETERA_DESTINO_NO_ENCONTRADA);
         }
 
         Usuario usuarioDestino = usuarioService.buscarUsuarioPorBilletera(idDestino);
         if (usuarioDestino == null) {
-            return new ResultadoTransaccion(false, false, null, 2);
+            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.USUARIO_DESTINO_NO_ENCONTRADO);
         }
 
         if (valor <= 0) {
-            return new ResultadoTransaccion(false, false, null, 1);
+            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.VALOR_INVALIDO);
         }
 
         double comision = comisionPrevia != null ? comisionPrevia: calcularComision(usuarioOrigen, usuarioDestino, valor);
         double total = valor + comision;
         if (origen.getSaldo() < total) {
-            return new ResultadoTransaccion(false, false, null, 1);
+            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.SALDO_INSUFICIENTE);
         }
 
         NivelUsuario nivelAntes = usuarioOrigen.getNivel();
@@ -253,6 +252,15 @@ public class TransaccionService {
 
         puntosService.removerPuntos(usuario, transaccion.getPuntosGenerados());
         transaccion.setEstado(EstadoTransaccion.REVERTIDA);
+
+        try {
+            Usuario usuarioDestino = usuarioService.buscarUsuarioPorBilletera(destino.getId());
+            if (usuarioDestino != null) {
+                notificacionService.enviarCancelacionTransferencia(usuario, usuarioDestino, origen,destino, transaccion);
+            }
+        } catch (Exception e) {
+            System.out.println("Error enviando correo de cancelación: " + e.getMessage());
+        }
 
         return true;
     }

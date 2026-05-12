@@ -132,6 +132,106 @@ public class NotificacionService {
                 "<hr style='margin:20px 0;'><p style='color:gray;font-size:12px;text-align:center;'>Gracias por usar Billetera Virtual</p></div>";
     }
 
+    public void enviarCancelacionTransferencia(Usuario origen, Usuario destino, Billetera billeteraOrigen, Billetera billeteraDestino, Transaccion transaccion) {
+        String mensajeOrigen = construirHtmlCancelacionTransferencia(origen, destino, billeteraOrigen, billeteraDestino, transaccion, false);
+        emailService.enviarCorreo(origen.getCorreoElectronico(), "Transferencia cancelada",mensajeOrigen);
+
+        if (!origen.getCedula().equals(destino.getCedula())) {
+            String mensajeDestino = construirHtmlCancelacionTransferencia(origen, destino, billeteraOrigen, billeteraDestino, transaccion, true);
+
+            emailService.enviarCorreo(destino.getCorreoElectronico(), "Transferencia revertida", mensajeDestino);
+        }
+    }
+
+    private String construirHtmlCancelacionTransferencia(Usuario origen, Usuario destino, Billetera billeteraOrigen, Billetera billeteraDestino, Transaccion transaccion, boolean recibido) {
+        String fecha = formatearFecha(LocalDateTime.now());
+
+        String mensaje =
+                "<div style='font-family:Arial,sans-serif;max-width:500px;margin:auto;padding:20px;border:1px solid #e5e7eb;border-radius:10px;'>";
+
+        mensaje +=
+                "<h2 style='color:#4d82bc;text-align:center;'>Billetera Virtual</h2>";
+
+        if (!recibido) {
+
+            mensaje +=
+                    "<p>Hola <b>" + origen.getNombreCompleto() + "</b>,</p>";
+
+            mensaje +=
+                    "<p>La transferencia de <b style='color:red;'>" +
+                            formatearMoneda(transaccion.getValor()) +
+                            "</b> realizada desde tu billetera número <b>" +
+                            billeteraOrigen.getId() +
+                            "</b> hacia la billetera número <b>" +
+                            billeteraDestino.getId() +
+                            "</b> fue cancelada correctamente.</p>";
+
+            mensaje +=
+                    "<p>La comisión de <b style='color:green;'>" +
+                            formatearMoneda(transaccion.getComision()) +
+                            "</b> fue devuelta a tu saldo.</p>";
+
+        } else {
+
+            mensaje +=
+                    "<p>Hola <b>" + destino.getNombreCompleto() + "</b>,</p>";
+
+            mensaje +=
+                    "<p>La transferencia recibida de <b>" +
+                            origen.getNombreCompleto() +
+                            "</b> por valor de <b style='color:red;'>" +
+                            formatearMoneda(transaccion.getValor()) +
+                            "</b> fue revertida.</p>";
+
+            mensaje +=
+                    "<p>El dinero fue retirado de tu billetera número <b>" +
+                            billeteraDestino.getId() +
+                            "</b>.</p>";
+        }
+
+        mensaje +=
+                "<p><b>Fecha:</b> " + fecha + "</p>";
+
+        mensaje +=
+                "<hr style='margin:20px 0;'>" +
+                        "<p style='color:gray;font-size:12px;text-align:center;'>" +
+                        "Gracias por usar Billetera Virtual" +
+                        "</p></div>";
+
+        return mensaje;
+    }
+
+    public void enviarFalloProgramada(Usuario usuario, TransaccionProgramada transaccion, CodigoResultadoTransaccion error) {
+        String mensaje = construirHtmlFalloProgramada(usuario, transaccion, error);
+
+        emailService.enviarCorreo(usuario.getCorreoElectronico(), "Fallo transacción programada", mensaje);
+    }
+
+    private String construirHtmlFalloProgramada(Usuario usuario, TransaccionProgramada t, CodigoResultadoTransaccion error) {
+
+        String motivo = switch (error) {
+            case SALDO_INSUFICIENTE -> "Saldo insuficiente";
+            case BILLETERA_DESTINO_NO_ENCONTRADA -> "La billetera destino no existe";
+            case BILLETERA_ORIGEN_NO_ENCONTRADA -> "La billetera origen no existe";
+            case USUARIO_DESTINO_NO_ENCONTRADO -> "El usuario destino no existe";
+            case USUARIO_NO_ENCONTRADO -> "El usuario no existe";
+            case MISMA_BILLETERA -> "No puedes transferir a la misma billetera";
+            case VALOR_INVALIDO -> "El valor ingresado es inválido";
+            default -> "Ocurrió un error inesperado";
+        };
+
+        return "<div style='font-family:Arial,sans-serif;max-width:500px;margin:auto;padding:20px;border:1px solid #e5e7eb;border-radius:10px;'>" +
+                "<h2 style='color:#4d82bc;text-align:center;'>Billetera Virtual</h2>" +
+                "<p>Hola <b>" + usuario.getNombreCompleto() + "</b>,</p>" +
+                "<p>Tu transacción programada de tipo <b>" + t.getTipo() +
+                "</b> para la fecha <b>" + formatearFecha(t.getFechaEjecucion()) +
+                "</b> no pudo ejecutarse.</p>" +
+                "<p><b>Motivo:</b> " + motivo + "</p>" +
+                "<hr style='margin:20px 0;'>" +
+                "<p style='color:gray;font-size:12px;text-align:center;'>Gracias por usar Billetera Virtual</p>" +
+                "</div>";
+    }
+
     private String infoTransferencia(Billetera b) {
         return b.getId();
     }

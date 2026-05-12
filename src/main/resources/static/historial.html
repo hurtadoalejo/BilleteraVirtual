@@ -358,9 +358,9 @@
           lista.innerHTML += `
           <div class="transaccion">
             <div>
-              <b>${t.tipo}</b><br>
+              <b>${obtenerNombreTransaccion(t)}</b><br>
               ${formatearFecha(t.fecha)} - 
-              <span style="color: ${t.tipo === 'RECARGA' ? 'green' : 'red'}; font-weight: bold;">
+              <span style="color: ${obtenerColorTransaccion(t)}; font-weight: bold;">
                 $${formatearNumero(t.valor)}
               </span>
             </div>
@@ -371,6 +371,16 @@
 
         renderPaginacion(filtradas.length);
       }
+    }
+
+    function obtenerNombreTransaccion(t) {
+      if (t.tipo !== "TRANSFERENCIA") {
+        return t.tipo;
+      }
+
+      const esRecibida = t.billeteraDestinoId && usuario.billeteras[t.billeteraDestinoId];
+
+      return esRecibida ? "TRANSFERENCIA RECIBIDA" : "TRANSFERENCIA ENVIADA";
     }
 
     function renderPaginacion(total) {
@@ -391,6 +401,23 @@
     function cambiarPagina(dir) {
       paginaActual += dir;
       render();
+    }
+
+    function obtenerColorTransaccion(t) {
+      if (t.tipo === "RECARGA") {
+        return "green";
+      }
+
+      if (t.tipo === "RETIRO") {
+        return "red";
+      }
+
+      if (t.tipo === "TRANSFERENCIA") {
+        const esRecibida = t.billeteraDestinoId && usuario.billeteras[t.billeteraDestinoId];
+        return esRecibida ? "green" : "red";
+      }
+
+      return "black";
     }
 
     function verDetalle(t) {
