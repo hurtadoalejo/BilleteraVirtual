@@ -32,7 +32,6 @@ public class PuntosService {
     }
 
     public void aplicarPuntos(Usuario usuario, int puntos) {
-
         usuario.setPuntos(usuario.getPuntos() + puntos);
 
         usuario.setPuntosAcumulados(usuario.getPuntosAcumulados() + puntos);

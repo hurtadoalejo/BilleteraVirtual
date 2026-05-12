@@ -323,7 +323,7 @@
   </div>
 
   <script>
-    const usuario = JSON.parse(sessionStorage.getItem("usuario"));
+    let usuario = JSON.parse(sessionStorage.getItem("usuario"));
     let nivelPendiente = null;
     let timeoutReversion = null;
 
@@ -418,16 +418,17 @@
         }
 
         if (res.ok) {
-
           const resUser = await fetch(`http://localhost:8080/usuarios/${usuario.cedula}`);
           const usuarioActualizado = await resUser.json();
 
           sessionStorage.setItem("usuario", JSON.stringify(usuarioActualizado));
 
-          Object.assign(usuario, usuarioActualizado);
+          usuario = usuarioActualizado;
 
           document.getElementById("notaComision").textContent =
             "Nota: Comisión por transferencia a otra persona será de " + obtenerComision();
+
+          actualizarTotal();
 
           document.getElementById("valor").value = "";
           document.getElementById("destino").value = "";
@@ -580,11 +581,29 @@
       }
     }
 
+    async function actualizarUsuario() {
+      const usuarioStorage = JSON.parse(sessionStorage.getItem("usuario"));
+
+      const res = await fetch(
+        `http://localhost:8080/usuarios/${usuarioStorage.cedula}`
+      );
+
+      const usuarioActualizado = await res.json();
+      sessionStorage.setItem("usuario", JSON.stringify(usuarioActualizado));
+      usuario = usuarioActualizado;
+
+      document.getElementById("notaComision").textContent =
+        "Nota: Comisión por transferencia a otra persona será de " + obtenerComision();
+    }
+
     document.getElementById("valor").addEventListener("input", actualizarTotal);
     document.getElementById("destino").addEventListener("input", actualizarTotal);
     document.getElementById("billeteraSelect").addEventListener("change", actualizarTotal);
 
-    cargarBilleteras();
+    (async () => {
+      await actualizarUsuario();
+      await cargarBilleteras();
+    })();
   </script>
 
 </body>

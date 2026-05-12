@@ -85,7 +85,7 @@ public class TransaccionService {
         );
     }
 
-    public ResultadoTransaccion transferir(String cedula, String idOrigen, String idDestino, double valor) {
+    public ResultadoTransaccion transferir(String cedula, String idOrigen, String idDestino, double valor, Double comisionPrevia) {
         Usuario usuarioOrigen = usuarioService.buscarUsuarioPorCedula(cedula);
         if (usuarioOrigen == null) {
             return new ResultadoTransaccion(false, false, null, 2);
@@ -114,7 +114,7 @@ public class TransaccionService {
             return new ResultadoTransaccion(false, false, null, 1);
         }
 
-        double comision = calcularComision(usuarioOrigen, usuarioDestino, valor);
+        double comision = comisionPrevia != null ? comisionPrevia: calcularComision(usuarioOrigen, usuarioDestino, valor);
         double total = valor + comision;
         if (origen.getSaldo() < total) {
             return new ResultadoTransaccion(false, false, null, 1);
@@ -147,7 +147,6 @@ public class TransaccionService {
     }
 
     private Transaccion registrarTransaccion(Usuario usuario, Billetera origen, Billetera destino, double valor, double comision, TipoTransaccion tipo, boolean generarPuntos) {
-
         Transaccion t = new Transaccion();
         t.setId(UUID.randomUUID().toString());
         t.setFecha(LocalDateTime.now());

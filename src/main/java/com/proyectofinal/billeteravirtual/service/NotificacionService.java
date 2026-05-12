@@ -45,8 +45,8 @@ public class NotificacionService {
         }
     }
 
-    public void enviarTransferenciaProgramada(Usuario origen, Usuario destino, Billetera billeteraOrigen, Billetera billeteraDestino, double valor, LocalDateTime fechaEjecucion) {
-        String mensaje = construirHtml(origen, TipoTransaccion.TRANSFERENCIA, valor, 0, billeteraOrigen, billeteraDestino, destino, true, fechaEjecucion);
+    public void enviarTransferenciaProgramada(Usuario origen, Usuario destino, Billetera billeteraOrigen, Billetera billeteraDestino, double valor, double comision, LocalDateTime fechaEjecucion) {
+        String mensaje = construirHtml(origen, TipoTransaccion.TRANSFERENCIA, valor, comision, billeteraOrigen, billeteraDestino, destino, true, fechaEjecucion);
         emailService.enviarCorreo(origen.getCorreoElectronico(), "Transferencia programada", mensaje);
     }
 
@@ -61,22 +61,22 @@ public class NotificacionService {
         switch (tipo) {
             case RECARGA -> mensaje += "<p>Has " + (programada ? "programado" : "realizado") +
                     " una recarga de <b style='color:green;'>" + valorFormateado +
-                    "</b> a tu billetera <b>" + destino.getId() + "</b>.</p>";
+                    "</b> a tu billetera número <b>" + destino.getId() + "</b>.</p>";
 
             case RETIRO -> mensaje += "<p>Has " + (programada ? "programado" : "realizado") +
                     " un retiro de <b style='color:red;'>" + valorFormateado +
-                    "</b> desde tu billetera <b>" + origen.getId() + "</b>.</p>";
+                    "</b> desde tu billetera número <b>" + origen.getId() + "</b>.</p>";
 
             case TRANSFERENCIA -> {
                 mensaje += "<p>Has " + (programada ? "programado" : "realizado") +
                         " una transferencia de <b style='color:red;'>" + valorFormateado +
-                        "</b> desde <b>" + infoTransferencia(origen) +
-                        "</b> hacia <b>" + infoTransferenciaDestino(destino, usuarioDestino) +
+                        "</b> desde tu billetera número <b>" + infoTransferencia(origen) +
+                        "</b> hacia la billetera número <b>" + infoTransferenciaDestino(destino, usuarioDestino) +
                         "</b>.</p>";
 
-                mensaje += programada
-                        ? "<p>Comisión: <b style='color:orange;'>Pendiente de cálculo</b></p>"
-                        : "<p>Comisión: <b style='color:red;'>" + formatearMoneda(comision) + "</b></p>";
+                mensaje += "<p>Comisión: <b style='color:red;'>" +
+                        formatearMoneda(comision) +
+                        "</b></p>";
             }
         }
 
@@ -94,7 +94,7 @@ public class NotificacionService {
                 "<p>Hola <b>" + destino.getNombreCompleto() + "</b>,</p>" +
                 "<p>Has recibido <b style='color:green;'>" + formatearMoneda(valor) +
                 "</b> de <b>" + origen.getNombreCompleto() +
-                "</b> en tu billetera <b>" + billeteraDestino.getId() + "</b>.</p>" +
+                "</b> en tu billetera número <b>" + billeteraDestino.getId() + "</b>.</p>" +
                 "<p><b>Fecha:</b> " + fecha + "</p>" +
                 "<hr style='margin:20px 0;'><p style='color:gray;font-size:12px;text-align:center;'>Gracias por usar Billetera Virtual</p></div>";
     }
@@ -104,7 +104,7 @@ public class NotificacionService {
     }
 
     private String infoTransferenciaDestino(Billetera b, Usuario u) {
-        return u.getNombreCompleto() + " - " + b.getId();
+        return b.getId() + " - " + u.getNombreCompleto();
     }
 
     private String formatearFecha(LocalDateTime fecha) {

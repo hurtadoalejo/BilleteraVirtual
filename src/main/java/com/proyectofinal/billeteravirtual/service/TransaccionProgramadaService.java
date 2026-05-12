@@ -25,6 +25,7 @@ public class TransaccionProgramadaService {
 
     public ResultadoTransaccion programarTransaccion(Usuario usuario, TipoTransaccion tipo, double valor, String billeteraOrigenId, String billeteraDestinoId, LocalDateTime fechaEjecucion) {
         Billetera origen = usuario.getBilleteras().get(billeteraOrigenId);
+        double comision = 0;
         if (tipo == TipoTransaccion.RETIRO) {
             if (origen.getSaldo() < valor) {
                 return new ResultadoTransaccion(false, false, null, 1
@@ -45,7 +46,6 @@ public class TransaccionProgramadaService {
             Usuario usuarioDestino = usuarioService.buscarUsuarioPorBilletera(billeteraDestinoId);
             boolean mismaPersona = usuario.getCedula().equals(usuarioDestino.getCedula());
 
-            double comision = 0;
             if (!mismaPersona) {
                 double porcentaje = obtenerComision(usuario.getNivel());
                 comision = valor * porcentaje;
@@ -62,13 +62,15 @@ public class TransaccionProgramadaService {
         t.setUsuario(usuario);
         t.setTipo(tipo);
         t.setValor(valor);
+        t.setComision(comision);
         t.setBilleteraOrigenId(billeteraOrigenId);
         t.setBilleteraDestinoId(billeteraDestinoId);
         t.setFechaEjecucion(fechaEjecucion);
         t.setEstado(EstadoTransaccion.PENDIENTE);
+
         sistemaBilletera.getColaProgramadas().add(t);
         usuario.getTransaccionesProgramadas().add(t);
-        notificarProgramacion(usuario, tipo, valor, billeteraOrigenId, billeteraDestinoId, fechaEjecucion);
+        notificarProgramacion(usuario, tipo, valor, comision, billeteraOrigenId, billeteraDestinoId, fechaEjecucion);
 
         return new ResultadoTransaccion(true, false, null);
     }
@@ -117,7 +119,7 @@ public class TransaccionProgramadaService {
             }
 
             case TRANSFERENCIA -> {
-                ResultadoTransaccion resultado = transaccionService.transferir(cedula, t.getBilleteraOrigenId(), t.getBilleteraDestinoId(), t.getValor());
+                ResultadoTransaccion resultado = transaccionService.transferir(cedula, t.getBilleteraOrigenId(), t.getBilleteraDestinoId(), t.getValor(), t.getComision());
                 exito = resultado.isOk();
             }
         }
@@ -153,7 +155,7 @@ public class TransaccionProgramadaService {
         return sistemaBilletera;
     }
 
-    private void notificarProgramacion(Usuario usuario, TipoTransaccion tipo, double valor, String billeteraOrigenId, String billeteraDestinoId, LocalDateTime fechaEjecucion) {
+    private void notificarProgramacion(Usuario usuario, TipoTransaccion tipo, double valor, double comision, String billeteraOrigenId, String billeteraDestinoId, LocalDateTime fechaEjecucion) {
         switch (tipo) {
             case RECARGA -> {
                 Billetera billetera = usuario.getBilleteras().get(billeteraOrigenId);
@@ -172,7 +174,7 @@ public class TransaccionProgramadaService {
                 Usuario usuarioDestino = usuarioService.buscarUsuarioPorBilletera(billeteraDestinoId);
 
                 if (usuarioDestino != null && origen != null && destino != null) {
-                    notificacionService.enviarTransferenciaProgramada(usuario, usuarioDestino, origen, destino, valor, fechaEjecucion);
+                    notificacionService.enviarTransferenciaProgramada(usuario, usuarioDestino, origen, destino, valor, comision, fechaEjecucion);
                 }
             }
         }

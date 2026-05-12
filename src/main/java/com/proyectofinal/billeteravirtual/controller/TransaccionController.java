@@ -51,8 +51,7 @@ public class TransaccionController {
 
     @PostMapping("/transferir/{cedula}")
     public ResponseEntity<?> transferir(@PathVariable String cedula, @RequestParam String origen, @RequestParam String destino, @RequestParam double valor) {
-        ResultadoTransaccion resultado = transaccionService.transferir(cedula, origen, destino, valor);
-
+        ResultadoTransaccion resultado = transaccionService.transferir(cedula, origen, destino, valor, null);
         if (!resultado.isOk()) {
             return switch (resultado.getCodigoError()) {
                 case 1 -> ResponseEntity.status(HttpStatus.CONFLICT).body("Saldo insuficiente");
