@@ -283,7 +283,15 @@
           <input type="text" id="total" readonly>
         </div>
 
-        <button class="btn" onclick="transferir()">Transferir</button>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+          <button class="btn" onclick="transferir()" style="margin:0;">
+            Transferir
+          </button>
+          <button class="btn" onclick="mostrarConfirmacionCancelacion()" style="margin:0; background:#e94040;">
+            Cancelar última transferencia
+          </button>
+        </div>
+
 
       </div>
 
@@ -298,24 +306,20 @@
         <button id="btnAceptar" onclick="cerrarPopup()">
           Aceptar
         </button>
-
-        <button id="btnDeshacer" class="hidden" onclick="mostrarConfirmacionReversion()">
-          Deshacer transferencia
-        </button>
       </div>
     </div>
   </div>
 
-  <div id="popupConfirmacion" class="popup hidden">
+  <div id="popupCancelar" class="popup hidden">
     <div class="popup-content">
-      <p>¿Deseas deshacer esta transferencia?</p>
+      <p>¿Seguro que quieres cancelar la última transferencia?</p>
 
       <div style="display:flex; gap:10px; justify-content:center;">
-        <button onclick="confirmarReversion()">
+        <button onclick="confirmarCancelacion()">
           Sí
         </button>
 
-        <button onclick="cerrarPopupConfirmacion()">
+        <button onclick="cerrarPopupCancelacion()">
           No
         </button>
       </div>
@@ -357,6 +361,21 @@
       data.forEach(b => {
         select.innerHTML += `<option value="${b.id}">${b.nombre}</option>`;
       });
+    }
+
+    function mostrarConfirmacionCancelacion() {
+      document.getElementById("popupCancelar")
+        .classList.remove("hidden");
+    }
+
+    function cerrarPopupCancelacion() {
+      document.getElementById("popupCancelar")
+        .classList.add("hidden");
+    }
+
+    async function confirmarCancelacion() {
+      cerrarPopupCancelacion();
+      await cancelarUltimaTransferencia();
     }
 
     async function transferir() {
@@ -411,7 +430,6 @@
 
         const data = await res.json();
         mostrarPopup("Transferencia realizada correctamente");
-        mostrarBotonDeshacer();
 
         if (data.subioNivel) {
           nivelPendiente = data.nuevoNivel;
@@ -447,32 +465,33 @@
       document.getElementById("popup").classList.remove("hidden");
     }
 
-    function mostrarBotonDeshacer() {
+    async function cancelarUltimaTransferencia() {
+      try {
+        const res = await fetch(
+          `http://localhost:8080/transacciones/revertir/${usuario.cedula}`,
+          {
+            method: "POST"
+          }
+        );
 
-      const btn = document.getElementById("btnDeshacer");
+        const mensaje = await res.text();
 
-      btn.classList.remove("hidden");
+        mostrarPopup(mensaje);
 
-      clearTimeout(timeoutReversion);
+        if (!res.ok) {
+          return;
+        }
 
-      setTimeout(() => { btn.classList.add("hidden"); }, 60000);
-    }
+        await actualizarUsuario();
+        await cargarBilleteras();
 
-    function mostrarConfirmacionReversion() {
-      document.getElementById("popupConfirmacion")
-        .classList.remove("hidden");
-    }
+        document.getElementById("valor").value = "";
+        document.getElementById("destino").value = "";
+        document.getElementById("total").value = "";
 
-    function cerrarPopupConfirmacion() {
-      document.getElementById("popupConfirmacion")
-        .classList.add("hidden");
-    }
-
-    async function confirmarReversion() {
-
-      cerrarPopupConfirmacion();
-
-      await revertirUltimaTransferencia();
+      } catch (e) {
+        mostrarPopup("Error al cancelar la transferencia");
+      }
     }
 
     function cerrarPopup() {
@@ -484,7 +503,6 @@
           nivelPendiente = null;
         }, 300);
       }
-      document.getElementById("btnDeshacer").classList.add("hidden");
     }
 
     function logout() {
@@ -571,7 +589,6 @@
         mostrarPopup(mensaje);
 
         document.getElementById("btnDeshacer").classList.add("hidden");
-        clearTimeout(timeoutReversion);
 
         await cargarBilleteras();
 
