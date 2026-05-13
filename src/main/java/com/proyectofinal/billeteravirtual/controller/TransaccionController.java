@@ -84,41 +84,16 @@ public class TransaccionController {
     @PostMapping("/revertir/{cedula}")
     public ResponseEntity<?> revertirUltimaTransferencia(@PathVariable String cedula) {
         CodigoResultadoTransaccion resultado = transaccionService.revertirUltimaTransferencia(cedula);
-        return switch (resultado) {
-            case SIN_ERROR ->
-                    ResponseEntity.ok("Transferencia revertida correctamente");
-
-            case USUARIO_NO_ENCONTRADO ->
-                    ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado");
-
-            case TRANSACCION_NO_ENCONTRADA ->
-                    ResponseEntity.status(HttpStatus.CONFLICT).body("No hay transferencias para cancelar");
-
-            case REVERSA_FUERA_DE_TIEMPO ->
-                    ResponseEntity.status(HttpStatus.CONFLICT).body("No se puede revertir después de 60 segundos");
-
-            case TRANSFERENCIA_YA_REVERTIDA ->
-                    ResponseEntity.status(HttpStatus.CONFLICT).body("La transferencia ya fue revertida");
-
-            case BILLETERA_DESTINO_NO_ENCONTRADA ->
-                    ResponseEntity.status(HttpStatus.CONFLICT).body("La billetera destino ya no existe");
-
-            case BILLETERA_ORIGEN_NO_ENCONTRADA ->
-                    ResponseEntity.status(HttpStatus.CONFLICT).body("La billetera origen ya no existe");
-
-            case SALDO_DESTINO_INSUFICIENTE ->
-                    ResponseEntity.status(HttpStatus.CONFLICT).body("La billetera destino no tiene saldo suficiente");
-
-            default ->
-                    ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("No se pudo revertir la transferencia");
-        };
+        return construirRespuestaReversion(resultado);
     }
 
     @PostMapping("/revertir/{cedula}/{idTransaccion}")
     public ResponseEntity<?> revertirTransferencia(@PathVariable String cedula, @PathVariable String idTransaccion) {
-
         CodigoResultadoTransaccion resultado = transaccionService.revertirTransferencia(cedula, idTransaccion);
+        return construirRespuestaReversion(resultado);
+    }
 
+    private ResponseEntity<?> construirRespuestaReversion(CodigoResultadoTransaccion resultado) {
         return switch (resultado) {
             case SIN_ERROR ->
                     ResponseEntity.ok("Transferencia revertida correctamente");
@@ -130,7 +105,7 @@ public class TransaccionController {
                     ResponseEntity.status(HttpStatus.NOT_FOUND).body("Transacción no encontrada");
 
             case REVERSA_FUERA_DE_TIEMPO ->
-                    ResponseEntity.status(HttpStatus.CONFLICT).body("Ya pasó más de 1 minuto");
+                    ResponseEntity.status(HttpStatus.CONFLICT).body("No se puede revertir después de 60 segundos");
 
             case TRANSFERENCIA_YA_REVERTIDA ->
                     ResponseEntity.status(HttpStatus.CONFLICT).body("La transferencia ya fue revertida");
