@@ -63,6 +63,12 @@ public class UsuarioService {
         return null;
     }
 
+    public void agregarHistorialReversiones(String cedula, Transaccion transaccion) {
+        Usuario usuario = buscarUsuarioPorCedula(cedula);
+        if (usuario == null) return;
+        usuario.getHistorialRevertidas().push(transaccion);
+    }
+
     public Usuario buscarUsuarioPorCedula(String cedula) {
         return sistema.getUsuarios().get(cedula);
     }

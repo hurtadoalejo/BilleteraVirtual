@@ -24,6 +24,7 @@ public class Usuario implements Comparable<Usuario>{
     private ArrayList<Beneficio> listaBeneficios = new ArrayList<>();
     private Map<String, Billetera> billeteras = new HashMap<>();
     private Stack<Transaccion> pilaReversiones = new Stack<>();
+    private Stack<Transaccion> historialRevertidas = new Stack<>();
 
     public String getNombreCompleto() {
         return nombreCompleto;
@@ -127,6 +128,14 @@ public class Usuario implements Comparable<Usuario>{
 
     public void setTransaccionesProgramadas(ArrayList<TransaccionProgramada> transaccionesProgramadas) {
         this.transaccionesProgramadas = transaccionesProgramadas;
+    }
+
+    public Stack<Transaccion> getHistorialRevertidas() {
+        return historialRevertidas;
+    }
+
+    public void setHistorialRevertidas(Stack<Transaccion> historialRevertidas) {
+        this.historialRevertidas = historialRevertidas;
     }
 
     @Override

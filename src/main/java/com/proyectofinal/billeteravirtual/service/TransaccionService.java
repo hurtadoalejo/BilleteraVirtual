@@ -201,24 +201,26 @@ public class TransaccionService {
         return usuario.getHistorialTransacciones();
     }
 
-    public boolean revertirUltimaTransferencia(String cedula) {
+    public CodigoResultadoTransaccion revertirUltimaTransferencia(String cedula) {
         Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
-        if (usuario == null) return false;
+        if (usuario == null) return CodigoResultadoTransaccion.USUARIO_NO_ENCONTRADO;;
 
         Stack<Transaccion> pila = usuario.getPilaReversiones();
-        if (pila.isEmpty()) return false;
+        if (pila.isEmpty()) return CodigoResultadoTransaccion.TRANSACCION_NO_ENCONTRADA;;
 
         Transaccion t = pila.peek();
-        boolean revertida = procesarReversion(usuario, t);
+        CodigoResultadoTransaccion revertida = procesarReversion(usuario, t);
 
-        if (revertida) pila.pop();
+        if (revertida == CodigoResultadoTransaccion.SIN_ERROR) {
+            pila.pop();
+        }
 
         return revertida;
     }
 
-    public boolean revertirTransferencia(String cedula, String idTransaccion) {
+    public CodigoResultadoTransaccion revertirTransferencia(String cedula, String idTransaccion) {
         Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
-        if (usuario == null) return false;
+        if (usuario == null) return CodigoResultadoTransaccion.USUARIO_NO_ENCONTRADO;;
 
         for (Transaccion t : usuario.getHistorialTransacciones()) {
             if (t.getId().equals(idTransaccion)) {
@@ -226,22 +228,25 @@ public class TransaccionService {
             }
         }
 
-        return false;
+        return CodigoResultadoTransaccion.TRANSACCION_NO_ENCONTRADA;
     }
 
-    private boolean procesarReversion(Usuario usuario, Transaccion transaccion) {
-        if (transaccion == null) return false;
-        if (transaccion.getTipo() != TipoTransaccion.TRANSFERENCIA) return false;
-        if (transaccion.getEstado() == EstadoTransaccion.REVERTIDA) return false;
+    private CodigoResultadoTransaccion procesarReversion(Usuario usuario, Transaccion transaccion) {
+        if (transaccion == null) return CodigoResultadoTransaccion.TRANSACCION_NO_ENCONTRADA;
+        if (transaccion.getTipo() != TipoTransaccion.TRANSFERENCIA) return CodigoResultadoTransaccion.ERROR_DESCONOCIDO;
+        if (transaccion.getEstado() == EstadoTransaccion.REVERTIDA) return CodigoResultadoTransaccion.TRANSFERENCIA_YA_REVERTIDA;
 
         long segundos = java.time.Duration.between(transaccion.getFecha(), LocalDateTime.now()).getSeconds();
 
-        if (segundos > 60) return false;
+        if (segundos > 60) return CodigoResultadoTransaccion.REVERSA_FUERA_DE_TIEMPO;;
         Billetera origen = usuarioService.buscarBilleteraGlobal(transaccion.getBilleteraOrigenId());
         Billetera destino = usuarioService.buscarBilleteraGlobal(transaccion.getBilleteraDestinoId());
 
-        if (origen == null || destino == null) return false;
-        if (destino.getSaldo() < transaccion.getValor()) return false;
+        if (origen == null) return CodigoResultadoTransaccion.BILLETERA_ORIGEN_NO_ENCONTRADA;
+
+        if (destino == null) return CodigoResultadoTransaccion.BILLETERA_DESTINO_NO_ENCONTRADA;
+
+        if (destino.getSaldo() < transaccion.getValor()) return CodigoResultadoTransaccion.SALDO_DESTINO_INSUFICIENTE;
 
         double totalDevolver = transaccion.getValor() + transaccion.getComision();
         destino.setSaldo(destino.getSaldo() - transaccion.getValor());
@@ -249,6 +254,7 @@ public class TransaccionService {
 
         puntosService.removerPuntos(usuario, transaccion.getPuntosGenerados());
         transaccion.setEstado(EstadoTransaccion.REVERTIDA);
+        usuarioService.agregarHistorialReversiones(usuario.getCedula(), transaccion);
 
         try {
             Usuario usuarioDestino = usuarioService.buscarUsuarioPorBilletera(destino.getId());
@@ -259,6 +265,6 @@ public class TransaccionService {
             System.out.println("Error enviando correo de cancelación: " + e.getMessage());
         }
 
-        return true;
+        return CodigoResultadoTransaccion.SIN_ERROR;
     }
 }
