@@ -57,9 +57,6 @@ public class TransaccionProgramadaService {
             }
 
             Usuario usuarioDestino = usuarioService.buscarUsuarioPorBilletera(billeteraDestinoId);
-            if (usuarioDestino == null) {
-                return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.USUARIO_DESTINO_NO_ENCONTRADO);
-            }
 
             boolean mismaPersona = usuario.getCedula().equals(usuarioDestino.getCedula());
 

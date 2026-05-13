@@ -61,9 +61,6 @@ public class TransaccionController {
                 case USUARIO_NO_ENCONTRADO ->
                         ResponseEntity.status(HttpStatus.NOT_FOUND).body("El usuario no existe");
 
-                case USUARIO_DESTINO_NO_ENCONTRADO ->
-                        ResponseEntity.status(HttpStatus.NOT_FOUND).body("El usuario destino no existe");
-
                 case BILLETERA_ORIGEN_NO_ENCONTRADA ->
                         ResponseEntity.status(HttpStatus.NOT_FOUND).body("La billetera origen no existe");
 

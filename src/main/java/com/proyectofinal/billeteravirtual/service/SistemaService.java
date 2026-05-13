@@ -119,4 +119,16 @@ public class SistemaService {
 
         return response;
     }
+
+    public void agregarNotificacion(NotificacionPendiente notificacion) {
+        sistema.getNotificacionesPendientes().offer(notificacion);
+    }
+
+    public NotificacionPendiente obtenerSiguienteNotificacion() {
+        return sistema.getNotificacionesPendientes().poll();
+    }
+
+    public boolean hayNotificacionesPendientes() {
+        return !sistema.getNotificacionesPendientes().isEmpty();
+    }
 }

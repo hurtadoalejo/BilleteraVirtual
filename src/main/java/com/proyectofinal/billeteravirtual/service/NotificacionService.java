@@ -1,6 +1,7 @@
 package com.proyectofinal.billeteravirtual.service;
 
 import com.proyectofinal.billeteravirtual.model.*;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import java.text.NumberFormat;
 import java.time.LocalDateTime;
@@ -10,50 +11,59 @@ import java.util.Locale;
 @Service
 public class NotificacionService {
     private final EmailService emailService;
+    private final SistemaService sistema;
 
-    public NotificacionService(EmailService emailService) {
+    public NotificacionService(EmailService emailService, SistemaService sistema) {
         this.emailService = emailService;
+        this.sistema = sistema;
     }
 
     public void enviarRecarga(Usuario usuario, Billetera billetera, double valor) {
         String mensaje = construirHtml(usuario, TipoTransaccion.RECARGA, valor, 0, null, billetera, null, false, LocalDateTime.now());
-        emailService.enviarCorreo(usuario.getCorreoElectronico(), "Recarga realizada", mensaje);
+
+        sistema.agregarNotificacion(new NotificacionPendiente(usuario.getCorreoElectronico(), "Recarga realizada", mensaje));
     }
 
     public void enviarRecargaProgramada(Usuario usuario, Billetera billetera, double valor, LocalDateTime fechaEjecucion) {
         String mensaje = construirHtml(usuario, TipoTransaccion.RECARGA, valor, 0, null, billetera, null, true, fechaEjecucion);
-        emailService.enviarCorreo(usuario.getCorreoElectronico(), "Recarga programada", mensaje);
+
+        sistema.agregarNotificacion(new NotificacionPendiente(usuario.getCorreoElectronico(), "Recarga programada", mensaje));
     }
 
     public void enviarRetiro(Usuario usuario, Billetera billetera, double valor) {
         String mensaje = construirHtml(usuario, TipoTransaccion.RETIRO, valor, 0, billetera, null, null, false, LocalDateTime.now());
-        emailService.enviarCorreo(usuario.getCorreoElectronico(), "Retiro realizado", mensaje);
+
+        sistema.agregarNotificacion(new NotificacionPendiente(usuario.getCorreoElectronico(), "Retiro realizado", mensaje));
     }
 
     public void enviarRetiroProgramado(Usuario usuario, Billetera billetera, double valor, LocalDateTime fechaEjecucion) {
         String mensaje = construirHtml(usuario, TipoTransaccion.RETIRO, valor, 0, billetera, null, null, true, fechaEjecucion);
-        emailService.enviarCorreo(usuario.getCorreoElectronico(), "Retiro programado", mensaje);
+
+        sistema.agregarNotificacion(new NotificacionPendiente(usuario.getCorreoElectronico(), "Retiro programado", mensaje));
     }
 
     public void enviarTransferencia(Usuario origen, Usuario destino, Billetera billeteraOrigen, Billetera billeteraDestino, double valor, double comision) {
         String mensajeOrigen = construirHtml(origen, TipoTransaccion.TRANSFERENCIA, valor, comision, billeteraOrigen, billeteraDestino, destino, false, LocalDateTime.now());
-        emailService.enviarCorreo(origen.getCorreoElectronico(), "Transferencia realizada", mensajeOrigen);
+
+        sistema.agregarNotificacion(new NotificacionPendiente(origen.getCorreoElectronico(), "Transferencia realizada", mensajeOrigen));
 
         if (!origen.getCedula().equals(destino.getCedula())) {
             String mensajeDestino = construirHtmlTransferenciaRecibida(origen, destino, billeteraDestino, valor);
-            emailService.enviarCorreo(destino.getCorreoElectronico(), "Transferencia recibida", mensajeDestino);
+
+            sistema.agregarNotificacion(new NotificacionPendiente(destino.getCorreoElectronico(), "Transferencia recibida", mensajeDestino));
         }
     }
 
     public void enviarTransferenciaProgramada(Usuario origen, Usuario destino, Billetera billeteraOrigen, Billetera billeteraDestino, double valor, double comision, LocalDateTime fechaEjecucion) {
         String mensaje = construirHtml(origen, TipoTransaccion.TRANSFERENCIA, valor, comision, billeteraOrigen, billeteraDestino, destino, true, fechaEjecucion);
-        emailService.enviarCorreo(origen.getCorreoElectronico(), "Transferencia programada", mensaje);
+
+        sistema.agregarNotificacion(new NotificacionPendiente(origen.getCorreoElectronico(), "Transferencia programada", mensaje));
     }
 
     public void enviarCancelacionProgramada(Usuario usuario, TransaccionProgramada transaccion) {
         String mensaje = construirHtmlCancelacion(usuario, transaccion);
 
-        emailService.enviarCorreo(usuario.getCorreoElectronico(), "Transacción programada cancelada", mensaje);
+        sistema.agregarNotificacion(new NotificacionPendiente(usuario.getCorreoElectronico(), "Transacción programada cancelada", mensaje));
     }
 
     private String construirHtmlCancelacion(Usuario usuario, TransaccionProgramada t) {
@@ -134,12 +144,13 @@ public class NotificacionService {
 
     public void enviarCancelacionTransferencia(Usuario origen, Usuario destino, Billetera billeteraOrigen, Billetera billeteraDestino, Transaccion transaccion) {
         String mensajeOrigen = construirHtmlCancelacionTransferencia(origen, destino, billeteraOrigen, billeteraDestino, transaccion, false);
-        emailService.enviarCorreo(origen.getCorreoElectronico(), "Transferencia cancelada",mensajeOrigen);
+
+        sistema.agregarNotificacion(new NotificacionPendiente(origen.getCorreoElectronico(), "Transferencia cancelada", mensajeOrigen));
 
         if (!origen.getCedula().equals(destino.getCedula())) {
             String mensajeDestino = construirHtmlCancelacionTransferencia(origen, destino, billeteraOrigen, billeteraDestino, transaccion, true);
 
-            emailService.enviarCorreo(destino.getCorreoElectronico(), "Transferencia revertida", mensajeDestino);
+            sistema.agregarNotificacion(new NotificacionPendiente(destino.getCorreoElectronico(), "Transferencia revertida", mensajeDestino));
         }
     }
 
@@ -204,7 +215,7 @@ public class NotificacionService {
     public void enviarFalloProgramada(Usuario usuario, TransaccionProgramada transaccion, CodigoResultadoTransaccion error) {
         String mensaje = construirHtmlFalloProgramada(usuario, transaccion, error);
 
-        emailService.enviarCorreo(usuario.getCorreoElectronico(), "Fallo transacción programada", mensaje);
+        sistema.agregarNotificacion(new NotificacionPendiente(usuario.getCorreoElectronico(), "Fallo transacción programada", mensaje));
     }
 
     private String construirHtmlFalloProgramada(Usuario usuario, TransaccionProgramada t, CodigoResultadoTransaccion error) {
@@ -213,7 +224,6 @@ public class NotificacionService {
             case SALDO_INSUFICIENTE -> "Saldo insuficiente";
             case BILLETERA_DESTINO_NO_ENCONTRADA -> "La billetera destino no existe";
             case BILLETERA_ORIGEN_NO_ENCONTRADA -> "La billetera origen no existe";
-            case USUARIO_DESTINO_NO_ENCONTRADO -> "El usuario destino no existe";
             case USUARIO_NO_ENCONTRADO -> "El usuario no existe";
             case MISMA_BILLETERA -> "No puedes transferir a la misma billetera";
             case VALOR_INVALIDO -> "El valor ingresado es inválido";
@@ -248,5 +258,17 @@ public class NotificacionService {
     private String formatearMoneda(double valor) {
         NumberFormat formato = NumberFormat.getCurrencyInstance(new Locale("es", "CO"));
         return formato.format(valor);
+    }
+
+    @Scheduled(fixedRate = 3000)
+    public void procesarNotificaciones() {
+        while (sistema.hayNotificacionesPendientes()) {
+            NotificacionPendiente n = sistema.obtenerSiguienteNotificacion();
+            try {
+                emailService.enviarCorreo(n.getDestinatario(), n.getAsunto(), n.getMensaje());
+            } catch (Exception e) {
+                System.out.println("Error enviando correo: " + e.getMessage());
+            }
+        }
     }
 }

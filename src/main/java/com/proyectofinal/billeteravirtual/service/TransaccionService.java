@@ -105,9 +105,6 @@ public class TransaccionService {
         }
 
         Usuario usuarioDestino = usuarioService.buscarUsuarioPorBilletera(idDestino);
-        if (usuarioDestino == null) {
-            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.USUARIO_DESTINO_NO_ENCONTRADO);
-        }
 
         if (valor <= 0) {
             return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.VALOR_INVALIDO);
