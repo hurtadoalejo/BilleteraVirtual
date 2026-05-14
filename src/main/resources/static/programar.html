@@ -89,10 +89,16 @@
       margin-bottom: 20px;
     }
 
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
     .tipo-selector {
       display: flex;
       gap: 12px;
-      margin-bottom: 25px;
       flex-wrap: wrap;
     }
 
@@ -102,16 +108,15 @@
       border: none;
       padding: 14px;
       border-radius: 14px;
-      background: #e2e8f0;
-      color: #334155;
+      background: #4d82bc;
+      color: white;
       cursor: pointer;
       transition: 0.2s;
       font-weight: 600;
     }
 
-    .tipo-btn.active {
-      background: #4d82bc;
-      color: white;
+    .tipo-btn:hover {
+      opacity: 0.9;
     }
 
     .form-grid {
@@ -129,7 +134,8 @@
 
     .form-row label {
       font-size: 14px;
-      color: #64748b;
+      color: white;
+      text-align: left;
     }
 
     .form-row select,
@@ -139,6 +145,12 @@
       border-radius: 10px;
       border: 1px solid #ccc;
       outline: none;
+    }
+
+    input[readonly] {
+      background: #f1f5f9;
+      color: #64748b;
+      cursor: not-allowed;
     }
 
     .input-group {
@@ -164,10 +176,11 @@
       cursor: pointer;
       background: #4d82bc;
       color: white;
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
       transition: 0.2s ease;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
     }
 
     .input-error {
@@ -176,14 +189,11 @@
     }
 
     #error-msg {
-      color: #ff6b6b;
+      color: #ffd5d5;
       font-size: 13px;
       display: none;
-      position: absolute;
-      top: 100%;
-      left: 0;
-      margin-top: 4px;
-      width: 100%;
+      margin-top: 5px;
+      text-align: left;
     }
 
     @keyframes shake {
@@ -228,10 +238,11 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: #f8fafc;
+      background: white;
       padding: 15px;
       border-radius: 12px;
       margin-bottom: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
     }
 
     .estado {
@@ -255,7 +266,9 @@
       color: #15803d;
     }
 
-    .estado.cancelada, .estado.fallida, .estado.revertida {
+    .estado.cancelada,
+    .estado.fallida,
+    .estado.revertida {
       background: #fee2e2;
       color: #b91c1c;
     }
@@ -275,19 +288,15 @@
     }
 
     .popup-content {
-      background: rgba(77, 130, 188, 0.85);
+      background: rgba(77, 130, 188, 0.9);
       backdrop-filter: blur(10px);
       padding: 25px 30px;
       border-radius: 20px;
       text-align: center;
       color: white;
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-      width: 420px;
-      max-width: 90%;
-    }
-
-    .popup-content p {
-      margin-bottom: 20px;
+      width: 700px;
+      max-width: 95%;
     }
 
     .popup-content button {
@@ -296,6 +305,7 @@
       border-radius: 20px;
       background: rgba(255, 255, 255, 0.3);
       color: white;
+      margin-top: 10px;
       cursor: pointer;
     }
 
@@ -309,28 +319,6 @@
       align-items: center;
       gap: 10px;
       padding-top: 15px;
-    }
-
-    .paginacion .btn {
-      margin: 0;
-      display: inline-block;
-    }
-
-    #lista {
-      flex: 1;
-      overflow-y: auto;
-      padding-right: 5px;
-    }
-
-    .transaccion {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: white;
-      padding: 15px;
-      border-radius: 12px;
-      margin-bottom: 10px;
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
     }
   </style>
 </head>
@@ -358,60 +346,34 @@
   </nav>
 
   <div class="content">
+
     <div class="container">
 
-      <h1 class="titulo">Programar Transacciones</h1>
+      <h1 class="titulo">
+        Programar Transacciones
+      </h1>
 
       <div class="card">
 
+        <h3 style="margin-bottom:20px; color:#334155;">
+          Selecciona la transacción a programar
+        </h3>
+
         <div class="tipo-selector">
-          <button class="tipo-btn active" onclick="seleccionarTipo('RECARGA', this)">
+
+          <button class="tipo-btn" onclick="abrirPopupProgramar('RECARGA')">
             Recarga
           </button>
 
-          <button class="tipo-btn" onclick="seleccionarTipo('RETIRO', this)">
+          <button class="tipo-btn" onclick="abrirPopupProgramar('RETIRO')">
             Retiro
           </button>
 
-          <button class="tipo-btn" onclick="seleccionarTipo('TRANSFERENCIA', this)">
+          <button class="tipo-btn" onclick="abrirPopupProgramar('TRANSFERENCIA')">
             Transferencia
           </button>
-        </div>
-
-        <div class="form-grid">
-
-          <div class="form-row">
-            <label>Billetera origen</label>
-            <select id="origen"></select>
-          </div>
-
-          <div class="form-row hidden" id="destinoRow">
-            <label>Billetera destino</label>
-
-            <input type="text" id="destino" inputmode="numeric"
-              oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-          </div>
-
-          <div class="form-row">
-            <label>Valor</label>
-
-            <div class="input-group">
-              <input type="text" id="valor" inputmode="numeric" oninput="formatearMiles(this)">
-
-              <div id="error-msg"></div>
-            </div>
-          </div>
-
-          <div class="form-row">
-            <label>Fecha y hora</label>
-            <input type="datetime-local" id="fecha" onchange="this.blur()">
-          </div>
 
         </div>
-
-        <button class="btn" onclick="programar()">
-          Programar
-        </button>
 
       </div>
 
@@ -420,12 +382,98 @@
       <div id="paginacion" class="paginacion"></div>
 
     </div>
+
+  </div>
+
+  <div id="popupProgramar" class="popup hidden">
+
+    <div class="popup-content">
+
+      <div style="margin-bottom:20px;">
+
+        <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+
+          <div style="display:flex; flex-direction:column; align-items:flex-start;">
+
+            <h2 id="tituloPopupProgramar">
+              Programar
+            </h2>
+
+            <div id="notaComision" style="
+              font-size:13px;
+              margin-top:6px;
+              color:#e2e8f0;
+              text-align:left;
+              width:100%;">
+            </div>
+
+          </div>
+
+          <button onclick="cerrarPopupProgramar()">
+            ✕
+          </button>
+
+        </div>
+
+      </div>
+
+      <div class="form-grid">
+
+        <div class="form-row">
+          <label>Billetera origen</label>
+          <select id="origen"></select>
+        </div>
+
+        <div class="form-row hidden" id="destinoRow">
+
+          <label>Billetera destino</label>
+
+          <input type="text" id="destino" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+        </div>
+
+        <div class="form-row">
+
+          <label>Valor</label>
+
+          <div class="input-group">
+
+            <input type="text" id="valor" inputmode="numeric" oninput="formatearMiles(this)">
+
+            <div id="error-msg"></div>
+
+          </div>
+        </div>
+
+        <div class="form-row hidden" id="totalRow">
+          <label>Total a descontar</label>
+
+          <input type="text" id="total" readonly>
+        </div>
+
+        <div class="form-row">
+          <label>Fecha y hora</label>
+
+          <input type="datetime-local" id="fecha" onchange="this.blur()">
+        </div>
+
+      </div>
+
+      <button class="btn" onclick="programar()">
+        Programar
+      </button>
+
+    </div>
+
   </div>
 
   <div id="popup" class="popup hidden">
-    <div class="popup-content">
+
+    <div class="popup-content" style="width:420px;">
+
       <p id="popup-message"></p>
+
       <div id="popup-buttons" style="display:flex; justify-content:center; gap:10px;">
+
         <button id="btnAceptar" onclick="cerrarPopup()">
           Aceptar
         </button>
@@ -439,11 +487,13 @@
         </button>
 
       </div>
+
     </div>
+
   </div>
 
   <script>
-    const usuario = JSON.parse(sessionStorage.getItem("usuario"));
+    let usuario = JSON.parse(sessionStorage.getItem("usuario"));
 
     if (!usuario) {
       window.location.href = "/login.html";
@@ -456,6 +506,92 @@
 
     let paginaActual = 1;
     const porPagina = 3;
+
+    function obtenerComision() {
+
+      switch (usuario.nivel) {
+
+        case "PLATA":
+          return "0.4%";
+
+        case "ORO":
+          return "0.3%";
+
+        case "PLATINO":
+          return "0.1%";
+
+        default:
+          return "0.5%";
+      }
+    }
+
+    function calcularComision(valor) {
+
+      let porcentaje = 0.005;
+
+      switch (usuario.nivel) {
+
+        case "PLATA":
+          porcentaje = 0.004;
+          break;
+
+        case "ORO":
+          porcentaje = 0.003;
+          break;
+
+        case "PLATINO":
+          porcentaje = 0.001;
+          break;
+      }
+
+      return Math.round(valor * porcentaje);
+    }
+
+    function esBilleteraPropia(destinoId) {
+
+      return billeteras.some(
+        b => String(b.id) === String(destinoId)
+      );
+    }
+
+    function actualizarTotal() {
+
+      const valorInput =
+        document.getElementById("valor");
+
+      const totalInput =
+        document.getElementById("total");
+
+      const valor = parseFloat(
+        valorInput.value.replace(/\./g, "")
+      );
+
+      const destinoId =
+        document.getElementById("destino").value;
+
+      if (!valor || valor <= 0) {
+
+        totalInput.value = "";
+        return;
+      }
+
+      let total = valor;
+
+      if (
+        tipoActual === "TRANSFERENCIA"
+        && !esBilleteraPropia(destinoId)
+      ) {
+
+        const comision =
+          calcularComision(valor);
+
+        total += comision;
+      }
+
+      totalInput.value =
+        Math.round(total)
+          .toLocaleString("es-CO");
+    }
 
     async function cargarBilleteras() {
 
@@ -470,6 +606,7 @@
       select.innerHTML = "";
 
       billeteras.forEach(b => {
+
         select.innerHTML += `
           <option value="${b.id}">
             ${b.nombre}
@@ -478,31 +615,67 @@
       });
     }
 
-    function seleccionarTipo(tipo, btn) {
-
+    async function abrirPopupProgramar(tipo) {
+      await actualizarUsuario();
       tipoActual = tipo;
 
-      document.querySelectorAll(".tipo-btn")
-        .forEach(b => b.classList.remove("active"));
+      document.getElementById("popupProgramar")
+        .classList.remove("hidden");
 
-      btn.classList.add("active");
+      document.getElementById("notaComision")
+        .textContent = "";
+
+      document.getElementById("tituloPopupProgramar")
+        .textContent =
+        "Programar " + tipo.toLowerCase();
 
       const destinoRow =
         document.getElementById("destinoRow");
 
+      const totalRow =
+        document.getElementById("totalRow");
+
       if (tipo === "TRANSFERENCIA") {
+
         destinoRow.classList.remove("hidden");
+        totalRow.classList.remove("hidden");
+
+        document.getElementById("notaComision")
+          .textContent =
+          "Nota: Comisión por transferencia a otra persona será de "
+          + obtenerComision();
+
       } else {
+
         destinoRow.classList.add("hidden");
+        totalRow.classList.add("hidden");
+
+        document.getElementById("notaComision")
+          .textContent = "";
       }
+
+      actualizarTotal();
+    }
+
+    function cerrarPopupProgramar() {
+
+      document.getElementById("popupProgramar")
+        .classList.add("hidden");
+
+      document.getElementById("valor").value = "";
+      document.getElementById("destino").value = "";
+      document.getElementById("fecha").value = "";
+
+      document.getElementById("error-msg").style.display = "none";
+
+      document.getElementById("valor")
+        .classList.remove("input-error");
     }
 
     async function programar() {
 
       const origen = document.getElementById("origen").value;
-
       const destino = document.getElementById("destino").value;
-
       const fecha = document.getElementById("fecha").value;
 
       const valorInput = document.getElementById("valor");
@@ -540,64 +713,31 @@
         return;
       }
 
-      if (tipoActual === "TRANSFERENCIA" && origen === destino) {
-        mostrarPopup("No puedes transferir a la misma billetera");
+      const fechaSeleccionada =
+        new Date(fecha);
+
+      const ahora = new Date();
+
+      ahora.setMinutes(
+        ahora.getMinutes() + 1
+      );
+
+      if (fechaSeleccionada < ahora) {
+
+        mostrarPopup(
+          "La fecha debe ser mínimo 1 minuto después de la hora actual"
+        );
 
         return;
       }
 
-      if (tipoActual === "TRANSFERENCIA") {
-        let porcentaje = 0.005;
-        switch (usuario.nivel) {
-          case "PLATA":
-            porcentaje = 0.004;
-            break;
+      if (tipoActual === "TRANSFERENCIA" && origen === destino) {
 
-          case "ORO":
-            porcentaje = 0.003;
-            break;
+        mostrarPopup(
+          "No puedes transferir a la misma billetera"
+        );
 
-          case "PLATINO":
-            porcentaje = 0.001;
-            break;
-        }
-
-        const comision =
-          Math.round(valor * porcentaje);
-
-        const total =
-          valor + comision;
-
-        if (total > billetera.saldo) {
-
-          errorMsg.textContent =
-            "No hay suficiente saldo disponible";
-
-          errorMsg.style.display = "block";
-
-          valorInput.classList.remove("input-error");
-          void valorInput.offsetWidth;
-          valorInput.classList.add("input-error");
-
-          return;
-        }
-      }
-
-      if (tipoActual === "RETIRO") {
-
-        if (valor > billetera.saldo) {
-
-          errorMsg.textContent =
-            "No hay suficiente saldo disponible";
-
-          errorMsg.style.display = "block";
-
-          valorInput.classList.remove("input-error");
-          void valorInput.offsetWidth;
-          valorInput.classList.add("input-error");
-
-          return;
-        }
+        return;
       }
 
       errorMsg.style.display = "none";
@@ -628,15 +768,14 @@
         const mensaje = await res.text();
 
         if (!res.ok) {
+
           mostrarPopup(mensaje);
           return;
         }
 
         mostrarPopup(mensaje);
 
-        document.getElementById("valor").value = "";
-        document.getElementById("destino").value = "";
-        document.getElementById("fecha").value = "";
+        cerrarPopupProgramar();
 
         cargarProgramadas();
 
@@ -649,6 +788,7 @@
     }
 
     async function cargarProgramadas(auto = false) {
+
       const res = await fetch(
         `http://localhost:8080/transacciones-programadas/listar/${usuario.cedula}`
       );
@@ -680,6 +820,7 @@
         }, 200);
 
       } else {
+
         dibujar();
       }
 
@@ -704,6 +845,7 @@
             <div class="transaccion">
 
               <div>
+
                 <b>${t.tipo}</b><br>
 
                 ${formatearFecha(t.fechaEjecucion)}
@@ -712,12 +854,13 @@
                 <span style="font-weight:bold;">
                   $${formatearNumero(t.valor)}
                 </span>
+
               </div>
 
               <div style="display:flex; align-items:center; gap:10px;">
 
                 <span class="estado ${t.estado.toLowerCase()}">
-                ${t.estado}
+                  ${t.estado}
                 </span>
 
                 ${t.estado === "PENDIENTE"
@@ -756,34 +899,37 @@
       if (totalPaginas <= 1) return;
 
       cont.innerHTML = `
-      <button
-        class="btn"
-        onclick="cambiarPagina(-1)"
-        ${paginaActual === 1 ? 'disabled' : ''}
-      >
-        ←
-      </button>
+        <button
+          class="btn"
+          onclick="cambiarPagina(-1)"
+          ${paginaActual === 1 ? 'disabled' : ''}
+        >
+          ←
+        </button>
 
-      <span>
-        Página ${paginaActual} de ${totalPaginas}
-      </span>
+        <span>
+          Página ${paginaActual} de ${totalPaginas}
+        </span>
 
-      <button
-        class="btn"
-        onclick="cambiarPagina(1)"
-        ${paginaActual === totalPaginas ? 'disabled' : ''}
-      >
-        →
-      </button>
-    `;
+        <button
+          class="btn"
+          onclick="cambiarPagina(1)"
+          ${paginaActual === totalPaginas ? 'disabled' : ''}
+        >
+          →
+        </button>
+      `;
     }
 
     function cambiarPagina(dir) {
+
       paginaActual += dir;
+
       render();
     }
 
     function cancelar(id) {
+
       idPendienteCancelar = id;
 
       document.getElementById("popup-message")
@@ -804,7 +950,9 @@
     }
 
     async function confirmarCancelacion() {
+
       try {
+
         const res = await fetch(
           `http://localhost:8080/transacciones-programadas/cancelar/${usuario.cedula}/${idPendienteCancelar}`,
           {
@@ -837,17 +985,19 @@
         valor.replace(/[^0-9]/g, "");
 
       if (valor === "") {
-
         input.value = "";
+        actualizarTotal();
         return;
       }
 
-      input.value =
-        Number(valor).toLocaleString("es-CO");
+      input.value = Number(valor).toLocaleString("es-CO");
+      actualizarTotal();
     }
 
     function formatearNumero(valor) {
-      return Number(valor).toLocaleString("es-CO");
+
+      return Number(valor)
+        .toLocaleString("es-CO");
     }
 
     function formatearFecha(fechaISO) {
@@ -880,6 +1030,7 @@
     }
 
     function mostrarPopup(mensaje) {
+
       document.getElementById("popup-message")
         .textContent = mensaje;
 
@@ -906,6 +1057,25 @@
       sessionStorage.removeItem("usuario");
     }
 
+    async function actualizarUsuario() {
+
+      const usuarioStorage =
+        JSON.parse(sessionStorage.getItem("usuario"));
+
+      const res = await fetch(
+        `http://localhost:8080/usuarios/${usuarioStorage.cedula}`
+      );
+
+      const usuarioActualizado = await res.json();
+
+      sessionStorage.setItem(
+        "usuario",
+        JSON.stringify(usuarioActualizado)
+      );
+
+      usuario = usuarioActualizado;
+    }
+
     document.getElementById("valor")
       .addEventListener("input", function () {
 
@@ -917,12 +1087,19 @@
         this.classList.remove("input-error");
       });
 
+    document.getElementById("destino")
+      .addEventListener("input", actualizarTotal);
+
+    document.getElementById("origen")
+      .addEventListener("change", actualizarTotal);
+
     cargarBilleteras();
     cargarProgramadas();
 
     setInterval(() => {
       cargarProgramadas(true);
     }, 5000);
+
   </script>
 
 </body>
