@@ -14,11 +14,13 @@ public class TransaccionService {
     private final UsuarioService usuarioService;
     private final PuntosService puntosService;
     private final NotificacionService notificacionService;
+    private final SistemaService sistemaService;
 
-    public TransaccionService(UsuarioService usuarioService, PuntosService puntosService, NotificacionService notificacionService) {
+    public TransaccionService(UsuarioService usuarioService, PuntosService puntosService, NotificacionService notificacionService, SistemaService sistemaService) {
         this.usuarioService = usuarioService;
         this.puntosService = puntosService;
         this.notificacionService = notificacionService;
+        this.sistemaService = sistemaService;
     }
 
     public ResultadoTransaccion recargar(String cedula, String idBilletera, double valor) {
@@ -126,7 +128,7 @@ public class TransaccionService {
         usuarioOrigen.getPilaReversiones().push(t);
 
         if (!usuarioOrigen.getCedula().equals(usuarioDestino.getCedula())) {
-            registrarTransaccion(usuarioDestino, origen, destino, valor, comision, TipoTransaccion.TRANSFERENCIA, false);
+            usuarioDestino.getHistorialTransacciones().add(t);
         }
 
         NivelUsuario nivelDespues = usuarioOrigen.getNivel();
@@ -139,6 +141,7 @@ public class TransaccionService {
             System.out.println("Error enviando correo: " + e.getMessage());
         }
 
+        sistemaService.actualizarGrafo(origen.getId(), destino.getId());
         return new ResultadoTransaccion(true, subioNivel, nivelDespues);
     }
 

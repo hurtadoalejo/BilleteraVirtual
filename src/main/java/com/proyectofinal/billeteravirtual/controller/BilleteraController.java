@@ -1,6 +1,7 @@
 package com.proyectofinal.billeteravirtual.controller;
 
 import com.proyectofinal.billeteravirtual.model.Billetera;
+import com.proyectofinal.billeteravirtual.model.BilleteraResponse;
 import com.proyectofinal.billeteravirtual.service.BilleteraService;
 import com.proyectofinal.billeteravirtual.util.ArrayList;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,5 +90,10 @@ public class BilleteraController {
         }
 
         return ResponseEntity.ok("Billetera eliminada correctamente");
+    }
+
+    @GetMapping("/admin")
+    public ResponseEntity<java.util.ArrayList<BilleteraResponse>> listarBilleteras() {
+        return ResponseEntity.ok(billeteraService.listarBilleterasAdmin());
     }
 }

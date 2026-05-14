@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Billeteras</title>
+
+  <style>
+    * {
+      user-select: none;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      display: flex;
+      height: 100vh;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(77, 130, 188, 0.6), transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(77, 130, 188, 0.6), transparent 40%),
+        radial-gradient(circle at 50% 50%, #4d82bc, #005187);
+      background-blend-mode: screen;
+      color: white;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: rgba(7, 68, 109, 0.25);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px 10px;
+    }
+
+    .nav-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 15px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      color: white;
+    }
+
+    .nav-item img {
+      width: 20px;
+      height: 20px;
+      opacity: 0.8;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .content {
+      flex: 1;
+      background: #F3F6FF;
+      color: #1e293b;
+      padding: 35px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      width: 100%;
+    }
+
+    .titulo {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .estadisticas {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .stat h3 {
+      color: #64748b;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .stat p {
+      font-size: 24px;
+      font-weight: bold;
+      color: #1e293b;
+    }
+
+    .busqueda {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #ccc;
+      outline: none;
+    }
+
+    #lista {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .billetera {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f8fafc;
+      padding: 18px;
+      border-radius: 14px;
+      margin-bottom: 12px;
+    }
+
+    .billetera-info {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      flex: 1;
+      font-size: 13px;
+    }
+
+    .label {
+      color: #64748b;
+      font-size: 11px;
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .value {
+      font-weight: bold;
+      color: #1e293b;
+    }
+
+    .categoria {
+      padding: 6px 0;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      display: inline-flex;
+      align-items: center;
+      margin-top: 2px;
+    }
+
+    .AHORROS {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .GASTOS {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .INVERSION {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .btn {
+      padding: 10px 18px;
+      border-radius: 20px;
+      border: none;
+      cursor: pointer;
+      background: #4d82bc;
+      color: white;
+    }
+
+    .paginacion {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      padding-top: 15px;
+    }
+
+    .lista-animada {
+      opacity: 1;
+      transform: translateY(0);
+      transition: all 0.3s ease;
+    }
+
+    .lista-animada.fade {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="sidebar">
+
+    <div class="nav-group">
+      <a href="/dashboard.html" class="nav-item"><img src="dashboard.svg"><span>Dashboard</span></a>
+      <a href="/usuarios.html" class="nav-item"><img src="usuarios.svg"><span>Usuarios</span></a>
+      <a href="/billeteras.html" class="nav-item"><img src="billeteras.svg"><span>Billeteras</span></a>
+      <a href="/transacciones.html" class="nav-item"><img src="transacciones.svg"><span>Transacciones</span></a>
+      <a href="/ranking.html" class="nav-item"><img src="ranking.svg"><span>Ranking</span></a>
+      <a href="/reporte.html" class="nav-item"><img src="reporte.svg"><span>Reporte</span></a>
+    </div>
+
+    <div class="nav-group">
+      <a href="/login.html" class="nav-item" onclick="logout()">
+        <img src="cerrar-sesion.svg">
+        <span>Cerrar sesión</span>
+      </a>
+    </div>
+
+  </nav>
+
+  <div class="content">
+
+    <div class="container">
+
+      <h1 class="titulo">
+        Billeteras registradas
+      </h1>
+
+      <div class="estadisticas">
+
+        <div class="stat">
+          <h3>Billetera con mayor uso</h3>
+          <p id="mayorUso">-</p>
+        </div>
+
+        <div class="stat">
+          <h3>Categoría más activa</h3>
+          <p id="categoriaActiva">-</p>
+        </div>
+
+        <div class="stat">
+          <h3>Total billeteras</h3>
+          <p id="totalBilleteras">0</p>
+        </div>
+
+      </div>
+
+      <div class="card">
+        <input type="text" id="buscarBilletera" class="busqueda" placeholder="Buscar por ID o dueño...">
+      </div>
+
+      <div id="lista"></div>
+
+      <div id="paginacion" class="paginacion"></div>
+
+    </div>
+
+  </div>
+
+  <script>
+
+    let billeteras = [];
+
+    let paginaActual = 1;
+
+    const porPagina = 4;
+
+    const formatoCOP =
+      new Intl.NumberFormat("es-CO");
+
+    async function cargarBilleteras() {
+
+      const res = await fetch(
+        "http://localhost:8080/billeteras/admin"
+      );
+
+      billeteras = await res.json();
+      billeteras.sort((a, b) =>
+        b.movimientos - a.movimientos
+      );
+
+      document.getElementById("totalBilleteras")
+        .textContent =
+        billeteras.length;
+
+      calcularEstadisticas();
+
+      render(true);
+    }
+
+    function calcularEstadisticas() {
+
+      if (billeteras.length === 0) {
+
+        document.getElementById("mayorUso")
+          .textContent = "-";
+
+        document.getElementById("categoriaActiva")
+          .textContent = "-";
+
+        return;
+      }
+
+      let mayor =
+        billeteras[0];
+
+      for (const billetera of billeteras) {
+
+        if (billetera.movimientos > mayor.movimientos) {
+          mayor = billetera;
+        }
+      }
+
+      document.getElementById("mayorUso")
+        .textContent =
+        mayor.nombre;
+
+      const categorias = {};
+
+      for (const billetera of billeteras) {
+
+        const tipo = billetera.tipo;
+
+        categorias[tipo] =
+          (categorias[tipo] || 0)
+          +
+          billetera.movimientos;
+      }
+
+      let categoriaMasActiva = "-";
+
+      let max = -1;
+
+      for (const categoria in categorias) {
+
+        if (categorias[categoria] > max) {
+
+          max = categorias[categoria];
+
+          categoriaMasActiva = categoria;
+        }
+      }
+
+      document.getElementById("categoriaActiva")
+        .textContent =
+        categoriaMasActiva;
+    }
+
+    function obtenerFiltradas() {
+
+      const texto =
+        document.getElementById("buscarBilletera")
+          .value
+          .trim()
+          .toLowerCase();
+
+      return billeteras.filter(b =>
+
+        b.id.toLowerCase().includes(texto)
+
+        ||
+
+        b.usuarioNombre.toLowerCase().includes(texto)
+
+        ||
+
+        b.usuarioId.toLowerCase().includes(texto)
+      );
+    }
+
+    function render(sinAnimacion = false) {
+
+      const lista =
+        document.getElementById("lista");
+
+      if (!sinAnimacion) {
+
+        lista.classList.add("fade");
+
+        setTimeout(() => dibujar(), 200);
+
+      } else {
+
+        dibujar();
+      }
+
+      function dibujar() {
+
+        lista.classList.remove("fade");
+
+        lista.classList.add("lista-animada");
+
+        const filtradas =
+          obtenerFiltradas();
+
+        const inicio =
+          (paginaActual - 1) * porPagina;
+
+        const fin =
+          inicio + porPagina;
+
+        const pagina =
+          filtradas.slice(inicio, fin);
+
+        lista.innerHTML = "";
+
+        pagina.forEach(b => {
+
+          lista.innerHTML += `
+          <div class="billetera">
+
+            <div class="billetera-info">
+
+              <div>
+                <span class="label">
+                  ID
+                </span>
+
+                <span class="value">
+                  ${b.id}
+                </span>
+              </div>
+
+              <div>
+                <span class="label">
+                  Nombre
+                </span>
+
+                <span class="value">
+                  ${b.nombre}
+                </span>
+              </div>
+
+              <div>
+                <span class="label">
+                  Dueño
+                </span>
+
+                <span class="value">
+                  ${b.usuarioNombre}
+                </span>
+              </div>
+
+              <div>
+                <span class="label">
+                  Cédula
+                </span>
+
+                <span class="value">
+                  ${b.usuarioId}
+                </span>
+              </div>
+
+              <div>
+                <span class="label">
+                  Saldo
+                </span>
+
+                <span class="value">
+                  $ ${formatoCOP.format(b.saldo)}
+                </span>
+              </div>
+
+              <div>
+                <span class="label">
+                  Categoría
+                </span>
+
+                <span class="categoria ${b.tipo}">
+                  ${b.tipo}
+                </span>
+              </div>
+
+              <div>
+                <span class="label">
+                  Movimientos
+                </span>
+
+                <span class="value">
+                  ${b.movimientos}
+                </span>
+              </div>
+
+              <div>
+                <span class="label">
+                  Estado
+                </span>
+
+                <span class="value">
+                  ${b.estado}
+                </span>
+              </div>
+
+            </div>
+
+          </div>
+        `;
+        });
+
+        renderPaginacion(filtradas.length);
+      }
+    }
+
+    function renderPaginacion(total) {
+
+      const cont =
+        document.getElementById("paginacion");
+
+      cont.innerHTML = "";
+
+      const totalPaginas =
+        Math.ceil(total / porPagina);
+
+      if (totalPaginas <= 1) return;
+
+      cont.innerHTML = `
+      <button
+        class="btn"
+        onclick="cambiarPagina(-1)"
+        ${paginaActual === 1 ? 'disabled' : ''}
+      >
+        ←
+      </button>
+
+      <span style="align-self:center;">
+        Página ${paginaActual} de ${totalPaginas}
+      </span>
+
+      <button
+        class="btn"
+        onclick="cambiarPagina(1)"
+        ${paginaActual === totalPaginas ? 'disabled' : ''}
+      >
+        →
+      </button>
+    `;
+    }
+
+    function cambiarPagina(dir) {
+
+      paginaActual += dir;
+
+      render();
+    }
+
+    document.getElementById("buscarBilletera")
+      .addEventListener("input", () => {
+
+        paginaActual = 1;
+
+        render();
+      });
+
+    function logout() {
+
+      sessionStorage.removeItem("usuario");
+    }
+
+    cargarBilleteras();
+
+    setInterval(() => {
+
+      cargarBilleteras();
+
+    }, 5000);
+
+  </script>
+
+</body>
+
+</html>

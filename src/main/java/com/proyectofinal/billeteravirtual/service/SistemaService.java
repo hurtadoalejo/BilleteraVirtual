@@ -3,7 +3,7 @@ package com.proyectofinal.billeteravirtual.service;
 import com.proyectofinal.billeteravirtual.model.*;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
+import java.util.*;
 
 @Service
 public class SistemaService {
@@ -130,5 +130,60 @@ public class SistemaService {
 
     public boolean hayNotificacionesPendientes() {
         return !sistema.getNotificacionesPendientes().isEmpty();
+    }
+
+    public void actualizarGrafo(String origenId, String destinoId) {
+        sistema.getGrafoTransferencias().putIfAbsent(origenId, new HashMap<>());
+
+        Map<String, Integer> conexiones = sistema.getGrafoTransferencias().get(origenId);
+
+        conexiones.put(destinoId, conexiones.getOrDefault(destinoId, 0) + 1);
+    }
+
+    public Map<String, Integer> obtenerConexionesDeBilletera(String billeteraId){
+        return sistema.getGrafoTransferencias().getOrDefault(billeteraId, new HashMap<>());
+    }
+
+    public String obtenerRutaMasFrecuente() {
+        String mejorRuta = null;
+        int maxTransferencias = 0;
+
+        Map<String, Map<String, Integer>> grafo = sistema.getGrafoTransferencias();
+
+        for (String origen : grafo.keySet()) {
+            Map<String, Integer> destinos = grafo.get(origen);
+            for (String destino : destinos.keySet()) {
+                int cantidad = destinos.get(destino);
+                if (cantidad > maxTransferencias) {
+                    maxTransferencias = cantidad;
+                    mejorRuta = origen + " → " + destino + " (" + cantidad + " transferencias)";
+                }
+            }
+        }
+
+        return mejorRuta;
+    }
+
+    public ArrayList<String> obtenerBilleterasConMasConexiones() {
+        ArrayList<String> resultado = new ArrayList<>();
+
+        int maxConexiones = 0;
+        for (String origen : sistema.getGrafoTransferencias().keySet()) {
+            int conexiones = sistema.getGrafoTransferencias().get(origen).size();
+            if (conexiones > maxConexiones) {
+                maxConexiones = conexiones;
+                resultado.clear();
+                resultado.add(origen);
+
+            } else if (conexiones == maxConexiones) {
+                resultado.add(origen);
+            }
+        }
+
+        return resultado;
+    }
+
+    public Collection<Usuario> obtenerUsuarios() {
+        return sistema.getUsuarios().values();
     }
 }

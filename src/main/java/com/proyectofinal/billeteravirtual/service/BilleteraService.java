@@ -10,10 +10,12 @@ import java.util.Map;
 public class BilleteraService {
 
     private final UsuarioService usuarioService;
+    private final SistemaService sistemaService;
     private static int contadorId = 0;
 
-    public BilleteraService(UsuarioService usuarioService) {
+    public BilleteraService(UsuarioService usuarioService, SistemaService sistemaService) {
         this.usuarioService = usuarioService;
+        this.sistemaService = sistemaService;
         Billetera billetera = new Billetera();
         billetera.setNombre("Nequi");
         billetera.setTipo(TipoBilletera.AHORRO);
@@ -83,5 +85,28 @@ public class BilleteraService {
         if (billetera.getSaldo() > 0) return false;
         usuario.getBilleteras().remove(idBilletera);
         return true;
+    }
+
+    public java.util.ArrayList<BilleteraResponse> listarBilleterasAdmin() {
+        java.util.ArrayList<BilleteraResponse> lista = new java.util.ArrayList<>();
+        for (Usuario usuario : sistemaService.obtenerUsuarios()) {
+            for (Billetera billetera : usuario.getBilleteras().values()) {
+                BilleteraResponse response = new BilleteraResponse();
+
+                response.setId(billetera.getId());
+                response.setNombre(billetera.getNombre());
+                response.setTipo(billetera.getTipo());
+                response.setEstado(billetera.getEstado());
+                response.setSaldo(billetera.getSaldo());
+
+                response.setUsuarioNombre(usuario.getNombreCompleto());
+                response.setUsuarioId(usuario.getCedula());
+                response.setMovimientos(billetera.getTransacciones().size());
+
+                lista.add(response);
+            }
+        }
+
+        return lista;
     }
 }

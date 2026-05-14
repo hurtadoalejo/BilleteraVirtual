@@ -11,6 +11,7 @@ public class SistemaBilletera {
     private PriorityQueue<TransaccionProgramada> colaProgramadas = new PriorityQueue<>();
     private TreeSet<Usuario> usuariosPorPuntos = new TreeSet<>();
     private Queue<NotificacionPendiente> notificacionesPendientes = new Queue<>();
+    private Map<String, Map<String, Integer>> grafoTransferencias = new HashMap<>();
 
     public Map<String, Usuario> getUsuarios() {
         return usuarios;
@@ -42,5 +43,13 @@ public class SistemaBilletera {
 
     public void setNotificacionesPendientes(Queue<NotificacionPendiente> notificacionesPendientes) {
         this.notificacionesPendientes = notificacionesPendientes;
+    }
+
+    public Map<String, Map<String, Integer>> getGrafoTransferencias() {
+        return grafoTransferencias;
+    }
+
+    public void setGrafoTransferencias(Map<String, Map<String, Integer>> grafoTransferencias) {
+        this.grafoTransferencias = grafoTransferencias;
     }
 }
