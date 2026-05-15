@@ -1,11 +1,15 @@
 package com.proyectofinal.billeteravirtual.service;
 
 import com.proyectofinal.billeteravirtual.model.*;
+import com.proyectofinal.billeteravirtual.response.TransaccionesResponse;
 import com.proyectofinal.billeteravirtual.util.ArrayList;
 import com.proyectofinal.billeteravirtual.util.Stack;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -269,5 +273,79 @@ public class TransaccionService {
         }
 
         return CodigoResultadoTransaccion.SIN_ERROR;
+    }
+
+    public java.util.ArrayList<Transaccion> obtenerTodas() {
+        java.util.ArrayList<Transaccion> lista = new java.util.ArrayList<>();
+
+        for (Usuario usuario : sistemaService.obtenerUsuarios()) {
+            for (Transaccion t : usuario.getHistorialTransacciones()) {
+                if (!lista.contains(t)) {
+                    lista.add(t);
+                }
+            }
+            for (Transaccion t : usuario.getTransaccionesProgramadas()) {
+                if (!lista.contains(t)) {
+                    lista.add(t);
+                }
+            }
+        }
+
+        return lista;
+    }
+
+    public double getMontoMovilizado(java.util.ArrayList<Transaccion> lista) {
+        double total = 0;
+
+        for (Transaccion t : lista) {
+            if (t.getEstado() == EstadoTransaccion.COMPLETADA) {
+                total += t.getValor();
+            }
+        }
+
+        return total;
+    }
+
+    public Map<TipoTransaccion, Integer> getFrecuenciaPorTipo(java.util.ArrayList<Transaccion> lista) {
+        Map<TipoTransaccion, Integer> frecuencia = new HashMap<>();
+
+        for (Transaccion t : lista) {
+            TipoTransaccion tipo = t.getTipo();
+            frecuencia.put(tipo, frecuencia.getOrDefault(tipo, 0) + 1);
+        }
+
+        return frecuencia;
+    }
+
+    public Map<EstadoTransaccion, Integer> getCantidadPorEstado(java.util.ArrayList<Transaccion> lista) {
+        Map<EstadoTransaccion, Integer> estados = new HashMap<>();
+        for (Transaccion t : lista) {
+            EstadoTransaccion estado = t.getEstado();
+            estados.put(estado, estados.getOrDefault(estado, 0) + 1);
+        }
+
+        return estados;
+    }
+
+    public java.util.ArrayList<Transaccion> getHistorialOrdenado(java.util.ArrayList<Transaccion> lista) {
+        lista.sort(Comparator.comparing(Transaccion::getFecha).reversed());
+
+        return lista;
+    }
+
+    public TransaccionesResponse getTransaccionesAdmin() {
+
+        java.util.ArrayList<Transaccion> lista = obtenerTodas();
+
+        lista = getHistorialOrdenado(lista);
+
+        TransaccionesResponse response = new TransaccionesResponse();
+
+        response.setTransacciones(lista);
+        response.setDineroMovilizado(getMontoMovilizado(lista));
+        response.setFrecuenciaPorTipo(getFrecuenciaPorTipo(lista));
+        response.setCantidadPorEstado(getCantidadPorEstado(lista));
+
+        return response;
     }
 }

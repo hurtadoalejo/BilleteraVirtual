@@ -796,8 +796,8 @@
       programadas = await res.json();
 
       programadas.sort((a, b) =>
-        new Date(b.fechaEjecucion)
-        - new Date(a.fechaEjecucion)
+        new Date(b.fecha)
+        - new Date(a.fecha)
       );
 
       if (!auto) {
@@ -840,7 +840,8 @@
           programadas.slice(inicio, fin);
 
         pagina.forEach(t => {
-
+          console.log(t.fecha);
+          console.log(typeof t.fecha);
           lista.innerHTML += `
             <div class="transaccion">
 
@@ -848,7 +849,7 @@
 
                 <b>${t.tipo}</b><br>
 
-                ${formatearFecha(t.fechaEjecucion)}
+                ${formatearFecha(t.fecha)}
                 <br>
 
                 <span style="font-weight:bold;">

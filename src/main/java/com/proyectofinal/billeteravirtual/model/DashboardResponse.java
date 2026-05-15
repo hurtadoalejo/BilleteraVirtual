@@ -1,5 +1,7 @@
 package com.proyectofinal.billeteravirtual.model;
 
+import com.proyectofinal.billeteravirtual.response.TransaccionDashboardResponse;
+
 import java.util.List;
 
 public class DashboardResponse {
@@ -9,7 +11,7 @@ public class DashboardResponse {
     private int totalTransacciones;
     private double dineroMovilizado;
 
-    private List<Transaccion> ultimasTransacciones;
+    private List<TransaccionDashboardResponse> ultimasTransacciones;
     private List<Usuario> topUsuarios;
 
     public int getTotalUsuarios() {
@@ -44,11 +46,11 @@ public class DashboardResponse {
         this.dineroMovilizado = dineroMovilizado;
     }
 
-    public List<Transaccion> getUltimasTransacciones() {
+    public List<TransaccionDashboardResponse> getUltimasTransacciones() {
         return ultimasTransacciones;
     }
 
-    public void setUltimasTransacciones(List<Transaccion> ultimasTransacciones) {
+    public void setUltimasTransacciones(List<TransaccionDashboardResponse> ultimasTransacciones) {
         this.ultimasTransacciones = ultimasTransacciones;
     }
 
@@ -59,6 +61,4 @@ public class DashboardResponse {
     public void setTopUsuarios(List<Usuario> topUsuarios) {
         this.topUsuarios = topUsuarios;
     }
-
-    // getters y setters
 }

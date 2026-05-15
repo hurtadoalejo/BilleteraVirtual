@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transacciones</title>
+
+  <style>
+    * {
+      user-select: none;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      display: flex;
+      height: 100vh;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(77, 130, 188, 0.6), transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(77, 130, 188, 0.6), transparent 40%),
+        radial-gradient(circle at 50% 50%, #4d82bc, #005187);
+      background-blend-mode: screen;
+      color: white;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: rgba(7, 68, 109, 0.25);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px 10px;
+    }
+
+    .nav-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 15px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      color: white;
+    }
+
+    .nav-item img {
+      width: 20px;
+      height: 20px;
+      opacity: 0.8;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .content {
+      flex: 1;
+      background: #F3F6FF;
+      color: #1e293b;
+      padding: 25px;
+      overflow-y: auto;
+    }
+
+    .titulo {
+      font-size: 28px;
+      margin-bottom: 20px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .card h3 {
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 8px;
+    }
+
+    .card p {
+      font-size: 22px;
+      font-weight: bold;
+      color: #4d82bc;
+    }
+
+    .filtros {
+      background: white;
+      padding: 15px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr auto;
+      gap: 12px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+      align-items: end;
+    }
+
+    .filtros input,
+    .filtros select {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #dbe2ea;
+      outline: none;
+      background: #f8fafc;
+    }
+
+    .filtro-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .filtro-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      padding-left: 2px;
+    }
+
+    .section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .box {
+      background: white;
+      border-radius: 15px;
+      padding: 15px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .box h2 {
+      font-size: 15px;
+      margin-bottom: 15px;
+      color: #1e293b;
+    }
+
+    .stats-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
+
+    .tabla {
+      background: white;
+      border-radius: 15px;
+      padding: 15px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+
+      height: 520px;
+
+      display: flex;
+      flex-direction: column;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .table-wrapper {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: auto;
+      border-radius: 12px;
+    }
+
+    thead {
+      background: #f8fafc;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      background: #f8fafc;
+      z-index: 10;
+    }
+
+    th {
+      text-align: left;
+      padding: 14px;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    td {
+      padding: 14px;
+      border-top: 1px solid #eee;
+      font-size: 13px;
+    }
+
+    .badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: bold;
+      display: inline-block;
+    }
+
+    .TRANSFERENCIA {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+
+    .RECARGA {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .RETIRO {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .COMPLETADA {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .REVERTIDA {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+
+    .PENDIENTE {
+      background: #fef3c7;
+      color: #b45309;
+    }
+
+    .FALLIDA {
+      background: #fecaca;
+      color: #991b1b;
+    }
+
+    .CANCELADA {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .paginacion {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .btn {
+      border: none;
+      background: #4d82bc;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    @media(max-width: 1200px) {
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .section {
+        grid-template-columns: 1fr;
+      }
+
+      .filtros {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="sidebar">
+
+    <div class="nav-group">
+      <a href="/dashboard.html" class="nav-item"><img src="dashboard.svg"><span>Dashboard</span></a>
+      <a href="/usuarios.html" class="nav-item"><img src="usuarios.svg"><span>Usuarios</span></a>
+      <a href="/billeteras.html" class="nav-item"><img src="billeteras.svg"><span>Billeteras</span></a>
+      <a href="/transacciones.html" class="nav-item"><img src="transacciones.svg"><span>Transacciones</span></a>
+      <a href="/ranking.html" class="nav-item"><img src="ranking.svg"><span>Ranking</span></a>
+      <a href="/reporte.html" class="nav-item"><img src="reporte.svg"><span>Reporte</span></a>
+    </div>
+
+    <div class="nav-group">
+      <a href="/login.html" class="nav-item">
+        <img src="cerrar-sesion.svg">
+        <span>Cerrar sesión</span>
+      </a>
+    </div>
+
+  </nav>
+
+  <div class="content">
+
+    <h1 class="titulo">
+      Analítica de transacciones
+    </h1>
+
+    <div class="grid">
+
+      <div class="card">
+        <h3>Total transacciones</h3>
+        <p id="totalTransacciones">0</p>
+      </div>
+
+      <div class="card">
+        <h3>Dinero movilizado</h3>
+        <p id="dineroMovilizado">$ 0</p>
+      </div>
+
+      <div class="card">
+        <h3>Tipo más usado</h3>
+        <p id="tipoFrecuente">-</p>
+      </div>
+
+      <div class="card">
+        <h3>Estado más común</h3>
+        <p id="estadoFrecuente">-</p>
+      </div>
+
+    </div>
+
+    <div class="filtros">
+
+      <div class="filtro-group">
+        <label>Fecha inicio</label>
+        <input type="date" id="fechaInicio">
+      </div>
+
+      <div class="filtro-group">
+        <label>Fecha fin</label>
+        <input type="date" id="fechaFin">
+      </div>
+
+      <div class="filtro-group">
+        <label>Tipo transacción</label>
+
+        <select id="filtroTipo">
+          <option value="">Todos los tipos</option>
+          <option value="TRANSFERENCIA">Transferencia</option>
+          <option value="RECARGA">Recarga</option>
+          <option value="RETIRO">Retiro</option>
+        </select>
+      </div>
+
+      <div class="filtro-group">
+        <label>Estado transacción</label>
+
+        <select id="filtroEstado">
+          <option value="">Todos los estados</option>
+          <option value="COMPLETADA">Completada</option>
+          <option value="REVERTIDA">Revertida</option>
+          <option value="PENDIENTE">Pendiente</option>
+          <option value="CANCELADA">Cancelada</option>
+        </select>
+      </div>
+
+      <button class="btn" onclick="limpiarFiltros()">
+        Limpiar
+      </button>
+
+    </div>
+
+    <div class="section">
+
+      <div class="box">
+
+        <h2>Frecuencia por tipo</h2>
+
+        <div class="stats-list" id="frecuenciaTipos"></div>
+
+      </div>
+
+      <div class="box">
+
+        <h2>Estados de transacciones</h2>
+
+        <div class="stats-list" id="frecuenciaEstados"></div>
+
+      </div>
+
+    </div>
+
+    <div class="tabla">
+
+      <div class="table-wrapper">
+
+        <table>
+
+          <thead>
+
+            <tr>
+              <th>Tipo</th>
+              <th>Estado</th>
+              <th>Valor</th>
+              <th>Comisión</th>
+              <th>Origen</th>
+              <th>Destino</th>
+              <th>Fecha</th>
+            </tr>
+
+          </thead>
+
+          <tbody id="tablaTransacciones"></tbody>
+
+        </table>
+
+      </div>
+
+      <div class="paginacion">
+
+        <button class="btn" id="btnAnterior" onclick="cambiarPagina(-1)">
+          ←
+        </button>
+
+        <span id="paginaTexto"></span>
+
+        <button class="btn" id="btnSiguiente" onclick="cambiarPagina(1)">
+          →
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+
+    let transacciones = [];
+
+    let paginaActual = 1;
+
+    const porPagina = 7;
+
+    const formatoCOP = new Intl.NumberFormat("es-CO", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    });
+
+    function formatearFecha(fechaISO) {
+
+      const fecha = new Date(fechaISO);
+
+      return fecha.toLocaleString("es-CO", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function actualizarAnalitica(lista) {
+
+      document.getElementById("totalTransacciones")
+        .textContent = lista.length;
+
+      let dinero = 0;
+
+      const frecuenciaTipos = {};
+
+      const frecuenciaEstados = {};
+
+      lista.forEach(t => {
+        if (t.estado === "COMPLETADA") {
+
+          dinero += t.valor;
+        }
+
+        frecuenciaTipos[t.tipo] =
+          (frecuenciaTipos[t.tipo] || 0) + 1;
+
+        frecuenciaEstados[t.estado] =
+          (frecuenciaEstados[t.estado] || 0) + 1;
+      });
+
+      document.getElementById("dineroMovilizado")
+        .textContent =
+        "$ " + formatoCOP.format(dinero);
+
+      document.getElementById("tipoFrecuente")
+        .textContent =
+        obtenerMayor(frecuenciaTipos);
+
+      document.getElementById("estadoFrecuente")
+        .textContent =
+        obtenerMayor(frecuenciaEstados);
+
+      renderFrecuencias(
+        frecuenciaTipos,
+        "frecuenciaTipos",
+        "tipo"
+      );
+
+      renderFrecuencias(
+        frecuenciaEstados,
+        "frecuenciaEstados",
+        "estado"
+      );
+    }
+
+    function obtenerMayor(objeto) {
+
+      let mayor = "-";
+
+      let cantidad = 0;
+
+      for (const key in objeto) {
+
+        if (objeto[key] > cantidad) {
+
+          cantidad = objeto[key];
+
+          mayor = key;
+        }
+      }
+
+      return mayor;
+    }
+
+    function renderFrecuencias(data, id, tipo) {
+
+      const contenedor =
+        document.getElementById(id);
+
+      contenedor.innerHTML = "";
+
+      if (tipo === "tipo") {
+
+        const tipos = [
+          "TRANSFERENCIA",
+          "RECARGA",
+          "RETIRO"
+        ];
+
+        tipos.forEach(t => {
+
+          contenedor.innerHTML += `
+        <div class="stat-item">
+          <span>${t}</span>
+          <b>${data[t] || 0}</b>
+        </div>
+      `;
+        });
+      }
+
+      if (tipo === "estado") {
+
+        const estados = [
+          "COMPLETADA",
+          "REVERTIDA",
+          "PENDIENTE",
+          "CANCELADA",
+          "FALLIDA"
+        ];
+
+        estados.forEach(e => {
+
+          contenedor.innerHTML += `
+        <div class="stat-item">
+          <span>${e}</span>
+          <b>${data[e] || 0}</b>
+        </div>
+      `;
+        });
+      }
+    }
+
+    function obtenerFiltradas() {
+
+      const tipo =
+        document.getElementById("filtroTipo").value;
+
+      const estado =
+        document.getElementById("filtroEstado").value;
+
+      const fechaInicio =
+        document.getElementById("fechaInicio").value;
+
+      const fechaFin =
+        document.getElementById("fechaFin").value;
+
+      return transacciones.filter(t => {
+
+        const coincideTipo =
+          !tipo || t.tipo === tipo;
+
+        const coincideEstado =
+          !estado || t.estado === estado;
+
+        const fechaTransaccion =
+          new Date(t.fecha);
+
+        let coincideInicio = true;
+        let coincideFin = true;
+
+        if (fechaInicio) {
+
+          coincideInicio =
+            fechaTransaccion >= new Date(fechaInicio);
+        }
+
+        if (fechaFin) {
+
+          const fin =
+            new Date(fechaFin);
+
+          fin.setHours(23, 59, 59, 999);
+
+          coincideFin =
+            fechaTransaccion <= fin;
+        }
+
+        return coincideTipo
+          && coincideEstado
+          && coincideInicio
+          && coincideFin;
+      });
+    }
+
+    function limpiarFiltros() {
+
+      document.getElementById("fechaInicio").value = "";
+
+      document.getElementById("fechaFin").value = "";
+
+      document.getElementById("filtroTipo").value = "";
+
+      document.getElementById("filtroEstado").value = "";
+
+      document.getElementById("fechaInicio")
+        .removeAttribute("max");
+
+      document.getElementById("fechaFin")
+        .removeAttribute("min");
+
+      paginaActual = 1;
+
+      renderTabla();
+    }
+
+    async function cargarDatos() {
+
+      const res = await fetch(
+        "http://localhost:8080/transacciones/admin"
+      );
+
+      const data = await res.json();
+
+      transacciones =
+        data.transacciones || [];
+
+      renderTabla();
+    }
+
+    function renderTabla() {
+
+      const filtradas =
+        obtenerFiltradas();
+
+      actualizarAnalitica(filtradas);
+
+      filtradas.sort((a, b) =>
+        new Date(b.fecha) - new Date(a.fecha)
+      );
+
+      const inicio =
+        (paginaActual - 1) * porPagina;
+
+      const fin =
+        inicio + porPagina;
+
+      const pagina =
+        filtradas.slice(inicio, fin);
+
+      const tabla =
+        document.getElementById("tablaTransacciones");
+
+      tabla.innerHTML = "";
+
+      pagina.forEach(t => {
+
+        tabla.innerHTML += `
+          <tr>
+
+            <td>
+              <span class="badge ${t.tipo}">
+                ${t.tipo}
+              </span>
+            </td>
+
+            <td>
+              <span class="badge ${t.estado}">
+                ${t.estado}
+              </span>
+            </td>
+
+            <td>
+              $ ${formatoCOP.format(t.valor)}
+            </td>
+
+            <td>
+              $ ${formatoCOP.format(t.comision)}
+            </td>
+
+            <td>
+              ${t.billeteraOrigenId || "-"}
+            </td>
+
+            <td>
+              ${t.billeteraDestinoId || "-"}
+            </td>
+
+            <td>
+              ${formatearFecha(t.fecha)}
+            </td>
+
+          </tr>
+        `;
+      });
+
+      renderPaginacion(filtradas.length);
+    }
+
+    function renderPaginacion(total) {
+
+      const totalPaginas =
+        Math.ceil(total / porPagina);
+
+      document.getElementById("paginaTexto")
+        .textContent =
+        `Página ${paginaActual} de ${totalPaginas || 1}`;
+
+      document.getElementById("btnAnterior")
+        .disabled =
+        paginaActual === 1;
+
+      document.getElementById("btnSiguiente")
+        .disabled =
+        paginaActual >= totalPaginas;
+    }
+
+    function cambiarPagina(direccion) {
+
+      const total =
+        obtenerFiltradas().length;
+
+      const totalPaginas =
+        Math.ceil(total / porPagina) || 1;
+
+      const nuevaPagina =
+        paginaActual + direccion;
+
+      if (nuevaPagina < 1) {
+        return;
+      }
+
+      if (nuevaPagina > totalPaginas) {
+        return;
+      }
+
+      paginaActual = nuevaPagina;
+
+      renderTabla();
+    }
+
+    document.getElementById("fechaInicio")
+      .addEventListener("change", (e) => {
+
+        const fechaInicio = e.target.value;
+
+        document.getElementById("fechaFin")
+          .min = fechaInicio;
+
+        const fechaFin =
+          document.getElementById("fechaFin").value;
+
+        if (fechaFin && fechaFin < fechaInicio) {
+
+          document.getElementById("fechaFin").value =
+            fechaInicio;
+        }
+
+        paginaActual = 1;
+
+        renderTabla();
+      });
+
+    document.getElementById("fechaFin")
+      .addEventListener("change", (e) => {
+
+        const fechaFin = e.target.value;
+
+        document.getElementById("fechaInicio")
+          .max = fechaFin;
+
+        const fechaInicio =
+          document.getElementById("fechaInicio").value;
+
+        if (fechaInicio && fechaInicio > fechaFin) {
+
+          document.getElementById("fechaInicio").value =
+            fechaFin;
+        }
+
+        paginaActual = 1;
+
+        renderTabla();
+      });
+
+    document.getElementById("filtroTipo")
+      .addEventListener("change", () => {
+
+        paginaActual = 1;
+
+        renderTabla();
+      });
+
+    document.getElementById("filtroEstado")
+      .addEventListener("change", () => {
+
+        paginaActual = 1;
+
+        renderTabla();
+      });
+
+    cargarDatos();
+
+    setInterval(() => {
+
+      cargarDatos();
+
+    }, 5000);
+
+  </script>
+
+</body>
+
+</html>

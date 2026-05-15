@@ -80,7 +80,7 @@ public class TransaccionProgramadaService {
         t.setComision(comision);
         t.setBilleteraOrigenId(billeteraOrigenId);
         t.setBilleteraDestinoId(billeteraDestinoId);
-        t.setFechaEjecucion(fechaEjecucion);
+        t.setFecha(fechaEjecucion);
         t.setEstado(EstadoTransaccion.PENDIENTE);
 
         sistemaBilletera.getColaProgramadas().add(t);
@@ -111,7 +111,7 @@ public class TransaccionProgramadaService {
                 cola.poll();
                 continue;
             }
-            if (t.getFechaEjecucion().isAfter(LocalDateTime.now())) {
+            if (t.getFecha().isAfter(LocalDateTime.now())) {
                 break;
             }
 

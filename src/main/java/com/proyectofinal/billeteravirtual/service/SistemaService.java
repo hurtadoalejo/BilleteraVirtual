@@ -1,6 +1,7 @@
 package com.proyectofinal.billeteravirtual.service;
 
 import com.proyectofinal.billeteravirtual.model.*;
+import com.proyectofinal.billeteravirtual.response.TransaccionDashboardResponse;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -72,22 +73,38 @@ public class SistemaService {
         return top;
     }
 
-    public java.util.ArrayList<Transaccion> getUltimasTransacciones() {
-        java.util.ArrayList<Transaccion> orden = new java.util.ArrayList<>();
+    public java.util.ArrayList<TransaccionDashboardResponse> getUltimasTransacciones() {
+        java.util.ArrayList<TransaccionDashboardResponse> lista = new java.util.ArrayList<>();
 
-        for (Usuario u : sistema.getUsuarios().values()) {
-            for (Transaccion t : u.getHistorialTransacciones()) {
-                orden.add(t);
+        for (Usuario usuario : sistema.getUsuarios().values()) {
+            for (Transaccion t : usuario.getHistorialTransacciones()) {
+                TransaccionDashboardResponse response = new TransaccionDashboardResponse();
+
+                String tipo = t.getTipo().toString();
+                if (t.getTipo() == TipoTransaccion.TRANSFERENCIA) {
+                    Billetera origen = usuario.getBilleteras().get(t.getBilleteraOrigenId());
+
+                    if (origen != null) {
+                        tipo = "TRANSFERENCIA ENVIADA";
+                    } else {
+                        tipo = "TRANSFERENCIA RECIBIDA";
+                    }
+                }
+
+                response.setTipo(tipo);
+                response.setValor(t.getValor());
+                response.setFecha(t.getFecha());
+
+                lista.add(response);
             }
         }
 
-        orden.sort(Comparator.comparing(Transaccion::getFecha).reversed());
+        lista.sort(Comparator.comparing(TransaccionDashboardResponse::getFecha).reversed());
+        java.util.ArrayList<TransaccionDashboardResponse> resultado = new java.util.ArrayList<>();
 
-        java.util.ArrayList<Transaccion> resultado = new java.util.ArrayList<>();
-
-        int limite = Math.min(3, orden.size());
+        int limite = Math.min(3, lista.size());
         for (int i = 0; i < limite; i++) {
-            resultado.add(orden.get(i));
+            resultado.add(lista.get(i));
         }
 
         return resultado;

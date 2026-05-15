@@ -67,7 +67,7 @@ public class NotificacionService {
     }
 
     private String construirHtmlCancelacion(Usuario usuario, TransaccionProgramada t) {
-        String fecha = formatearFecha(t.getFechaEjecucion());
+        String fecha = formatearFecha(t.getFecha());
 
         String tipo = switch (t.getTipo()) {
             case RECARGA -> "La recarga";
@@ -234,7 +234,7 @@ public class NotificacionService {
                 "<h2 style='color:#4d82bc;text-align:center;'>Billetera Virtual</h2>" +
                 "<p>Hola <b>" + usuario.getNombreCompleto() + "</b>,</p>" +
                 "<p>Tu transacción programada de tipo <b>" + t.getTipo() +
-                "</b> para la fecha <b>" + formatearFecha(t.getFechaEjecucion()) +
+                "</b> para la fecha <b>" + formatearFecha(t.getFecha()) +
                 "</b> no pudo ejecutarse.</p>" +
                 "<p><b>Motivo:</b> " + motivo + "</p>" +
                 "<hr style='margin:20px 0;'>" +

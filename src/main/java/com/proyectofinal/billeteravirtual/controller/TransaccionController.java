@@ -135,4 +135,9 @@ public class TransaccionController {
 
         return ResponseEntity.ok(respuesta);
     }
+
+    @GetMapping("/admin")
+    public ResponseEntity<?> dashboardTransacciones() {
+        return ResponseEntity.ok(transaccionService.getTransaccionesAdmin());
+    }
 }
