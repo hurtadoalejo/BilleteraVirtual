@@ -11,11 +11,13 @@ public class BilleteraService {
 
     private final UsuarioService usuarioService;
     private final SistemaService sistemaService;
+    private final SistemaBilletera sistema;
     private static int contadorId = 0;
 
-    public BilleteraService(UsuarioService usuarioService, SistemaService sistemaService) {
+    public BilleteraService(UsuarioService usuarioService, SistemaService sistemaService, SistemaBilletera sistema) {
         this.usuarioService = usuarioService;
         this.sistemaService = sistemaService;
+        this.sistema = sistema;
         Billetera billetera = new Billetera();
         billetera.setNombre("Nequi");
         billetera.setTipo(TipoBilletera.AHORRO);
@@ -108,5 +110,11 @@ public class BilleteraService {
         }
 
         return lista;
+    }
+
+    public void actualizarSaldo(Billetera billetera, double nuevoSaldo) {
+        sistema.getBilleterasPorSaldo().remove(billetera);
+        billetera.setSaldo(nuevoSaldo);
+        sistema.getBilleterasPorSaldo().add(billetera);
     }
 }

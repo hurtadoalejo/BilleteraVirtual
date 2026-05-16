@@ -2,8 +2,7 @@ package com.proyectofinal.billeteravirtual.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.proyectofinal.billeteravirtual.util.ArrayList;
 
-public class Billetera {
-
+public class Billetera implements Comparable<Billetera> {
     private String id;
     private String nombre;
     private TipoBilletera tipo;
@@ -81,5 +80,16 @@ public class Billetera {
     @Override
     public int hashCode() {
         return id.hashCode();
+    }
+
+    @Override
+    public int compareTo(Billetera otra) {
+        int cmp = Double.compare(otra.getSaldo(), this.getSaldo());
+
+        if (cmp == 0) {
+            return this.getId().compareTo(otra.getId());
+        }
+
+        return cmp;
     }
 }

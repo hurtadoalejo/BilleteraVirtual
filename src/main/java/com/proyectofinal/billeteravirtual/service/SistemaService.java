@@ -203,4 +203,36 @@ public class SistemaService {
     public Collection<Usuario> obtenerUsuarios() {
         return sistema.getUsuarios().values();
     }
+
+    public ArrayList<Transaccion> getTopTransacciones() {
+        ArrayList<Transaccion> top = new ArrayList<>();
+        int count = 0;
+
+        for (Transaccion t : sistema.getTransaccionesPorTotal()) {
+            top.add(t);
+            count++;
+            if (count == 3) break;
+        }
+
+        return top;
+    }
+
+    public ArrayList<Billetera> getTopBilleteras() {
+        ArrayList<Billetera> top = new ArrayList<>();
+        int count = 0;
+
+        for (Billetera b : sistema.getBilleterasPorSaldo()) {
+            top.add(b);
+            count++;
+
+            if (count == 3) break;
+        }
+
+        return top;
+    }
+
+    public void actualizarBilleteraOrdenada(Billetera billetera) {
+        sistema.getBilleterasPorSaldo().remove(billetera);
+        sistema.getBilleterasPorSaldo().add(billetera);
+    }
 }

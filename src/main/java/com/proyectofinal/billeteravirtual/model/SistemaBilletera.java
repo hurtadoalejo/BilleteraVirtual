@@ -10,6 +10,8 @@ public class SistemaBilletera {
     private Map<String, Usuario> usuarios = new HashMap<>();
     private PriorityQueue<TransaccionProgramada> colaProgramadas = new PriorityQueue<>();
     private TreeSet<Usuario> usuariosPorPuntos = new TreeSet<>();
+    private TreeSet<Transaccion> transaccionesPorTotal = new TreeSet<>();
+    private TreeSet<Billetera> billeterasPorSaldo = new TreeSet<>();
     private Queue<NotificacionPendiente> notificacionesPendientes = new Queue<>();
     private Map<String, Map<String, Integer>> grafoTransferencias = new HashMap<>();
 
@@ -51,5 +53,21 @@ public class SistemaBilletera {
 
     public void setGrafoTransferencias(Map<String, Map<String, Integer>> grafoTransferencias) {
         this.grafoTransferencias = grafoTransferencias;
+    }
+
+    public TreeSet<Transaccion> getTransaccionesPorTotal() {
+        return transaccionesPorTotal;
+    }
+
+    public void setTransaccionesPorTotal(TreeSet<Transaccion> transaccionesPorTotal) {
+        this.transaccionesPorTotal = transaccionesPorTotal;
+    }
+
+    public TreeSet<Billetera> getBilleterasPorSaldo() {
+        return billeterasPorSaldo;
+    }
+
+    public void setBilleterasPorSaldo(TreeSet<Billetera> billeterasPorSaldo) {
+        this.billeterasPorSaldo = billeterasPorSaldo;
     }
 }

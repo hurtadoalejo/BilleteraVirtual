@@ -1,7 +1,7 @@
 package com.proyectofinal.billeteravirtual.model;
 import java.time.LocalDateTime;
 
-public class TransaccionProgramada extends Transaccion implements Comparable<TransaccionProgramada> {
+public class TransaccionProgramada extends Transaccion {
     private Usuario usuario;
 
     public Usuario getUsuario() {
@@ -13,7 +13,13 @@ public class TransaccionProgramada extends Transaccion implements Comparable<Tra
     }
 
     @Override
-    public int compareTo(TransaccionProgramada otra) {
-        return this.getFecha().compareTo(otra.getFecha());
+    public int compareTo(Transaccion otra) {
+        int comparacion = this.getFecha().compareTo(otra.getFecha());
+
+        if (comparacion == 0) {
+            return this.getId().compareTo(otra.getId());
+        }
+
+        return comparacion;
     }
 }

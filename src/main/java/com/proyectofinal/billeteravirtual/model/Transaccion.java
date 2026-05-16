@@ -1,7 +1,7 @@
 package com.proyectofinal.billeteravirtual.model;
 import java.time.LocalDateTime;
 
-public class Transaccion {
+public class Transaccion implements Comparable<Transaccion> {
 
     private String id;
     private LocalDateTime fecha;
@@ -85,5 +85,18 @@ public class Transaccion {
 
     public void setComision(double comision) {
         this.comision = comision;
+    }
+
+    @Override
+    public int compareTo(Transaccion otra) {
+        double totalThis = this.valor + this.comision;
+        double totalOtra = otra.valor + otra.comision;
+
+        int comparacion = Double.compare(totalOtra, totalThis);
+        if (comparacion == 0) {
+            return this.id.compareTo(otra.id);
+        }
+
+        return comparacion;
     }
 }

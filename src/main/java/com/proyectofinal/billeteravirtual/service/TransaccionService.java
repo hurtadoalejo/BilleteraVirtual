@@ -18,13 +18,17 @@ public class TransaccionService {
     private final UsuarioService usuarioService;
     private final PuntosService puntosService;
     private final NotificacionService notificacionService;
+    private final BilleteraService billeteraService;
     private final SistemaService sistemaService;
+    private final SistemaBilletera sistema;
 
-    public TransaccionService(UsuarioService usuarioService, PuntosService puntosService, NotificacionService notificacionService, SistemaService sistemaService) {
+    public TransaccionService(UsuarioService usuarioService, PuntosService puntosService, NotificacionService notificacionService, SistemaService sistemaService, BilleteraService billeteraService, SistemaBilletera sistema) {
         this.usuarioService = usuarioService;
         this.puntosService = puntosService;
         this.notificacionService = notificacionService;
         this.sistemaService = sistemaService;
+        this.billeteraService = billeteraService;
+        this.sistema = sistema;
     }
 
     public ResultadoTransaccion recargar(String cedula, String idBilletera, double valor) {
@@ -40,7 +44,7 @@ public class TransaccionService {
         }
 
         NivelUsuario nivelAntes = usuario.getNivel();
-        billetera.setSaldo(billetera.getSaldo() + valor);
+        billeteraService.actualizarSaldo(billetera, billetera.getSaldo() + valor);
         registrarTransaccion(usuario, null, billetera, valor, 0, TipoTransaccion.RECARGA, true);
         NivelUsuario nivelDespues = usuario.getNivel();
         boolean subioNivel = nivelAntes != nivelDespues;
@@ -73,7 +77,7 @@ public class TransaccionService {
 
         NivelUsuario nivelAntes = usuario.getNivel();
 
-        billetera.setSaldo(billetera.getSaldo() - valor);
+        billeteraService.actualizarSaldo(billetera, billetera.getSaldo() - valor);
 
         registrarTransaccion(usuario, billetera, null, valor, 0, TipoTransaccion.RETIRO, true);
 
@@ -124,8 +128,8 @@ public class TransaccionService {
 
         NivelUsuario nivelAntes = usuarioOrigen.getNivel();
 
-        origen.setSaldo(origen.getSaldo() - total);
-        destino.setSaldo(destino.getSaldo() + valor);
+        billeteraService.actualizarSaldo(origen, origen.getSaldo() - total);
+        billeteraService.actualizarSaldo(destino, destino.getSaldo() + valor);
 
         Transaccion t = registrarTransaccion(usuarioOrigen, origen, destino, valor, comision, TipoTransaccion.TRANSFERENCIA, true);
 
@@ -178,6 +182,7 @@ public class TransaccionService {
         }
 
         usuario.getHistorialTransacciones().add(t);
+        sistema.getTransaccionesPorTotal().add(t);
 
         return t;
     }
@@ -256,11 +261,13 @@ public class TransaccionService {
         if (destino.getSaldo() < transaccion.getValor()) return CodigoResultadoTransaccion.SALDO_DESTINO_INSUFICIENTE;
 
         double totalDevolver = transaccion.getValor() + transaccion.getComision();
-        destino.setSaldo(destino.getSaldo() - transaccion.getValor());
-        origen.setSaldo(origen.getSaldo() + totalDevolver);
+        billeteraService.actualizarSaldo(destino, destino.getSaldo() - transaccion.getValor());
+
+        billeteraService.actualizarSaldo(origen, origen.getSaldo() + totalDevolver);
 
         puntosService.removerPuntos(usuario, transaccion.getPuntosGenerados());
         transaccion.setEstado(EstadoTransaccion.REVERTIDA);
+        sistema.getTransaccionesPorTotal().remove(transaccion);
         usuarioService.agregarHistorialReversiones(usuario.getCedula(), transaccion);
 
         try {
