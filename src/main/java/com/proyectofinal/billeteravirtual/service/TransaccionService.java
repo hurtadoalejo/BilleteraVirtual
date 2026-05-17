@@ -5,15 +5,17 @@ import com.proyectofinal.billeteravirtual.enums.EstadoTransaccion;
 import com.proyectofinal.billeteravirtual.enums.NivelUsuario;
 import com.proyectofinal.billeteravirtual.enums.TipoTransaccion;
 import com.proyectofinal.billeteravirtual.model.*;
+import org.springframework.stereotype.Service;
 import com.proyectofinal.billeteravirtual.response.TransaccionesResponse;
 import com.proyectofinal.billeteravirtual.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 import com.proyectofinal.billeteravirtual.util.Stack;
-import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.util.Comparator;
 
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -24,15 +26,17 @@ public class TransaccionService {
     private final NotificacionService notificacionService;
     private final BilleteraService billeteraService;
     private final SistemaService sistemaService;
+    private final FraudeService fraudeService;
     private final SistemaBilletera sistema;
 
-    public TransaccionService(UsuarioService usuarioService, PuntosService puntosService, NotificacionService notificacionService, SistemaService sistemaService, BilleteraService billeteraService, SistemaBilletera sistema) {
+    public TransaccionService(UsuarioService usuarioService, PuntosService puntosService, NotificacionService notificacionService, SistemaService sistemaService, BilleteraService billeteraService, SistemaBilletera sistema, FraudeService fraudeService) {
         this.usuarioService = usuarioService;
         this.puntosService = puntosService;
         this.notificacionService = notificacionService;
         this.sistemaService = sistemaService;
         this.billeteraService = billeteraService;
         this.sistema = sistema;
+        this.fraudeService = fraudeService;
     }
 
     /**
@@ -226,6 +230,226 @@ public class TransaccionService {
     }
 
     /**
+     * Recupera el historial completo de transacciones asociadas a un usuario específico.
+     * @param cedula El documento de identidad del usuario.
+     * @return Un ArrayList con las transacciones del usuario, o null si el usuario no existe.
+     */
+    public ArrayList<Transaccion> obtenerHistorial(String cedula) {
+        Usuario usuario = buscarUsuario(cedula);
+
+        if (usuario == null) return null;
+        return usuario.getHistorialTransacciones();
+    }
+
+    /**
+     * Revierte la última transferencia exitosa del usuario utilizando el principio LIFO (Last In, First Out)
+     * desde su pila de reversiones.
+     * @param cedula El documento de identidad del usuario que solicita la reversión.
+     * @return El código de resultado de la operación (e.g., SIN_ERROR, REVERSA_FUERA_DE_TIEMPO, etc.).
+     */
+    public CodigoResultadoTransaccion revertirUltimaTransferencia(String cedula) {
+        Usuario usuario = buscarUsuario(cedula);
+        if (usuario == null) return CodigoResultadoTransaccion.USUARIO_NO_ENCONTRADO;
+
+        Stack<Transaccion> pila = usuario.getPilaReversiones();
+        if (pila.isEmpty()) return CodigoResultadoTransaccion.TRANSACCION_NO_ENCONTRADA;
+
+        Transaccion transaccion = pila.peek();
+        CodigoResultadoTransaccion resultado = procesarReversion(usuario, transaccion);
+
+        if (resultado == CodigoResultadoTransaccion.SIN_ERROR) pila.pop();
+
+        return resultado;
+    }
+
+    /**
+     * Busca y revierte una transferencia específica dentro del historial del usuario mediante su identificador único.
+     * @param cedula El documento de identidad del usuario.
+     * @param idTransaccion El identificador único de la transacción que se desea revertir.
+     * @return El código de resultado que determina el éxito o la causa de falla de la reversión.
+     */
+    public CodigoResultadoTransaccion revertirTransferencia(String cedula, String idTransaccion) {
+
+        Usuario usuario = buscarUsuario(cedula);
+
+        if (usuario == null) return CodigoResultadoTransaccion.USUARIO_NO_ENCONTRADO;
+
+        for (Transaccion transaccion : usuario.getHistorialTransacciones()) {
+            if (transaccion.getId().equals(idTransaccion)) return procesarReversion(usuario, transaccion);
+        }
+
+        return CodigoResultadoTransaccion.TRANSACCION_NO_ENCONTRADA;
+    }
+
+    /**
+     * Proceso centralizado de negocio que valida las reglas de tiempo (máximo 60 segundos), saldos y estados
+     * para realizar la devolución de dinero, remoción de puntos y actualización de grafos por reversión.
+     * @param usuario El usuario que originó la transacción.
+     * @param transaccion La transacción de tipo transferencia que se va a deshacer.
+     * @return CodigoResultadoTransaccion con el estatus final del proceso de reversión.
+     */
+    private CodigoResultadoTransaccion procesarReversion(Usuario usuario, Transaccion transaccion) {
+
+        if (transaccion == null) {
+            return CodigoResultadoTransaccion.TRANSACCION_NO_ENCONTRADA;
+        }
+
+        if (transaccion.getTipo() != TipoTransaccion.TRANSFERENCIA) {
+            return CodigoResultadoTransaccion.ERROR_DESCONOCIDO;
+        }
+
+        if (transaccion.getEstado() == EstadoTransaccion.REVERTIDA) {
+            return CodigoResultadoTransaccion.TRANSFERENCIA_YA_REVERTIDA;
+        }
+
+        long segundos = Duration.between(transaccion.getFecha(), LocalDateTime.now()).getSeconds();
+
+        if (segundos > 60) {
+            return CodigoResultadoTransaccion.REVERSA_FUERA_DE_TIEMPO;
+        }
+
+        Billetera origen = usuarioService.buscarBilleteraGlobal(transaccion.getBilleteraOrigenId());
+        Billetera destino = usuarioService.buscarBilleteraGlobal(transaccion.getBilleteraDestinoId());
+
+        if (origen == null) {
+            return CodigoResultadoTransaccion.BILLETERA_ORIGEN_NO_ENCONTRADA;
+        }
+
+        if (destino == null) {
+            return CodigoResultadoTransaccion.BILLETERA_DESTINO_NO_ENCONTRADA;
+        }
+
+        if (destino.getSaldo() < transaccion.getValor()) {
+            return CodigoResultadoTransaccion.SALDO_DESTINO_INSUFICIENTE;
+        }
+
+        double totalDevolver = transaccion.getValor() + transaccion.getComision();
+
+        billeteraService.actualizarSaldo(destino, destino.getSaldo() - transaccion.getValor());
+        billeteraService.actualizarSaldo(origen, origen.getSaldo() + totalDevolver);
+
+        puntosService.removerPuntos(usuario, transaccion.getPuntosGenerados());
+
+        transaccion.setEstado(EstadoTransaccion.REVERTIDA);
+
+        sistema.getTransaccionesPorTotal().remove(transaccion);
+
+        usuarioService.agregarHistorialReversiones(usuario.getCedula(), transaccion);
+
+        try {
+
+            Usuario usuarioDestino = usuarioService.buscarUsuarioPorBilletera(destino.getId());
+
+            if (usuarioDestino != null) {
+                sistemaService.disminuirConexionUsuarios(usuario.getCedula(), usuarioDestino.getCedula());
+
+                sistemaService.disminuirConexionBilleteras(origen.getId(), destino.getId());
+
+                notificacionService.enviarCancelacionTransferencia(usuario, usuarioDestino, origen, destino, transaccion);
+            }
+
+        } catch (Exception e) {
+            System.out.println(
+                    "Error enviando correo de cancelación: " + e.getMessage()
+            );
+        }
+
+        return CodigoResultadoTransaccion.SIN_ERROR;
+    }
+
+    /**
+     * Calcula la sumatoria monetaria de los montos de aquellas transacciones cuyo estado actual es COMPLETADA.
+     * @param lista El listado de transacciones a analizar.
+     * @return El monto total de dinero efectivamente movilizado.
+     */
+    public double getMontoMovilizado(java.util.ArrayList<Transaccion> lista) {
+        double total = 0;
+        for (Transaccion transaccion : lista) {
+
+            if (transaccion.getEstado() == EstadoTransaccion.COMPLETADA) {
+
+                total += transaccion.getValor();
+            }
+        }
+
+        return total;
+    }
+
+    /**
+     * Construye un mapa de frecuencias que contabiliza cuántas transacciones corresponden a cada tipo disponible.
+     * @param lista El listado de transacciones a agrupar.
+     * @return Un Map que asocia cada TipoTransaccion con su respectiva cantidad de ocurrencias.
+     */
+    public Map<TipoTransaccion, Integer> getFrecuenciaPorTipo(java.util.ArrayList<Transaccion> lista) {
+        Map<TipoTransaccion, Integer> frecuencia = new HashMap<>();
+
+        for (Transaccion transaccion : lista) {
+            TipoTransaccion tipo = transaccion.getTipo();
+            Integer actual = frecuencia.get(tipo);
+
+            if (actual == null) {
+                frecuencia.put(tipo, 1);
+            } else {
+                frecuencia.put(tipo, actual + 1);
+            }
+        }
+
+        return frecuencia;
+    }
+
+    /**
+     * Construye un mapa de distribución que contabiliza la cantidad de transacciones según su estado actual.
+     * @param lista El listado de transacciones a agrupar.
+     * @return Un Map que vincula cada EstadoTransaccion con su cantidad de registros.
+     */
+    public Map<EstadoTransaccion, Integer> getCantidadPorEstado(java.util.ArrayList<Transaccion> lista) {
+        Map<EstadoTransaccion, Integer> estados = new HashMap<>();
+
+        for (Transaccion transaccion : lista) {
+            EstadoTransaccion estado = transaccion.getEstado();
+            Integer actual = estados.get(estado);
+
+            if (actual == null) {
+                estados.put(estado, 1);
+            } else {
+                estados.put(estado, actual + 1);
+            }
+        }
+
+        return estados;
+    }
+
+    /**
+     * Ordena de manera destructiva el listado de transacciones provisto, de la más reciente a la más antigua.
+     * @param lista La lista de transacciones a ordenar.
+     * @return La misma instancia de ArrayList ordenada cronológicamente en orden descendente.
+     */
+    public java.util.ArrayList<Transaccion> getHistorialOrdenado(java.util.ArrayList<Transaccion> lista) {
+
+        lista.sort(Comparator.comparing(Transaccion::getFecha).reversed());
+        return lista;
+    }
+
+    /**
+     * Genera, unifica y empaqueta un reporte estadístico global con todas las métricas del ecosistema transaccional
+     * para el módulo de administración.
+     * @return Un objeto TransaccionesResponse que consolida listas ordenadas, totales y mapas de frecuencia.
+     */
+    public TransaccionesResponse getTransaccionesAdmin() {
+        java.util.ArrayList<Transaccion> lista = sistemaService.obtenerTodasLasTransacciones();
+        lista = getHistorialOrdenado(lista);
+
+        TransaccionesResponse response = new TransaccionesResponse();
+
+        response.setTransacciones(lista);
+        response.setDineroMovilizado(getMontoMovilizado(lista));
+        response.setFrecuenciaPorTipo(getFrecuenciaPorTipo(lista));
+        response.setCantidadPorEstado(getCantidadPorEstado(lista));
+
+        return response;
+    }
+
+    /**
      * Atajo interno para mapear y recuperar una billetera específica a partir de la memoria de un usuario.
      * @param usuario El objeto usuario dueño.
      * @param id El identificador único de la billetera.
@@ -361,6 +585,7 @@ public class TransaccionService {
 
         usuario.getHistorialTransacciones().add(t);
         sistema.getTransaccionesPorTotal().add(t);
+        fraudeService.analizarTransaccion(usuario, t);
 
         return t;
     }

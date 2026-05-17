@@ -16,7 +16,6 @@ public class SistemaBilletera {
     private Map<String, Map<String, Integer>> grafoTransferenciasBilleteras = new HashMap<>();
     private Map<String, Map<String, Integer>> grafoTransferenciasUsuarios = new HashMap<>();
 
-
     public Map<String, Usuario> getUsuarios() {
         return usuarios;
     }

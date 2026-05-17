@@ -299,6 +299,32 @@ public class SistemaService {
     }
 
     /**
+     * Consolida en una sola lista todas las transacciones únicas (tanto del historial como programadas)
+     * de todos los usuarios registrados en el sistema, evitando duplicados.
+     * @return Un ArrayList global con el total de transacciones únicas detectadas.
+     */
+    public java.util.ArrayList<Transaccion> obtenerTodasLasTransacciones() {
+        java.util.ArrayList<Transaccion> lista = new java.util.ArrayList<>();
+
+        for (Usuario usuario : obtenerUsuarios()) {
+
+            for (Transaccion transaccion : usuario.getHistorialTransacciones()) {
+                if (!lista.contains(transaccion)) {
+                    lista.add(transaccion);
+                }
+            }
+
+            for (Transaccion transaccion : usuario.getTransaccionesProgramadas()) {
+                if (!lista.contains(transaccion)) {
+                    lista.add(transaccion);
+                }
+            }
+        }
+
+        return lista;
+    }
+
+    /**
      * Obtiene la colección completa de todos los usuarios almacenados en el sistema.
      * @return Una Collection con los objetos Usuario registrados.
      */

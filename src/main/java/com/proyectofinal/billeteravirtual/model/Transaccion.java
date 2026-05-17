@@ -1,8 +1,11 @@
 package com.proyectofinal.billeteravirtual.model;
 import com.proyectofinal.billeteravirtual.enums.EstadoTransaccion;
+import com.proyectofinal.billeteravirtual.enums.NivelRiesgo;
 import com.proyectofinal.billeteravirtual.enums.TipoTransaccion;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Transaccion implements Comparable<Transaccion> {
 
@@ -18,6 +21,8 @@ public class Transaccion implements Comparable<Transaccion> {
 
     private EstadoTransaccion estado;
     private int puntosGenerados;
+    private NivelRiesgo nivelRiesgo = NivelRiesgo.SIN_RIESGO;
+    private List<String> alertasFraude = new ArrayList<>();
 
     public String getId() {
         return id;
@@ -97,6 +102,22 @@ public class Transaccion implements Comparable<Transaccion> {
 
     public void setIdUsuario(String idUsuario) {
         this.idUsuario = idUsuario;
+    }
+
+    public NivelRiesgo getNivelRiesgo() {
+        return nivelRiesgo;
+    }
+
+    public void setNivelRiesgo(NivelRiesgo nivelRiesgo) {
+        this.nivelRiesgo = nivelRiesgo;
+    }
+
+    public List<String> getAlertasFraude() {
+        return alertasFraude;
+    }
+
+    public void setAlertasFraude(List<String> alertasFraude) {
+        this.alertasFraude = alertasFraude;
     }
 
     @Override
