@@ -1,5 +1,8 @@
 package com.proyectofinal.billeteravirtual.model;
 
+import com.proyectofinal.billeteravirtual.enums.CodigoResultadoTransaccion;
+import com.proyectofinal.billeteravirtual.enums.NivelUsuario;
+
 public class ResultadoTransaccion {
     private boolean ok;
     private boolean subioNivel;

@@ -1,7 +1,7 @@
 package com.proyectofinal.billeteravirtual.service;
 
-import com.proyectofinal.billeteravirtual.model.NivelUsuario;
-import com.proyectofinal.billeteravirtual.model.TipoTransaccion;
+import com.proyectofinal.billeteravirtual.enums.NivelUsuario;
+import com.proyectofinal.billeteravirtual.enums.TipoTransaccion;
 import com.proyectofinal.billeteravirtual.model.Usuario;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +14,13 @@ public class PuntosService {
         this.usuarioService = usuarioService;
     }
 
+    /**
+     * Calcula la cantidad de puntos que genera una transacción según su tipo, monto y el nivel del usuario.
+     * @param valor El monto total de la operación financiera.
+     * @param tipo El tipo de transacción (RECARGA, RETIRO, TRANSFERENCIA).
+     * @param nivel El rango actual del usuario (BRONCE, PLATA, ORO, PLATINO).
+     * @return El total de puntos enteros calculados para la operación.
+     */
     public int calcularPuntos(double valor, TipoTransaccion tipo, NivelUsuario nivel) {
         int base = switch (tipo) {
             case RECARGA -> 1;
@@ -31,6 +38,11 @@ public class PuntosService {
         return (int) (valor / 5000) * (base + bonus);
     }
 
+    /**
+     * Suma los puntos obtenidos al saldo actual y acumulado del usuario, actualizando su posición en el ranking y nivel.
+     * @param usuario El usuario al que se le asignarán los puntos.
+     * @param puntos La cantidad de puntos a añadir.
+     */
     public void aplicarPuntos(Usuario usuario, int puntos) {
         usuario.setPuntos(usuario.getPuntos() + puntos);
 
@@ -40,6 +52,11 @@ public class PuntosService {
         usuarioService.actualizarNivelUsuario(usuario);
     }
 
+    /**
+     * Resta puntos al saldo actual y acumulado del usuario debido a una cancelación o reversión, previniendo valores negativos.
+     * @param usuario El usuario al que se le removerán los puntos.
+     * @param puntos La cantidad de puntos a descontar.
+     */
     public void removerPuntos(Usuario usuario, int puntos) {
         usuario.setPuntos(usuario.getPuntos() - puntos);
         usuario.setPuntosAcumulados(usuario.getPuntosAcumulados() - puntos);

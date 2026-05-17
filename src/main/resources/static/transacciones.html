@@ -26,6 +26,17 @@
       color: white;
     }
 
+    .fade-table {
+      opacity: 1;
+      transform: translateY(0);
+      transition: all 0.25s ease;
+    }
+
+    .fade-table.out {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+
     .sidebar {
       width: 220px;
       background: rgba(7, 68, 109, 0.25);
@@ -712,72 +723,67 @@
     }
 
     function renderTabla() {
+      const tabla = document.getElementById("tablaTransacciones");
 
-      const filtradas =
-        obtenerFiltradas();
+      tabla.classList.add("out");
 
-      actualizarAnalitica(filtradas);
+      setTimeout(() => {
 
-      filtradas.sort((a, b) =>
-        new Date(b.fecha) - new Date(a.fecha)
-      );
+        const filtradas = obtenerFiltradas();
 
-      const inicio =
-        (paginaActual - 1) * porPagina;
+        actualizarAnalitica(filtradas);
 
-      const fin =
-        inicio + porPagina;
+        filtradas.sort((a, b) =>
+          new Date(b.fecha) - new Date(a.fecha)
+        );
 
-      const pagina =
-        filtradas.slice(inicio, fin);
+        const inicio =
+          (paginaActual - 1) * porPagina;
 
-      const tabla =
-        document.getElementById("tablaTransacciones");
+        const fin =
+          inicio + porPagina;
 
-      tabla.innerHTML = "";
+        const pagina =
+          filtradas.slice(inicio, fin);
 
-      pagina.forEach(t => {
+        tabla.innerHTML = "";
 
-        tabla.innerHTML += `
-          <tr>
+        pagina.forEach(t => {
 
-            <td>
-              <span class="badge ${t.tipo}">
-                ${t.tipo}
-              </span>
-            </td>
+          tabla.innerHTML += `
+        <tr>
 
-            <td>
-              <span class="badge ${t.estado}">
-                ${t.estado}
-              </span>
-            </td>
+          <td>
+            <span class="badge ${t.tipo}">
+              ${t.tipo}
+            </span>
+          </td>
 
-            <td>
-              $ ${formatoCOP.format(t.valor)}
-            </td>
+          <td>
+            <span class="badge ${t.estado}">
+              ${t.estado}
+            </span>
+          </td>
 
-            <td>
-              $ ${formatoCOP.format(t.comision)}
-            </td>
+          <td>$ ${formatoCOP.format(t.valor)}</td>
 
-            <td>
-              ${t.billeteraOrigenId || "-"}
-            </td>
+          <td>$ ${formatoCOP.format(t.comision)}</td>
 
-            <td>
-              ${t.billeteraDestinoId || "-"}
-            </td>
+          <td>${t.billeteraOrigenId || "-"}</td>
 
-            <td>
-              ${formatearFecha(t.fecha)}
-            </td>
+          <td>${t.billeteraDestinoId || "-"}</td>
 
-          </tr>
-        `;
-      });
+          <td>${formatearFecha(t.fecha)}</td>
 
-      renderPaginacion(filtradas.length);
+        </tr>
+      `;
+        });
+
+        renderPaginacion(filtradas.length);
+
+        tabla.classList.remove("out");
+
+      }, 150);
     }
 
     function renderPaginacion(total) {
@@ -883,6 +889,8 @@
       });
 
     cargarDatos();
+    document.getElementById("tablaTransacciones")
+      .classList.add("fade-table");
 
     setInterval(() => {
 

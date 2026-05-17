@@ -1,5 +1,7 @@
 package com.proyectofinal.billeteravirtual.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.proyectofinal.billeteravirtual.enums.EstadoBilletera;
+import com.proyectofinal.billeteravirtual.enums.TipoBilletera;
 import com.proyectofinal.billeteravirtual.util.ArrayList;
 
 public class Billetera implements Comparable<Billetera> {

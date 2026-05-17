@@ -21,6 +21,13 @@ public class BeneficioService {
         this.billeteraService = billeteraService;
     }
 
+    /**
+     * Realiza el canje de puntos acumulados por dinero asignado a una billetera específica.
+     * @param cedula El documento de identidad del usuario.
+     * @param idBilletera El identificador de la billetera destino.
+     * @param puntos La cantidad de puntos que se desean canjear.
+     * @return El objeto Beneficio generado con el detalle del canje, o null si los datos son inválidos o no hay puntos suficientes.
+     */
     public Beneficio canjear(String cedula, String idBilletera, int puntos) {
         Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
 
@@ -45,6 +52,11 @@ public class BeneficioService {
         return beneficio;
     }
 
+    /**
+     * Obtiene el historial completo de los beneficios canjeados por un usuario.
+     * @param cedula El documento de identidad del usuario.
+     * @return Un ArrayList con los beneficios obtenidos, o una lista vacía si el usuario no existe.
+     */
     public ArrayList<Beneficio> obtenerHistorial(String cedula) {
         Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
         if (usuario == null) return new ArrayList<>();

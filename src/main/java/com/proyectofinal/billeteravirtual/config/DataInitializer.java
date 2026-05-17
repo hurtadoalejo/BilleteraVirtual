@@ -1,5 +1,6 @@
 package com.proyectofinal.billeteravirtual.config;
 
+import com.proyectofinal.billeteravirtual.enums.TipoBilletera;
 import com.proyectofinal.billeteravirtual.model.*;
 import com.proyectofinal.billeteravirtual.service.BilleteraService;
 import com.proyectofinal.billeteravirtual.service.TransaccionService;

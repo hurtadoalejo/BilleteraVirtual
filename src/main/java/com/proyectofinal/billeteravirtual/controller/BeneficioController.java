@@ -21,6 +21,13 @@ public class BeneficioController {
         this.beneficioService = beneficioService;
     }
 
+    /**
+     * Realiza el canje de puntos por un beneficio
+     * @param cedula cédula del usuario
+     * @param idBilletera identificador de la billetera
+     * @param puntos cantidad de puntos a canjear
+     * @return Beneficio generado o null si falla
+     */
     @PostMapping("/canjear/{cedula}/{idBilletera}/{puntos}")
     public ResponseEntity<?> canjear(@PathVariable String cedula, @PathVariable String idBilletera, @PathVariable int puntos) {
         Beneficio beneficio = beneficioService.canjear(cedula, idBilletera, puntos);
@@ -34,6 +41,11 @@ public class BeneficioController {
         return ResponseEntity.ok(beneficio);
     }
 
+    /**
+     * Obtiene el historial de beneficios por cédula
+     * @param cedula cédula del usuario
+     * @return lista de beneficios del usuario
+     */
     @GetMapping("/historial/{cedula}")
     public ResponseEntity<List<Beneficio>> historial(@PathVariable String cedula) {
         ArrayList<Beneficio> billeteraPropias = beneficioService.obtenerHistorial(cedula);
@@ -42,8 +54,6 @@ public class BeneficioController {
             beneficios.add(beneficio);
         }
 
-        return ResponseEntity.ok(
-                beneficios
-        );
+        return ResponseEntity.ok(beneficios);
     }
 }

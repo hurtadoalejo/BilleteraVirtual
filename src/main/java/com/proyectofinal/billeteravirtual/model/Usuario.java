@@ -1,6 +1,7 @@
 package com.proyectofinal.billeteravirtual.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.proyectofinal.billeteravirtual.enums.NivelUsuario;
 import com.proyectofinal.billeteravirtual.util.ArrayList;
 import com.proyectofinal.billeteravirtual.util.Stack;
 

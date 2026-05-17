@@ -13,6 +13,12 @@ public class EmailService {
     @Autowired
     private JavaMailSender mailSender;
 
+    /**
+     * Envía de forma asíncrona un correo electrónico en formato HTML o texto plano.
+     * @param destino La dirección de correo electrónico del destinatario.
+     * @param asunto El tema o título del correo electrónico.
+     * @param mensaje El contenido del mensaje (soporta etiquetas HTML).
+     */
     @Async
     public void enviarCorreo(String destino, String asunto, String mensaje) {
         try {

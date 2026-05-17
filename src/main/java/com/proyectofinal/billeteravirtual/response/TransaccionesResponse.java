@@ -1,7 +1,7 @@
 package com.proyectofinal.billeteravirtual.response;
 
-import com.proyectofinal.billeteravirtual.model.EstadoTransaccion;
-import com.proyectofinal.billeteravirtual.model.TipoTransaccion;
+import com.proyectofinal.billeteravirtual.enums.EstadoTransaccion;
+import com.proyectofinal.billeteravirtual.enums.TipoTransaccion;
 import com.proyectofinal.billeteravirtual.model.Transaccion;
 
 import java.util.Map;

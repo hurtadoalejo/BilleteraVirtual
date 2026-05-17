@@ -1,5 +1,9 @@
 package com.proyectofinal.billeteravirtual.service;
 
+import com.proyectofinal.billeteravirtual.enums.CodigoResultadoTransaccion;
+import com.proyectofinal.billeteravirtual.enums.EstadoTransaccion;
+import com.proyectofinal.billeteravirtual.enums.NivelUsuario;
+import com.proyectofinal.billeteravirtual.enums.TipoTransaccion;
 import com.proyectofinal.billeteravirtual.model.*;
 import com.proyectofinal.billeteravirtual.response.TransaccionesResponse;
 import com.proyectofinal.billeteravirtual.util.ArrayList;
@@ -31,67 +35,94 @@ public class TransaccionService {
         this.sistema = sistema;
     }
 
+    /**
+     * Realiza una recarga de saldo en una billetera y genera una notificación por correo electrónico.
+     * @param cedula El documento de identidad del usuario.
+     * @param idBilletera El identificador de la billetera destino.
+     * @param valor El monto de dinero a recargar.
+     * @return El objeto ResultadoTransaccion indicando el estado de la operación.
+     */
     public ResultadoTransaccion recargar(String cedula, String idBilletera, double valor) {
         return recargarInterno(cedula, idBilletera, valor, true);
     }
 
+    /**
+     * Realiza una recarga de saldo en una billetera sin despachar notificación por correo.
+     * @param cedula El documento de identidad del usuario.
+     * @param idBilletera El identificador de la billetera destino.
+     * @param valor El monto de dinero a recargar.
+     * @return El objeto ResultadoTransaccion indicando el estado de la operación.
+     */
     public ResultadoTransaccion recargarSinCorreo(String cedula, String idBilletera, double valor) {
         return recargarInterno(cedula, idBilletera, valor, false);
     }
 
-    public ResultadoTransaccion recargarInterno(String cedula, String idBilletera, double valor, boolean enviarCorreo) {
-        Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
+    /**
+     * Proceso centralizado para validar y ejecutar la recarga de saldo en una billetera específica.
+     * @param cedula El documento de identidad del usuario.
+     * @param idBilletera El identificador de la billetera destino.
+     * @param valor El monto de dinero a recargar.
+     * @param enviarCorreo Determina si se dispara o no la alerta por correo electrónico.
+     * @return El objeto ResultadoTransaccion con el éxito o código de error respectivo.
+     */
+    private ResultadoTransaccion recargarInterno(String cedula, String idBilletera, double valor, boolean enviarCorreo) {
 
-        if (usuario == null) {
-            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.USUARIO_NO_ENCONTRADO);
-        }
+        Usuario usuario = buscarUsuario(cedula);
+        if (usuario == null) return errorUsuario();
 
-        Billetera billetera = usuario.getBilleteras().get(idBilletera);
-        if (billetera == null) {
-            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.BILLETERA_ORIGEN_NO_ENCONTRADA);
-        }
+        Billetera billetera = buscarBilletera(usuario, idBilletera);
+        if (billetera == null) return errorBilleteraOrigen();
 
         NivelUsuario nivelAntes = usuario.getNivel();
+
         billeteraService.actualizarSaldo(billetera, billetera.getSaldo() + valor);
+
         Transaccion t = registrarTransaccion(usuario, null, billetera, valor, 0, TipoTransaccion.RECARGA, true);
-        NivelUsuario nivelDespues = usuario.getNivel();
-        boolean subioNivel = nivelAntes != nivelDespues;
 
-        if (enviarCorreo) {
-            try {
-                notificacionService.enviarRecarga(usuario, billetera, valor);
+        if (enviarCorreo) enviarSeguro(() -> notificacionService.enviarRecarga(usuario, billetera, valor));
 
-            } catch (Exception e) {
-                System.out.println("Error enviando correo: " + e.getMessage());
-            }
-        }
-
-        return new ResultadoTransaccion(true, subioNivel, nivelDespues, CodigoResultadoTransaccion.SIN_ERROR, t);
+        return resultadoOk(usuario, nivelAntes, t);
     }
 
+    /**
+     * Realiza un retiro de saldo desde una billetera y despacha una notificación por correo electrónico.
+     * @param cedula El documento de identidad del usuario.
+     * @param idBilletera El identificador de la billetera de origen.
+     * @param valor El monto de dinero a retirar.
+     * @return El objeto ResultadoTransaccion indicando el estado de la operación.
+     */
     public ResultadoTransaccion retirar(String cedula, String idBilletera, double valor) {
         return retirarInterno(cedula, idBilletera, valor, true);
     }
 
+    /**
+     * Realiza un retiro de saldo desde una billetera sin despachar notificación por correo.
+     * @param cedula El documento de identidad del usuario.
+     * @param idBilletera El identificador de la billetera de origen.
+     * @param valor El monto de dinero a retirar.
+     * @return El objeto ResultadoTransaccion indicando el estado de la operación.
+     */
     public ResultadoTransaccion retirarSinCorreo(String cedula, String idBilletera, double valor) {
         return retirarInterno(cedula, idBilletera, valor, false);
     }
 
-    public ResultadoTransaccion retirarInterno(String cedula, String idBilletera, double valor, boolean  enviarCorreo) {
-        Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
+    /**
+     * Proceso centralizado para validar, comprobar fondos y ejecutar el retiro de una billetera específica.
+     * @param cedula El documento de identidad del usuario.
+     * @param idBilletera El identificador de la billetera de origen.
+     * @param valor El monto de dinero a retirar.
+     * @param enviarCorreo Determina si se dispara o no la alerta por correo electrónico.
+     * @return El objeto ResultadoTransaccion con el éxito o código de error por saldo insuficiente.
+     */
+    private ResultadoTransaccion retirarInterno(String cedula, String idBilletera, double valor, boolean enviarCorreo) {
 
-        if (usuario == null) {
-            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.USUARIO_NO_ENCONTRADO);
-        }
+        Usuario usuario = buscarUsuario(cedula);
+        if (usuario == null) return errorUsuario();
 
-        Billetera billetera = usuario.getBilleteras().get(idBilletera);
-        if (billetera == null) {
-            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.BILLETERA_ORIGEN_NO_ENCONTRADA);
-        }
+        Billetera billetera = buscarBilletera(usuario, idBilletera);
+        if (billetera == null) return errorBilleteraOrigen();
 
-        if (billetera.getSaldo() < valor) {
-            return new ResultadoTransaccion(false, false, null,  CodigoResultadoTransaccion.SALDO_INSUFICIENTE);
-        }
+        if (billetera.getSaldo() < valor) return errorSaldo();
 
         NivelUsuario nivelAntes = usuario.getNivel();
 
@@ -99,92 +130,215 @@ public class TransaccionService {
 
         Transaccion t = registrarTransaccion(usuario, billetera, null, valor, 0, TipoTransaccion.RETIRO, true);
 
-        NivelUsuario nivelDespues = usuario.getNivel();
-        boolean subioNivel = nivelAntes != nivelDespues;
+        if (enviarCorreo) enviarSeguro(() -> notificacionService.enviarRetiro(usuario, billetera, valor));
 
-        if (enviarCorreo) {
-            try {
-                notificacionService.enviarRetiro(usuario, billetera, valor);
-
-            } catch (Exception e) {
-                System.out.println("Error enviando correo: " + e.getMessage());
-            }
-        }
-
-        return new ResultadoTransaccion(true, subioNivel, nivelDespues, CodigoResultadoTransaccion.SIN_ERROR, t);
+        return resultadoOk(usuario, nivelAntes, t);
     }
 
+    /**
+     * Ejecuta una transferencia de fondos entre billeteras enviando notificaciones informativas por correo.
+     * @param cedula El documento de identidad del usuario emisor.
+     * @param idOrigen El identificador de la billetera origen del débito.
+     * @param idDestino El identificador de la billetera global de destino.
+     * @param valor El monto neto de dinero a transferir.
+     * @param comisionPrevia Valor fijo opcional de comisión, si es null se calcula de manera dinámica.
+     * @return El objeto ResultadoTransaccion con los detalles informativos de la transferencia.
+     */
     public ResultadoTransaccion transferir(String cedula, String idOrigen, String idDestino, double valor, Double comisionPrevia) {
         return transferirInterno(cedula, idOrigen, idDestino, valor, comisionPrevia, true);
     }
 
+    /**
+     * Ejecuta una transferencia de fondos entre billeteras omitiendo el despacho de correos electrónicos.
+     * @param cedula El documento de identidad del usuario emisor.
+     * @param idOrigen El identificador de la billetera origen del débito.
+     * @param idDestino El identificador de la billetera global de destino.
+     * @param valor El monto neto de dinero a transferir.
+     * @param comisionPrevia Valor fijo opcional de comisión, si es null se calcula de manera dinámica.
+     * @return El objeto ResultadoTransaccion con los detalles informativos de la transferencia.
+     */
     public ResultadoTransaccion transferirSinCorreo(String cedula, String idOrigen, String idDestino, double valor, Double comisionPrevia) {
         return transferirInterno(cedula, idOrigen, idDestino, valor, comisionPrevia, false);
     }
 
-    public ResultadoTransaccion transferirInterno(String cedula, String idOrigen, String idDestino, double valor, Double comisionPrevia, boolean  enviarCorreo) {
-        Usuario usuarioOrigen = usuarioService.buscarUsuarioPorCedula(cedula);
-        if (usuarioOrigen == null) {
-            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.USUARIO_NO_ENCONTRADO);
-        }
+    /**
+     * Proceso centralizado para estructurar de manera segura transferencias entre usuarios y mapear conexiones en el grafo.
+     * @param cedula El documento de identidad del usuario emisor.
+     * @param idOrigen El identificador de la billetera origen.
+     * @param idDestino El identificador de la billetera destino.
+     * @param valor El monto neto de dinero a transferir.
+     * @param comisionPrevia Valor de comisión ya calculado, o null para procesarlo en el flujo.
+     * @param enviarCorreo Determina si se disparan o no los comprobantes digitales por correo electrónico.
+     * @return El objeto ResultadoTransaccion con la validación de negocio correspondiente a saldos y datos de destino.
+     */
+    private ResultadoTransaccion transferirInterno(String cedula, String idOrigen, String idDestino, double valor, Double comisionPrevia, boolean enviarCorreo) {
 
-        if (idOrigen.equals(idDestino)) {
-            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.MISMA_BILLETERA);
-        }
+        Usuario origenUser = buscarUsuario(cedula);
+        if (origenUser == null) return errorUsuario();
 
-        Billetera origen = usuarioOrigen.getBilleteras().get(idOrigen);
-        if (origen == null) {
-            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.BILLETERA_ORIGEN_NO_ENCONTRADA);
-        }
+        if (idOrigen.equals(idDestino)) return errorMismaBilletera();
+
+        Billetera origen = buscarBilletera(origenUser, idOrigen);
+        if (origen == null) return errorBilleteraOrigen();
 
         Billetera destino = usuarioService.buscarBilleteraGlobal(idDestino);
-        if (destino == null) {
-            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.BILLETERA_DESTINO_NO_ENCONTRADA);
-        }
+        if (destino == null) return errorBilleteraDestino();
 
-        Usuario usuarioDestino = usuarioService.buscarUsuarioPorBilletera(idDestino);
+        Usuario destinoUser = usuarioService.buscarUsuarioPorBilletera(idDestino);
 
-        if (valor <= 0) {
-            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.VALOR_INVALIDO);
-        }
+        if (valor <= 0) return errorValor();
 
-        double comision = comisionPrevia != null ? comisionPrevia: calcularComision(usuarioOrigen, usuarioDestino, valor);
+        double comision = comisionPrevia != null ? comisionPrevia : calcularComision(origenUser, destinoUser, valor);
         double total = valor + comision;
-        if (origen.getSaldo() < total) {
-            return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.SALDO_INSUFICIENTE);
-        }
 
-        NivelUsuario nivelAntes = usuarioOrigen.getNivel();
+        if (origen.getSaldo() < total) return errorSaldo();
+
+        NivelUsuario nivelAntes = origenUser.getNivel();
 
         billeteraService.actualizarSaldo(origen, origen.getSaldo() - total);
         billeteraService.actualizarSaldo(destino, destino.getSaldo() + valor);
 
-        Transaccion t = registrarTransaccion(usuarioOrigen, origen, destino, valor, comision, TipoTransaccion.TRANSFERENCIA, true);
+        Transaccion t = registrarTransaccion(origenUser, origen, destino, valor, comision, TipoTransaccion.TRANSFERENCIA, true);
 
-        usuarioOrigen.getPilaReversiones().push(t);
+        origenUser.getPilaReversiones().push(t);
 
-        if (!usuarioOrigen.getCedula().equals(usuarioDestino.getCedula())) {
-            usuarioDestino.getHistorialTransacciones().add(t);
-        }
-
-        NivelUsuario nivelDespues = usuarioOrigen.getNivel();
-        boolean subioNivel = nivelAntes != nivelDespues;
-
-        if (enviarCorreo) {
-            try {
-                notificacionService.enviarTransferencia(usuarioOrigen, usuarioDestino, origen, destino, valor, comision);
-
-            } catch (Exception e) {
-                System.out.println("Error enviando correo: " + e.getMessage());
-            }
+        if (!origenUser.getCedula().equals(destinoUser.getCedula())) {
+            destinoUser.getHistorialTransacciones().add(t);
         }
 
         sistemaService.actualizarGrafoBilleteras(origen.getId(), destino.getId());
-        sistemaService.actualizarGrafoUsuarios(usuarioOrigen.getCedula(), usuarioDestino.getCedula());
+        sistemaService.actualizarGrafoUsuarios(origenUser.getCedula(), destinoUser.getCedula());
+
+        if (enviarCorreo) {
+            enviarSeguro(() -> notificacionService.enviarTransferencia(origenUser, destinoUser, origen, destino, valor, comision));
+        }
+
+        return resultadoOk(origenUser, nivelAntes, t);
+    }
+
+    /**
+     * Atajo interno para buscar un usuario a través del servicio de persistencia delegada.
+     * @param cedula El documento de identidad.
+     * @return El objeto Usuario en caso de ser encontrado.
+     */
+    private Usuario buscarUsuario(String cedula) {
+        return usuarioService.buscarUsuarioPorCedula(cedula);
+    }
+
+    /**
+     * Atajo interno para mapear y recuperar una billetera específica a partir de la memoria de un usuario.
+     * @param usuario El objeto usuario dueño.
+     * @param id El identificador único de la billetera.
+     * @return El objeto Billetera correspondiente.
+     */
+    private Billetera buscarBilletera(Usuario usuario, String id) {
+        return usuario.getBilleteras().get(id);
+    }
+
+    /**
+     * Genera una respuesta estructurada con código de error indicando que el usuario no existe.
+     * @return ResultadoTransaccion con estado fallido y código USUARIO_NO_ENCONTRADO.
+     */
+    private ResultadoTransaccion errorUsuario() {
+        return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.USUARIO_NO_ENCONTRADO);
+    }
+
+    /**
+     * Genera una respuesta estructurada con código de error indicando que la billetera origen es inválida o no existe.
+     * @return ResultadoTransaccion con estado fallido y código BILLETERA_ORIGEN_NO_ENCONTRADA.
+     */
+    private ResultadoTransaccion errorBilleteraOrigen() {
+        return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.BILLETERA_ORIGEN_NO_ENCONTRADA);
+    }
+
+    /**
+     * Genera una respuesta estructurada con código de error indicando que la billetera destino es inválida o no existe.
+     * @return ResultadoTransaccion con estado fallido y código BILLETERA_DESTINO_NO_ENCONTRADA.
+     */
+    private ResultadoTransaccion errorBilleteraDestino() {
+        return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.BILLETERA_DESTINO_NO_ENCONTRADA);
+    }
+
+    /**
+     * Genera una respuesta estructurada con código de error por insuficiencia de fondos monetarios.
+     * @return ResultadoTransaccion con estado fallido y código SALDO_INSUFICIENTE.
+     */
+    private ResultadoTransaccion errorSaldo() {
+        return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.SALDO_INSUFICIENTE);
+    }
+
+    /**
+     * Genera una respuesta estructurada indicando que el monto ingresado para la transacción no es válido.
+     * @return ResultadoTransaccion con estado fallido y código VALOR_INVALIDO.
+     */
+    private ResultadoTransaccion errorValor() {
+        return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.VALOR_INVALIDO);
+    }
+
+    /**
+     * Genera una respuesta estructurada que restringe las transferencias cuyo origen y destino coinciden sobre el mismo elemento.
+     * @return ResultadoTransaccion con estado fallido y código MISMA_BILLETERA.
+     */
+    private ResultadoTransaccion errorMismaBilletera() {
+        return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.MISMA_BILLETERA);
+    }
+
+    /**
+     * Construye una respuesta estructurada exitosa evaluando dinámicamente si el incremento de puntos causó un ascenso de nivel.
+     * @param usuario El objeto usuario que operó la transacción.
+     * @param nivelAntes El nivel que ostentaba el usuario antes de procesar el flujo.
+     * @param t La transacción completada.
+     * @return El objeto ResultadoTransaccion con banderas de éxito y novedades de nivelación.
+     */
+    private ResultadoTransaccion resultadoOk(Usuario usuario, NivelUsuario nivelAntes, Transaccion t) {
+        NivelUsuario nivelDespues = usuario.getNivel();
+        boolean subioNivel = nivelAntes != nivelDespues;
         return new ResultadoTransaccion(true, subioNivel, nivelDespues, t);
     }
 
+    /**
+     * Ejecuta bloques de instrucciones de manera protegida capturando excepciones para evitar rupturas críticas en los flujos principales.
+     * @param r El proceso ejecutable encapsulado en un Runnable.
+     */
+    private void enviarSeguro(Runnable r) {
+        try {
+            r.run();
+        } catch (Exception e) {
+            System.out.println("Error enviando correo: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Calcula la tasa impositiva o comisión de envío según el rango de membresía del usuario emisor.
+     * @param origen El usuario que envía y asume la comisión.
+     * @param destino El usuario destino del dinero.
+     * @param valor El importe neto de la operación.
+     * @return El valor monetario de la comisión calculada, o 0 si se transfiere entre cuentas propias.
+     */
+    private double calcularComision(Usuario origen, Usuario destino, double valor) {
+        if (origen.getCedula().equals(destino.getCedula())) return 0;
+
+        return switch (origen.getNivel()) {
+            case BRONCE -> valor * 0.005;
+            case PLATA -> valor * 0.004;
+            case ORO -> valor * 0.003;
+            case PLATINO -> valor * 0.001;
+        };
+    }
+
+    /**
+     * Registra de forma completa un movimiento en el core financiero asignándole identificadores únicos y gestionando los puntos ganados.
+     * @param usuario El usuario gestor de la acción.
+     * @param origen La billetera de cargo.
+     * @param destino La billetera de abono.
+     * @param valor El monto de dinero base.
+     * @param comision El recargo cobrado por el servicio.
+     * @param tipo El clasificador de movimiento financiero.
+     * @param generarPuntos Condicional que determina si la transacción gratifica al cliente con puntos de lealtad.
+     * @return El objeto estructurado de tipo Transaccion con los estados actualizados en memoria global.
+     */
     private Transaccion registrarTransaccion(Usuario usuario, Billetera origen, Billetera destino, double valor, double comision, TipoTransaccion tipo, boolean generarPuntos) {
+
         Transaccion t = new Transaccion();
         t.setId(UUID.randomUUID().toString());
         t.setIdUsuario(usuario.getCedula());
@@ -192,7 +346,6 @@ public class TransaccionService {
         t.setTipo(tipo);
         t.setValor(valor);
         t.setComision(comision);
-
         t.setBilleteraOrigenId(origen != null ? origen.getId() : null);
         t.setBilleteraDestinoId(destino != null ? destino.getId() : null);
         t.setEstado(EstadoTransaccion.COMPLETADA);
@@ -201,192 +354,14 @@ public class TransaccionService {
             int puntos = puntosService.calcularPuntos(valor, tipo, usuario.getNivel());
             t.setPuntosGenerados(puntos);
             puntosService.aplicarPuntos(usuario, puntos);
-        } else {
-            t.setPuntosGenerados(0);
         }
 
-        if (origen != null) {
-            origen.getTransacciones().add(t);
-        }
-
-        if (destino != null && destino != origen) {
-            destino.getTransacciones().add(t);
-        }
+        if (origen != null) origen.getTransacciones().add(t);
+        if (destino != null && destino != origen) destino.getTransacciones().add(t);
 
         usuario.getHistorialTransacciones().add(t);
         sistema.getTransaccionesPorTotal().add(t);
 
         return t;
-    }
-
-    private double calcularComision(Usuario origen, Usuario destino, double valor) {
-        boolean mismaPersona = origen.getCedula().equals(destino.getCedula());
-
-        if (mismaPersona) {
-            return 0;
-        }
-
-        double porcentaje = switch (origen.getNivel()) {
-            case BRONCE -> 0.005;
-            case PLATA -> 0.004;
-            case ORO -> 0.003;
-            case PLATINO -> 0.001;
-        };
-
-        return valor * porcentaje;
-    }
-
-    public ArrayList<Transaccion> obtenerHistorial(String cedula) {
-        Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
-        if (usuario == null) {
-            return null;
-        }
-
-        return usuario.getHistorialTransacciones();
-    }
-
-    public CodigoResultadoTransaccion revertirUltimaTransferencia(String cedula) {
-        Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
-        if (usuario == null) return CodigoResultadoTransaccion.USUARIO_NO_ENCONTRADO;;
-
-        Stack<Transaccion> pila = usuario.getPilaReversiones();
-        if (pila.isEmpty()) return CodigoResultadoTransaccion.TRANSACCION_NO_ENCONTRADA;;
-
-        Transaccion t = pila.peek();
-        CodigoResultadoTransaccion revertida = procesarReversion(usuario, t);
-
-        if (revertida == CodigoResultadoTransaccion.SIN_ERROR) {
-            pila.pop();
-        }
-
-        return revertida;
-    }
-
-    public CodigoResultadoTransaccion revertirTransferencia(String cedula, String idTransaccion) {
-        Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
-        if (usuario == null) return CodigoResultadoTransaccion.USUARIO_NO_ENCONTRADO;;
-
-        for (Transaccion t : usuario.getHistorialTransacciones()) {
-            if (t.getId().equals(idTransaccion)) {
-                return procesarReversion(usuario, t);
-            }
-        }
-
-        return CodigoResultadoTransaccion.TRANSACCION_NO_ENCONTRADA;
-    }
-
-    private CodigoResultadoTransaccion procesarReversion(Usuario usuario, Transaccion transaccion) {
-        if (transaccion == null) return CodigoResultadoTransaccion.TRANSACCION_NO_ENCONTRADA;
-        if (transaccion.getTipo() != TipoTransaccion.TRANSFERENCIA) return CodigoResultadoTransaccion.ERROR_DESCONOCIDO;
-        if (transaccion.getEstado() == EstadoTransaccion.REVERTIDA) return CodigoResultadoTransaccion.TRANSFERENCIA_YA_REVERTIDA;
-
-        long segundos = java.time.Duration.between(transaccion.getFecha(), LocalDateTime.now()).getSeconds();
-
-        if (segundos > 60) return CodigoResultadoTransaccion.REVERSA_FUERA_DE_TIEMPO;;
-        Billetera origen = usuarioService.buscarBilleteraGlobal(transaccion.getBilleteraOrigenId());
-        Billetera destino = usuarioService.buscarBilleteraGlobal(transaccion.getBilleteraDestinoId());
-
-        if (origen == null) return CodigoResultadoTransaccion.BILLETERA_ORIGEN_NO_ENCONTRADA;
-
-        if (destino == null) return CodigoResultadoTransaccion.BILLETERA_DESTINO_NO_ENCONTRADA;
-
-        if (destino.getSaldo() < transaccion.getValor()) return CodigoResultadoTransaccion.SALDO_DESTINO_INSUFICIENTE;
-
-        double totalDevolver = transaccion.getValor() + transaccion.getComision();
-        billeteraService.actualizarSaldo(destino, destino.getSaldo() - transaccion.getValor());
-
-        billeteraService.actualizarSaldo(origen, origen.getSaldo() + totalDevolver);
-
-        puntosService.removerPuntos(usuario, transaccion.getPuntosGenerados());
-        transaccion.setEstado(EstadoTransaccion.REVERTIDA);
-        sistema.getTransaccionesPorTotal().remove(transaccion);
-        usuarioService.agregarHistorialReversiones(usuario.getCedula(), transaccion);
-
-        try {
-            Usuario usuarioDestino = usuarioService.buscarUsuarioPorBilletera(destino.getId());
-            if (usuarioDestino != null) {
-                sistemaService.disminuirConexionUsuarios(usuario.getCedula(), usuarioDestino.getCedula());
-                sistemaService.disminuirConexionBilleteras(origen.getId(), destino.getId());
-                notificacionService.enviarCancelacionTransferencia(usuario, usuarioDestino, origen,destino, transaccion);
-            }
-        } catch (Exception e) {
-            System.out.println("Error enviando correo de cancelación: " + e.getMessage());
-        }
-
-        return CodigoResultadoTransaccion.SIN_ERROR;
-    }
-
-    public java.util.ArrayList<Transaccion> obtenerTodas() {
-        java.util.ArrayList<Transaccion> lista = new java.util.ArrayList<>();
-
-        for (Usuario usuario : sistemaService.obtenerUsuarios()) {
-            for (Transaccion t : usuario.getHistorialTransacciones()) {
-                if (!lista.contains(t)) {
-                    lista.add(t);
-                }
-            }
-            for (Transaccion t : usuario.getTransaccionesProgramadas()) {
-                if (!lista.contains(t)) {
-                    lista.add(t);
-                }
-            }
-        }
-
-        return lista;
-    }
-
-    public double getMontoMovilizado(java.util.ArrayList<Transaccion> lista) {
-        double total = 0;
-
-        for (Transaccion t : lista) {
-            if (t.getEstado() == EstadoTransaccion.COMPLETADA) {
-                total += t.getValor();
-            }
-        }
-
-        return total;
-    }
-
-    public Map<TipoTransaccion, Integer> getFrecuenciaPorTipo(java.util.ArrayList<Transaccion> lista) {
-        Map<TipoTransaccion, Integer> frecuencia = new HashMap<>();
-
-        for (Transaccion t : lista) {
-            TipoTransaccion tipo = t.getTipo();
-            frecuencia.put(tipo, frecuencia.getOrDefault(tipo, 0) + 1);
-        }
-
-        return frecuencia;
-    }
-
-    public Map<EstadoTransaccion, Integer> getCantidadPorEstado(java.util.ArrayList<Transaccion> lista) {
-        Map<EstadoTransaccion, Integer> estados = new HashMap<>();
-        for (Transaccion t : lista) {
-            EstadoTransaccion estado = t.getEstado();
-            estados.put(estado, estados.getOrDefault(estado, 0) + 1);
-        }
-
-        return estados;
-    }
-
-    public java.util.ArrayList<Transaccion> getHistorialOrdenado(java.util.ArrayList<Transaccion> lista) {
-        lista.sort(Comparator.comparing(Transaccion::getFecha).reversed());
-
-        return lista;
-    }
-
-    public TransaccionesResponse getTransaccionesAdmin() {
-
-        java.util.ArrayList<Transaccion> lista = obtenerTodas();
-
-        lista = getHistorialOrdenado(lista);
-
-        TransaccionesResponse response = new TransaccionesResponse();
-
-        response.setTransacciones(lista);
-        response.setDineroMovilizado(getMontoMovilizado(lista));
-        response.setFrecuenciaPorTipo(getFrecuenciaPorTipo(lista));
-        response.setCantidadPorEstado(getCantidadPorEstado(lista));
-
-        return response;
     }
 }

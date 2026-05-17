@@ -206,7 +206,7 @@
     </div>
 
     <div class="nav-group">
-      <a href="/login.html" class="nav-item" onclick="logout()">
+      <a href="/login.html" class="nav-item">
         <img src="images/cerrar-sesion.svg">
         <span>Cerrar sesión</span>
       </a>
@@ -327,7 +327,7 @@
           nodes.push({
             id: origen,
             label: origen,
-            size: 30,
+            size: 38,
             shape: "dot",
 
             font: {
@@ -358,7 +358,7 @@
             nodes.push({
               id: destino,
               label: destino,
-              size: 30,
+              size: 38,
               shape: "dot",
 
               font: {
@@ -424,20 +424,18 @@
         },
 
         physics: {
-
           enabled: true,
-
           stabilization: {
             enabled: true,
-            iterations: 200
+            iterations: 400
           },
 
           barnesHut: {
-            gravitationalConstant: -15000,
-            centralGravity: 0.01,
-            springLength: 350,
-            springConstant: 0.015,
-            damping: 0.12,
+            gravitationalConstant: -30000,
+            centralGravity: 0.2,
+            springLength: 220,
+            springConstant: 0.04,
+            damping: 0.15,
             avoidOverlap: 1
           }
         },
@@ -486,6 +484,10 @@
           graphData,
           options
         );
+
+      setTimeout(() => {
+        network.fit({ animation: true });
+      }, 300);
     }
 
     function zoomIn() {
@@ -519,10 +521,6 @@
       network.fit({
         animation: true
       });
-    }
-
-    function logout() {
-      sessionStorage.removeItem("usuario");
     }
 
   </script>

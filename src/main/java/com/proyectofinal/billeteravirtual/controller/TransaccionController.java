@@ -1,12 +1,12 @@
 package com.proyectofinal.billeteravirtual.controller;
 
-import com.proyectofinal.billeteravirtual.model.CodigoResultadoTransaccion;
+import com.proyectofinal.billeteravirtual.enums.CodigoResultadoTransaccion;
 import com.proyectofinal.billeteravirtual.model.ResultadoTransaccion;
 import com.proyectofinal.billeteravirtual.model.Transaccion;
 import com.proyectofinal.billeteravirtual.service.TransaccionService;
 
 import com.proyectofinal.billeteravirtual.util.ArrayList;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.proyectofinal.billeteravirtual.util.ResponseHandler;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.http.ResponseEntity;
@@ -22,6 +22,13 @@ public class TransaccionController {
         this.transaccionService = transaccionService;
     }
 
+    /**
+     * Recarga saldo en una billetera
+     * @param cedula cédula del usuario
+     * @param idBilletera identificador de la billetera
+     * @param valor monto a recargar
+     * @return resultado de la transacción
+     */
     @PostMapping("/recargar/{cedula}/{idBilletera}/{valor}")
     public ResponseEntity<?> recargar(@PathVariable String cedula, @PathVariable String idBilletera, @PathVariable double valor) {
 
@@ -36,6 +43,13 @@ public class TransaccionController {
         return ResponseEntity.ok(resultado);
     }
 
+    /**
+     * Retira saldo de una billetera
+     * @param cedula cédula del usuario
+     * @param idBilletera identificador de la billetera
+     * @param valor monto a retirar
+     * @return resultado de la transacción
+     */
     @PostMapping("/retirar/{cedula}/{idBilletera}")
     public ResponseEntity<?> retirar(@PathVariable String cedula, @PathVariable String idBilletera, @RequestParam double valor) {
 
@@ -50,49 +64,53 @@ public class TransaccionController {
         return ResponseEntity.ok(resultado);
     }
 
+    /**
+     * Realiza una transferencia entre billeteras
+     * @param cedula cédula del usuario
+     * @param origen billetera origen
+     * @param destino billetera destino
+     * @param valor monto a transferir
+     * @return resultado de la transferencia
+     */
     @PostMapping("/transferir/{cedula}")
     public ResponseEntity<?> transferir(@PathVariable String cedula, @RequestParam String origen, @RequestParam String destino, @RequestParam double valor) {
         ResultadoTransaccion resultado = transaccionService.transferir(cedula, origen, destino, valor, null);
 
         if (!resultado.isOk()) {
-            return switch (resultado.getCodigoError()) {
-                case SALDO_INSUFICIENTE ->
-                        ResponseEntity.status(HttpStatus.CONFLICT).body("Saldo insuficiente");
-
-                case USUARIO_NO_ENCONTRADO ->
-                        ResponseEntity.status(HttpStatus.NOT_FOUND).body("El usuario no existe");
-
-                case BILLETERA_ORIGEN_NO_ENCONTRADA ->
-                        ResponseEntity.status(HttpStatus.NOT_FOUND).body("La billetera origen no existe");
-
-                case BILLETERA_DESTINO_NO_ENCONTRADA ->
-                        ResponseEntity.status(HttpStatus.NOT_FOUND).body("La billetera destino no existe");
-
-                case MISMA_BILLETERA ->
-                        ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No puedes transferir a la misma billetera");
-
-                case VALOR_INVALIDO ->
-                        ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El valor ingresado es inválido");
-
-                default ->
-                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error en la transferencia");
-            };
+            return ResponseHandler.manejarError(resultado, "Error en la transferencia");
         }
+
         return ResponseEntity.ok(resultado);
     }
 
+    /**
+     * Revertir la última transferencia del usuario
+     * @param cedula cédula del usuario
+     * @return resultado de la reversión
+     */
     @PostMapping("/revertir/{cedula}")
     public ResponseEntity<?> revertirUltimaTransferencia(@PathVariable String cedula) {
         CodigoResultadoTransaccion resultado = transaccionService.revertirUltimaTransferencia(cedula);
         return construirRespuestaReversion(resultado);
     }
 
+    /**
+     * Revertir una transferencia específica
+     * @param cedula cédula del usuario
+     * @param idTransaccion identificador de la transacción
+     * @return resultado de la reversión
+     */
     @PostMapping("/revertir/{cedula}/{idTransaccion}")
     public ResponseEntity<?> revertirTransferencia(@PathVariable String cedula, @PathVariable String idTransaccion) {
         CodigoResultadoTransaccion resultado = transaccionService.revertirTransferencia(cedula, idTransaccion);
         return construirRespuestaReversion(resultado);
     }
 
+    /**
+     * Construye la respuesta HTTP para la reversión de transacciones
+     * @param resultado código de resultado
+     * @return ResponseEntity con el mensaje correspondiente
+     */
     private ResponseEntity<?> construirRespuestaReversion(CodigoResultadoTransaccion resultado) {
         return switch (resultado) {
             case SIN_ERROR ->
@@ -124,6 +142,11 @@ public class TransaccionController {
         };
     }
 
+    /**
+     * Obtiene el historial de transacciones de un usuario
+     * @param cedula cédula del usuario
+     * @return lista de transacciones
+     */
     @GetMapping("/historial/{cedula}")
     public ResponseEntity<?> obtenerHistorial(@PathVariable String cedula) {
         ArrayList<Transaccion> historial = transaccionService.obtenerHistorial(cedula);
@@ -136,6 +159,10 @@ public class TransaccionController {
         return ResponseEntity.ok(respuesta);
     }
 
+    /**
+     * Obtiene todas las transacciones para administración
+     * @return listado de transacciones admin
+     */
     @GetMapping("/admin")
     public ResponseEntity<?> dashboardTransacciones() {
         return ResponseEntity.ok(transaccionService.getTransaccionesAdmin());

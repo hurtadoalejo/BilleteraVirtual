@@ -1,4 +1,7 @@
 package com.proyectofinal.billeteravirtual.model;
+import com.proyectofinal.billeteravirtual.enums.EstadoTransaccion;
+import com.proyectofinal.billeteravirtual.enums.TipoTransaccion;
+
 import java.time.LocalDateTime;
 
 public class Transaccion implements Comparable<Transaccion> {

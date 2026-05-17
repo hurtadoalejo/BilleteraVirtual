@@ -19,6 +19,12 @@ public class BilleteraController {
         this.billeteraService = billeteraService;
     }
 
+    /**
+     * Crea una nueva billetera para un usuario
+     * @param cedula cédula del usuario
+     * @param billetera datos de la billetera a crear
+     * @return mensaje de estado de la operación
+     */
     @PostMapping("/{cedula}")
     public ResponseEntity<?> crearBilletera(@PathVariable String cedula, @RequestBody Billetera billetera) {
 
@@ -35,6 +41,11 @@ public class BilleteraController {
                 .body("Billetera creada correctamente");
     }
 
+    /**
+     * Lista todas las billeteras de un usuario
+     * @param cedula cédula del usuario
+     * @return lista de billeteras
+     */
     @GetMapping("/{cedula}")
     public ResponseEntity<?> listarBilleteras(@PathVariable String cedula) {
 
@@ -47,6 +58,12 @@ public class BilleteraController {
         return ResponseEntity.ok(billeteras);
     }
 
+    /**
+     * Busca una billetera específica de un usuario
+     * @param cedula cédula del usuario
+     * @param idBilletera identificador de la billetera
+     * @return billetera encontrada o error 404
+     */
     @GetMapping("/{cedula}/{idBilletera}")
     public ResponseEntity<?> buscarBilletera(@PathVariable String cedula, @PathVariable String idBilletera) {
 
@@ -61,6 +78,13 @@ public class BilleteraController {
         return ResponseEntity.ok(billetera);
     }
 
+    /**
+     * Actualiza una billetera existente
+     * @param cedula cédula del usuario
+     * @param idBilletera identificador de la billetera
+     * @param datos nuevos datos de la billetera
+     * @return mensaje de estado de la operación
+     */
     @PutMapping("/{cedula}/{idBilletera}")
     public ResponseEntity<?> actualizarBilletera(@PathVariable String cedula, @PathVariable String idBilletera, @RequestBody Billetera datos) {
 
@@ -75,6 +99,12 @@ public class BilleteraController {
         return ResponseEntity.ok("Billetera actualizada correctamente");
     }
 
+    /**
+     * Elimina una billetera si cumple las condiciones
+     * @param cedula cédula del usuario
+     * @param idBilletera identificador de la billetera
+     * @return mensaje de estado de la operación
+     */
     @DeleteMapping("/{cedula}/{idBilletera}")
     public ResponseEntity<?> eliminarBilletera(@PathVariable String cedula, @PathVariable String idBilletera) {
 
@@ -89,6 +119,10 @@ public class BilleteraController {
         return ResponseEntity.ok("Billetera eliminada correctamente");
     }
 
+    /**
+     * Lista todas las billeteras del sistema (admin)
+     * @return lista de billeteras
+     */
     @GetMapping("/admin")
     public ResponseEntity<java.util.ArrayList<BilleteraResponse>> listarBilleteras() {
         return ResponseEntity.ok(billeteraService.listarBilleterasAdmin());

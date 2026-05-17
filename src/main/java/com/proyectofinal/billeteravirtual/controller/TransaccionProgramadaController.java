@@ -2,12 +2,13 @@ package com.proyectofinal.billeteravirtual.controller;
 
 import com.proyectofinal.billeteravirtual.model.ResultadoTransaccion;
 import com.proyectofinal.billeteravirtual.model.TransaccionProgramada;
-import com.proyectofinal.billeteravirtual.model.TipoTransaccion;
+import com.proyectofinal.billeteravirtual.enums.TipoTransaccion;
 import com.proyectofinal.billeteravirtual.model.Usuario;
 import com.proyectofinal.billeteravirtual.service.TransaccionProgramadaService;
 import com.proyectofinal.billeteravirtual.service.UsuarioService;
 
 import com.proyectofinal.billeteravirtual.util.ArrayList;
+import com.proyectofinal.billeteravirtual.util.ResponseHandler;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +28,16 @@ public class TransaccionProgramadaController {
         this.usuarioService = usuarioService;
     }
 
+    /**
+     * Programa una transacción para ejecución futura
+     * @param cedula cédula del usuario
+     * @param tipo tipo de transacción a programar
+     * @param valor valor de la transacción
+     * @param origen billetera de origen (opcional)
+     * @param destino billetera de destino (opcional)
+     * @param fecha fecha de ejecución
+     * @return mensaje de estado de la operación
+     */
     @PostMapping("/programar")
     public ResponseEntity<?> programar(@RequestParam String cedula, @RequestParam TipoTransaccion tipo, @RequestParam double valor, @RequestParam(required = false) String origen, @RequestParam(required = false) String destino, @RequestParam String fecha) {
         Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
@@ -36,32 +47,18 @@ public class TransaccionProgramadaController {
         ResultadoTransaccion resultado = transaccionProgramadaService.programarTransaccion(usuario, tipo, valor, origen, destino, fechaEjecucion);
 
         if (!resultado.isOk()) {
-            return switch (resultado.getCodigoError()) {
-                case SALDO_INSUFICIENTE ->
-                        ResponseEntity.status(HttpStatus.CONFLICT).body("Saldo insuficiente");
-
-                case USUARIO_NO_ENCONTRADO ->
-                        ResponseEntity.status(HttpStatus.NOT_FOUND).body("El usuario no existe");
-
-                case BILLETERA_ORIGEN_NO_ENCONTRADA ->
-                        ResponseEntity.status(HttpStatus.NOT_FOUND).body("La billetera origen no existe");
-
-                case BILLETERA_DESTINO_NO_ENCONTRADA ->
-                        ResponseEntity.status(HttpStatus.NOT_FOUND).body("La billetera destino no existe");
-
-                case MISMA_BILLETERA ->
-                        ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No puedes transferir a la misma billetera");
-
-                case VALOR_INVALIDO ->
-                        ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El valor ingresado es inválido");
-
-                default ->
-                        ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al programar transacción");
-            };
+            return ResponseHandler.manejarError(resultado, "Error al programar transacción");
         }
+
         return ResponseEntity.ok("Transacción programada correctamente");
     }
 
+    /**
+     * Cancela una transacción programada
+     * @param cedula cédula del usuario
+     * @param id identificador de la transacción programada
+     * @return mensaje de estado de la operación
+     */
     @PostMapping("/cancelar/{cedula}/{id}")
     public ResponseEntity<?> cancelar(@PathVariable String cedula, @PathVariable String id) {
         boolean cancelada = transaccionProgramadaService.cancelarTransaccion(id, cedula);
@@ -75,6 +72,11 @@ public class TransaccionProgramadaController {
         return ResponseEntity.ok("Transacción cancelada correctamente");
     }
 
+    /**
+     * Lista las transacciones programadas de un usuario
+     * @param cedula cédula del usuario
+     * @return lista de transacciones programadas
+     */
     @GetMapping("/listar/{cedula}")
     public ResponseEntity<?> listarProgramadas(@PathVariable String cedula) {
         Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
@@ -89,6 +91,10 @@ public class TransaccionProgramadaController {
         return ResponseEntity.ok(respuesta);
     }
 
+    /**
+     * Muestra la cola de transacciones programadas del sistema
+     * @return lista de transacciones en cola
+     */
     @GetMapping("/cola")
     public ResponseEntity<?> verCola() {
 

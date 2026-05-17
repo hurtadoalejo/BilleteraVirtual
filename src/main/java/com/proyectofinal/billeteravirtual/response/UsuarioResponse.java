@@ -1,6 +1,6 @@
 package com.proyectofinal.billeteravirtual.response;
 
-import com.proyectofinal.billeteravirtual.model.NivelUsuario;
+import com.proyectofinal.billeteravirtual.enums.NivelUsuario;
 import com.proyectofinal.billeteravirtual.model.Transaccion;
 
 import java.util.ArrayList;

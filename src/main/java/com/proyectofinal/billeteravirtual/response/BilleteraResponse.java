@@ -1,7 +1,7 @@
 package com.proyectofinal.billeteravirtual.response;
 
-import com.proyectofinal.billeteravirtual.model.EstadoBilletera;
-import com.proyectofinal.billeteravirtual.model.TipoBilletera;
+import com.proyectofinal.billeteravirtual.enums.EstadoBilletera;
+import com.proyectofinal.billeteravirtual.enums.TipoBilletera;
 
 public class BilleteraResponse {
     private String id;
