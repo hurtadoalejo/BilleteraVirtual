@@ -24,8 +24,8 @@ public class DataInitializer {
 
         return args -> {
 
-            Usuario u1 = crearUsuario("Alejandro Hurtado", "1092850037", "alejo@gmail.com", "3161111111", "123");
-            Usuario u2 = crearUsuario("Veronica Ibarra", "1036448546", "3162222222", "vero@gmail.com", "123");
+            Usuario u1 = crearUsuario("Alejandro Hurtado", "1092850037", "alejohg2911@gmail.com", "3161111111", "123");
+            Usuario u2 = crearUsuario("Veronica Ibarra", "1036448546", "3162222222", "alejandro.hurtadog@uqvirtual.edu.co", "123");
             Usuario u3 = crearUsuario("Carlos Ramirez", "1000000001", "carlos@gmail.com", "3163333333", "123");
             Usuario u4 = crearUsuario("Laura Martinez", "1000000002", "laura@gmail.com", "3164444444", "123");
             Usuario u5 = crearUsuario("Andres Gomez", "1000000003", "andres@gmail.com", "3165555555", "123");
