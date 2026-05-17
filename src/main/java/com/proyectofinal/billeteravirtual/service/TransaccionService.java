@@ -32,6 +32,14 @@ public class TransaccionService {
     }
 
     public ResultadoTransaccion recargar(String cedula, String idBilletera, double valor) {
+        return recargarInterno(cedula, idBilletera, valor, true);
+    }
+
+    public ResultadoTransaccion recargarSinCorreo(String cedula, String idBilletera, double valor) {
+        return recargarInterno(cedula, idBilletera, valor, false);
+    }
+
+    public ResultadoTransaccion recargarInterno(String cedula, String idBilletera, double valor, boolean enviarCorreo) {
         Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
 
         if (usuario == null) {
@@ -45,21 +53,31 @@ public class TransaccionService {
 
         NivelUsuario nivelAntes = usuario.getNivel();
         billeteraService.actualizarSaldo(billetera, billetera.getSaldo() + valor);
-        registrarTransaccion(usuario, null, billetera, valor, 0, TipoTransaccion.RECARGA, true);
+        Transaccion t = registrarTransaccion(usuario, null, billetera, valor, 0, TipoTransaccion.RECARGA, true);
         NivelUsuario nivelDespues = usuario.getNivel();
         boolean subioNivel = nivelAntes != nivelDespues;
 
-        try {
-            notificacionService.enviarRecarga(usuario, billetera, valor);
+        if (enviarCorreo) {
+            try {
+                notificacionService.enviarRecarga(usuario, billetera, valor);
 
-        } catch (Exception e) {
-            System.out.println("Error enviando correo: " + e.getMessage());
+            } catch (Exception e) {
+                System.out.println("Error enviando correo: " + e.getMessage());
+            }
         }
 
-        return new ResultadoTransaccion(true, subioNivel, nivelDespues, CodigoResultadoTransaccion.SIN_ERROR);
+        return new ResultadoTransaccion(true, subioNivel, nivelDespues, CodigoResultadoTransaccion.SIN_ERROR, t);
     }
 
     public ResultadoTransaccion retirar(String cedula, String idBilletera, double valor) {
+        return retirarInterno(cedula, idBilletera, valor, true);
+    }
+
+    public ResultadoTransaccion retirarSinCorreo(String cedula, String idBilletera, double valor) {
+        return retirarInterno(cedula, idBilletera, valor, false);
+    }
+
+    public ResultadoTransaccion retirarInterno(String cedula, String idBilletera, double valor, boolean  enviarCorreo) {
         Usuario usuario = usuarioService.buscarUsuarioPorCedula(cedula);
 
         if (usuario == null) {
@@ -79,22 +97,32 @@ public class TransaccionService {
 
         billeteraService.actualizarSaldo(billetera, billetera.getSaldo() - valor);
 
-        registrarTransaccion(usuario, billetera, null, valor, 0, TipoTransaccion.RETIRO, true);
+        Transaccion t = registrarTransaccion(usuario, billetera, null, valor, 0, TipoTransaccion.RETIRO, true);
 
         NivelUsuario nivelDespues = usuario.getNivel();
         boolean subioNivel = nivelAntes != nivelDespues;
 
-        try {
-            notificacionService.enviarRetiro(usuario, billetera, valor);
+        if (enviarCorreo) {
+            try {
+                notificacionService.enviarRetiro(usuario, billetera, valor);
 
-        } catch (Exception e) {
-            System.out.println("Error enviando correo: " + e.getMessage());
+            } catch (Exception e) {
+                System.out.println("Error enviando correo: " + e.getMessage());
+            }
         }
 
-        return new ResultadoTransaccion(true, subioNivel, nivelDespues, CodigoResultadoTransaccion.SIN_ERROR);
+        return new ResultadoTransaccion(true, subioNivel, nivelDespues, CodigoResultadoTransaccion.SIN_ERROR, t);
     }
 
     public ResultadoTransaccion transferir(String cedula, String idOrigen, String idDestino, double valor, Double comisionPrevia) {
+        return transferirInterno(cedula, idOrigen, idDestino, valor, comisionPrevia, true);
+    }
+
+    public ResultadoTransaccion transferirSinCorreo(String cedula, String idOrigen, String idDestino, double valor, Double comisionPrevia) {
+        return transferirInterno(cedula, idOrigen, idDestino, valor, comisionPrevia, false);
+    }
+
+    public ResultadoTransaccion transferirInterno(String cedula, String idOrigen, String idDestino, double valor, Double comisionPrevia, boolean  enviarCorreo) {
         Usuario usuarioOrigen = usuarioService.buscarUsuarioPorCedula(cedula);
         if (usuarioOrigen == null) {
             return new ResultadoTransaccion(false, false, null, CodigoResultadoTransaccion.USUARIO_NO_ENCONTRADO);
@@ -142,20 +170,24 @@ public class TransaccionService {
         NivelUsuario nivelDespues = usuarioOrigen.getNivel();
         boolean subioNivel = nivelAntes != nivelDespues;
 
-        try {
-            notificacionService.enviarTransferencia(usuarioOrigen, usuarioDestino, origen, destino, valor, comision);
+        if (enviarCorreo) {
+            try {
+                notificacionService.enviarTransferencia(usuarioOrigen, usuarioDestino, origen, destino, valor, comision);
 
-        } catch (Exception e) {
-            System.out.println("Error enviando correo: " + e.getMessage());
+            } catch (Exception e) {
+                System.out.println("Error enviando correo: " + e.getMessage());
+            }
         }
 
-        sistemaService.actualizarGrafo(origen.getId(), destino.getId());
-        return new ResultadoTransaccion(true, subioNivel, nivelDespues);
+        sistemaService.actualizarGrafoBilleteras(origen.getId(), destino.getId());
+        sistemaService.actualizarGrafoUsuarios(usuarioOrigen.getCedula(), usuarioDestino.getCedula());
+        return new ResultadoTransaccion(true, subioNivel, nivelDespues, t);
     }
 
     private Transaccion registrarTransaccion(Usuario usuario, Billetera origen, Billetera destino, double valor, double comision, TipoTransaccion tipo, boolean generarPuntos) {
         Transaccion t = new Transaccion();
         t.setId(UUID.randomUUID().toString());
+        t.setIdUsuario(usuario.getCedula());
         t.setFecha(LocalDateTime.now());
         t.setTipo(tipo);
         t.setValor(valor);
@@ -273,6 +305,8 @@ public class TransaccionService {
         try {
             Usuario usuarioDestino = usuarioService.buscarUsuarioPorBilletera(destino.getId());
             if (usuarioDestino != null) {
+                sistemaService.disminuirConexionUsuarios(usuario.getCedula(), usuarioDestino.getCedula());
+                sistemaService.disminuirConexionBilleteras(origen.getId(), destino.getId());
                 notificacionService.enviarCancelacionTransferencia(usuario, usuarioDestino, origen,destino, transaccion);
             }
         } catch (Exception e) {

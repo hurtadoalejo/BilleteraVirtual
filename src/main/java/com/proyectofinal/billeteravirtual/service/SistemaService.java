@@ -1,6 +1,7 @@
 package com.proyectofinal.billeteravirtual.service;
 
 import com.proyectofinal.billeteravirtual.model.*;
+import com.proyectofinal.billeteravirtual.response.DashboardResponse;
 import com.proyectofinal.billeteravirtual.response.TransaccionDashboardResponse;
 import org.springframework.stereotype.Service;
 
@@ -29,12 +30,23 @@ public class SistemaService {
     }
 
     public int getTotalTransacciones() {
-        int total = 0;
-        for (Usuario u : sistema.getUsuarios().values()) {
-            total += u.getHistorialTransacciones().size();
+        java.util.ArrayList<Transaccion> lista = new java.util.ArrayList<>();
+
+        for (Usuario usuario : obtenerUsuarios()) {
+            for (Transaccion t : usuario.getHistorialTransacciones()) {
+                if (!lista.contains(t)) {
+                    lista.add(t);
+                }
+            }
+
+            for (Transaccion t : usuario.getTransaccionesProgramadas()) {
+                if (!lista.contains(t)) {
+                    lista.add(t);
+                }
+            }
         }
 
-        return total;
+        return lista.size();
     }
 
     public double getDineroMovilizado() {
@@ -133,6 +145,8 @@ public class SistemaService {
         response.setDineroMovilizado(getDineroMovilizado());
         response.setUltimasTransacciones(getUltimasTransacciones());
         response.setTopUsuarios(getTopUsuarios());
+        response.setTopTransacciones(getTopTransacciones());
+        response.setTopBilleteras(getTopBilleteras());
 
         return response;
     }
@@ -149,55 +163,58 @@ public class SistemaService {
         return !sistema.getNotificacionesPendientes().isEmpty();
     }
 
-    public void actualizarGrafo(String origenId, String destinoId) {
-        sistema.getGrafoTransferencias().putIfAbsent(origenId, new HashMap<>());
+    public void actualizarGrafoBilleteras(String origenId, String destinoId) {
+        sistema.getGrafoTransferenciasBilleteras().putIfAbsent(origenId, new HashMap<>());
 
-        Map<String, Integer> conexiones = sistema.getGrafoTransferencias().get(origenId);
+        Map<String, Integer> conexiones = sistema.getGrafoTransferenciasBilleteras().get(origenId);
 
         conexiones.put(destinoId, conexiones.getOrDefault(destinoId, 0) + 1);
     }
 
-    public Map<String, Integer> obtenerConexionesDeBilletera(String billeteraId){
-        return sistema.getGrafoTransferencias().getOrDefault(billeteraId, new HashMap<>());
+    public void actualizarGrafoUsuarios(String cedulaOrigen, String cedulaDestino) {
+        sistema.getGrafoTransferenciasUsuarios().putIfAbsent(cedulaOrigen, new HashMap<>());
+
+        Map<String, Integer> conexiones = sistema.getGrafoTransferenciasUsuarios().get(cedulaOrigen);
+
+        conexiones.put(cedulaDestino, conexiones.getOrDefault(cedulaDestino, 0) + 1);
     }
 
-    public String obtenerRutaMasFrecuente() {
-        String mejorRuta = null;
-        int maxTransferencias = 0;
+    public void disminuirConexionUsuarios(String cedulaOrigen, String cedulaDestino) {
+        Map<String, Map<String, Integer>> grafo = sistema.getGrafoTransferenciasUsuarios();
 
-        Map<String, Map<String, Integer>> grafo = sistema.getGrafoTransferencias();
+        if (!grafo.containsKey(cedulaOrigen)) return;
 
-        for (String origen : grafo.keySet()) {
-            Map<String, Integer> destinos = grafo.get(origen);
-            for (String destino : destinos.keySet()) {
-                int cantidad = destinos.get(destino);
-                if (cantidad > maxTransferencias) {
-                    maxTransferencias = cantidad;
-                    mejorRuta = origen + " → " + destino + " (" + cantidad + " transferencias)";
-                }
-            }
+        Map<String, Integer> conexiones = grafo.get(cedulaOrigen);
+
+        if (!conexiones.containsKey(cedulaDestino)) return;
+
+        int cantidad = conexiones.get(cedulaDestino);
+
+        if (cantidad <= 1) {
+            conexiones.remove(cedulaDestino);
+            if (conexiones.isEmpty()) grafo.remove(cedulaOrigen);
+        } else {
+            conexiones.put(cedulaDestino, cantidad - 1);
         }
-
-        return mejorRuta;
     }
 
-    public ArrayList<String> obtenerBilleterasConMasConexiones() {
-        ArrayList<String> resultado = new ArrayList<>();
+    public void disminuirConexionBilleteras(String origenId, String destinoId) {
+        Map<String, Map<String, Integer>> grafo = sistema.getGrafoTransferenciasBilleteras();
 
-        int maxConexiones = 0;
-        for (String origen : sistema.getGrafoTransferencias().keySet()) {
-            int conexiones = sistema.getGrafoTransferencias().get(origen).size();
-            if (conexiones > maxConexiones) {
-                maxConexiones = conexiones;
-                resultado.clear();
-                resultado.add(origen);
+        if (!grafo.containsKey(origenId)) return;
 
-            } else if (conexiones == maxConexiones) {
-                resultado.add(origen);
-            }
+        Map<String, Integer> conexiones = grafo.get(origenId);
+
+        if (!conexiones.containsKey(destinoId)) return;
+
+        int cantidad = conexiones.get(destinoId);
+
+        if (cantidad <= 1) {
+            conexiones.remove(destinoId);
+            if (conexiones.isEmpty()) grafo.remove(origenId);;
+        } else {
+            conexiones.put(destinoId, cantidad - 1);
         }
-
-        return resultado;
     }
 
     public Collection<Usuario> obtenerUsuarios() {
@@ -231,8 +248,11 @@ public class SistemaService {
         return top;
     }
 
-    public void actualizarBilleteraOrdenada(Billetera billetera) {
-        sistema.getBilleterasPorSaldo().remove(billetera);
-        sistema.getBilleterasPorSaldo().add(billetera);
+    public Map<String, Map<String, Integer>> obtenerGrafoUsuarios() {
+        return sistema.getGrafoTransferenciasUsuarios();
+    }
+
+    public Map<String, Map<String, Integer>> obtenerGrafoBilleteras() {
+        return sistema.getGrafoTransferenciasBilleteras();
     }
 }

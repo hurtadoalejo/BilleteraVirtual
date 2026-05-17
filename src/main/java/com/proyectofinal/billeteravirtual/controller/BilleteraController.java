@@ -1,16 +1,13 @@
 package com.proyectofinal.billeteravirtual.controller;
 
 import com.proyectofinal.billeteravirtual.model.Billetera;
-import com.proyectofinal.billeteravirtual.model.BilleteraResponse;
+import com.proyectofinal.billeteravirtual.response.BilleteraResponse;
 import com.proyectofinal.billeteravirtual.service.BilleteraService;
 import com.proyectofinal.billeteravirtual.util.ArrayList;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/billeteras")

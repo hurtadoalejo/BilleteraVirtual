@@ -13,7 +13,9 @@ public class SistemaBilletera {
     private TreeSet<Transaccion> transaccionesPorTotal = new TreeSet<>();
     private TreeSet<Billetera> billeterasPorSaldo = new TreeSet<>();
     private Queue<NotificacionPendiente> notificacionesPendientes = new Queue<>();
-    private Map<String, Map<String, Integer>> grafoTransferencias = new HashMap<>();
+    private Map<String, Map<String, Integer>> grafoTransferenciasBilleteras = new HashMap<>();
+    private Map<String, Map<String, Integer>> grafoTransferenciasUsuarios = new HashMap<>();
+
 
     public Map<String, Usuario> getUsuarios() {
         return usuarios;
@@ -47,12 +49,12 @@ public class SistemaBilletera {
         this.notificacionesPendientes = notificacionesPendientes;
     }
 
-    public Map<String, Map<String, Integer>> getGrafoTransferencias() {
-        return grafoTransferencias;
+    public Map<String, Map<String, Integer>> getGrafoTransferenciasBilleteras() {
+        return grafoTransferenciasBilleteras;
     }
 
-    public void setGrafoTransferencias(Map<String, Map<String, Integer>> grafoTransferencias) {
-        this.grafoTransferencias = grafoTransferencias;
+    public void setGrafoTransferenciasBilleteras(Map<String, Map<String, Integer>> grafoTransferenciasBilleteras) {
+        this.grafoTransferenciasBilleteras = grafoTransferenciasBilleteras;
     }
 
     public TreeSet<Transaccion> getTransaccionesPorTotal() {
@@ -69,5 +71,13 @@ public class SistemaBilletera {
 
     public void setBilleterasPorSaldo(TreeSet<Billetera> billeterasPorSaldo) {
         this.billeterasPorSaldo = billeterasPorSaldo;
+    }
+
+    public Map<String, Map<String, Integer>> getGrafoTransferenciasUsuarios() {
+        return grafoTransferenciasUsuarios;
+    }
+
+    public void setGrafoTransferenciasUsuarios(Map<String, Map<String, Integer>> grafoTransferenciasUsuarios) {
+        this.grafoTransferenciasUsuarios = grafoTransferenciasUsuarios;
     }
 }

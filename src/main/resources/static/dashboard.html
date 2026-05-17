@@ -112,7 +112,7 @@
       box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
       height: 280px;
     }
-    
+
 
     .box h2 {
       font-size: 14px;
@@ -138,17 +138,17 @@
   <nav class="sidebar">
 
     <div class="nav-group">
-      <a href="/dashboard.html" class="nav-item"><img src="dashboard.svg"><span>Dashboard</span></a>
-      <a href="/usuarios.html" class="nav-item"><img src="usuarios.svg"><span>Usuarios</span></a>
-      <a href="/billeteras.html" class="nav-item"><img src="billeteras.svg"><span>Billeteras</span></a>
-      <a href="/transacciones.html" class="nav-item"><img src="transacciones.svg"><span>Transacciones</span></a>
-      <a href="/ranking.html" class="nav-item"><img src="ranking.svg"><span>Ranking</span></a>
-      <a href="/reporte.html" class="nav-item"><img src="reporte.svg"><span>Reporte</span></a>
+      <a href="/dashboard.html" class="nav-item"><img src="images/dashboard.svg"><span>Dashboard</span></a>
+      <a href="/usuarios.html" class="nav-item"><img src="images/usuarios.svg"><span>Usuarios</span></a>
+      <a href="/billeteras.html" class="nav-item"><img src="images/billeteras.svg"><span>Billeteras</span></a>
+      <a href="/transacciones.html" class="nav-item"><img src="images/transacciones.svg"><span>Transacciones</span></a>
+      <a href="/relaciones.html" class="nav-item"><img src="images/relaciones.svg"><span>Relaciones</span></a>
+      <a href="/reporte.html" class="nav-item"><img src="images/reporte.svg"><span>Reporte</span></a>
     </div>
 
     <div class="nav-group">
       <a href="/login.html" class="nav-item">
-        <img src="cerrar-sesion.svg">
+        <img src="images/cerrar-sesion.svg">
         <span>Cerrar sesión</span>
       </a>
     </div>
@@ -188,7 +188,17 @@
 
       <div class="box">
         <h2>Top usuarios</h2>
-        <div id="top"></div>
+        <div id="topUsuarios"></div>
+      </div>
+
+      <div class="box">
+        <h2>Top transacciones</h2>
+        <div id="topTransacciones"></div>
+      </div>
+
+      <div class="box">
+        <h2>Top billeteras</h2>
+        <div id="topBilleteras"></div>
       </div>
 
     </div>
@@ -237,7 +247,7 @@
         })
         .join("");
 
-      document.getElementById("top").innerHTML = data.topUsuarios.map(u =>
+      document.getElementById("topUsuarios").innerHTML = data.topUsuarios.map(u =>
         `<div class="item">
           <b>${u.nombreCompleto}</b><br>
           <span class="small">Cédula: ${u.cedula}</span><br>
@@ -245,6 +255,28 @@
           Puntos: ${u.puntos}
         </div>`
       ).join("");
+
+      document.getElementById("topTransacciones").innerHTML =
+        data.topTransacciones.map(t => {
+          const valorFormateado = formatoCOP.format(Number(t.valor));
+          return `
+            <div class="item">
+              <b>${t.tipo}</b><br>
+              <span class="small">${formatearFecha(t.fecha)}</span><br>
+              Valor: $ ${valorFormateado}
+            </div>
+          `;
+        }).join("");
+
+      document.getElementById("topBilleteras").innerHTML =
+        data.topBilleteras.map(b => {
+          return `
+            <div class="item">
+              <b>Billetera ID:</b> ${b.id}<br>
+              <span class="small">Saldo: $ ${formatoCOP.format(b.getSaldo ? b.getSaldo() : b.saldo)}</span>
+            </div>
+          `;
+        }).join("");
     }
 
     cargarDashboard();

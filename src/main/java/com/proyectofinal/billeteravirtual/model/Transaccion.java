@@ -6,6 +6,7 @@ public class Transaccion implements Comparable<Transaccion> {
     private String id;
     private LocalDateTime fecha;
     private TipoTransaccion tipo;
+    private String idUsuario;
     private double valor;
     private double comision;
 
@@ -85,6 +86,14 @@ public class Transaccion implements Comparable<Transaccion> {
 
     public void setComision(double comision) {
         this.comision = comision;
+    }
+
+    public String getIdUsuario() {
+        return idUsuario;
+    }
+
+    public void setIdUsuario(String idUsuario) {
+        this.idUsuario = idUsuario;
     }
 
     @Override

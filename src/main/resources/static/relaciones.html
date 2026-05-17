@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Relaciones</title>
+
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+
+  <style>
+    * {
+      user-select: none;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      display: flex;
+      height: 100vh;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(77, 130, 188, 0.6), transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(77, 130, 188, 0.6), transparent 40%),
+        radial-gradient(circle at 50% 50%, #4d82bc, #005187);
+      background-blend-mode: screen;
+      color: white;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: rgba(7, 68, 109, 0.25);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px 10px;
+    }
+
+    .nav-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 15px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      color: white;
+    }
+
+    .nav-item img {
+      width: 20px;
+      height: 20px;
+      opacity: 0.8;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .content {
+      flex: 1;
+      background: #F3F6FF;
+      color: #1e293b;
+      padding: 35px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .container {
+      max-width: 1300px;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      gap: 20px;
+    }
+
+    .titulo {
+      font-size: 28px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .top-bar {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .selector {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid #ccc;
+      outline: none;
+      background: white;
+      min-width: 220px;
+      font-size: 14px;
+    }
+
+    .btn {
+      padding: 12px 20px;
+      border-radius: 14px;
+      border: none;
+      cursor: pointer;
+      background: #4d82bc;
+      color: white;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+    }
+
+    .grafo-card {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .grafo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .zoom-controls {
+      display: flex;
+      gap: 10px;
+    }
+
+    .zoom-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 12px;
+      background: #4d82bc;
+      color: white;
+      font-size: 20px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .zoom-btn:hover {
+      opacity: 0.9;
+    }
+
+    #grafo {
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+      border-radius: 18px;
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      overflow: hidden;
+    }
+
+    .info {
+      color: #64748b;
+      font-size: 14px;
+    }
+
+    html,
+    body {
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="sidebar">
+
+    <div class="nav-group">
+      <a href="/dashboard.html" class="nav-item"><img src="images/dashboard.svg"><span>Dashboard</span></a>
+      <a href="/usuarios.html" class="nav-item"><img src="images/usuarios.svg"><span>Usuarios</span></a>
+      <a href="/billeteras.html" class="nav-item"><img src="images/billeteras.svg"><span>Billeteras</span></a>
+      <a href="/transacciones.html" class="nav-item"><img src="images/transacciones.svg"><span>Transacciones</span></a>
+      <a href="/relaciones.html" class="nav-item"><img src="images/relaciones.svg"><span>Relaciones</span></a>
+      <a href="/reporte.html" class="nav-item"><img src="images/reporte.svg"><span>Reporte</span></a>
+    </div>
+
+    <div class="nav-group">
+      <a href="/login.html" class="nav-item" onclick="logout()">
+        <img src="images/cerrar-sesion.svg">
+        <span>Cerrar sesión</span>
+      </a>
+    </div>
+
+  </nav>
+
+  <div class="content">
+
+    <div class="container">
+
+      <h1 class="titulo">Relaciones y conexiones</h1>
+
+      <div class="card">
+
+        <div class="top-bar">
+
+          <select id="tipoGrafo" class="selector">
+            <option value="usuarios">Grafo completo de usuarios</option>
+            <option value="billeteras">Grafo completo de billeteras</option>
+          </select>
+
+          <button class="btn" onclick="cargarGrafo()">
+            Mostrar grafo
+          </button>
+
+        </div>
+
+      </div>
+
+      <div class="card grafo-card">
+
+        <div class="grafo-header">
+
+          <div>
+            <h2>Visualización del grafo</h2>
+          </div>
+
+          <div class="zoom-controls">
+
+            <button class="zoom-btn" onclick="zoomIn()">
+              +
+            </button>
+
+            <button class="zoom-btn" onclick="zoomOut()">
+              −
+            </button>
+
+            <button class="zoom-btn" onclick="resetZoom()">
+              ⟳
+            </button>
+
+          </div>
+
+        </div>
+
+        <div id="grafo"></div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+
+    let network = null;
+
+    async function cargarGrafo() {
+
+      const tipo =
+        document.getElementById("tipoGrafo").value;
+
+      let endpoint = "";
+
+      if (tipo === "usuarios") {
+
+        endpoint =
+          "http://localhost:8080/sistema/grafo/usuarios";
+
+      } else {
+
+        endpoint =
+          "http://localhost:8080/sistema/grafo/billeteras";
+      }
+
+      try {
+
+        const response =
+          await fetch(endpoint);
+
+        if (!response.ok) {
+          throw new Error("Error cargando el grafo");
+        }
+
+        const data =
+          await response.json();
+
+        construirGrafo(data, tipo);
+
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    function construirGrafo(data, tipo) {
+
+      const nodes = [];
+      const edges = [];
+
+      const nodosAgregados =
+        new Set();
+
+      for (const origen in data) {
+
+        if (!nodosAgregados.has(origen)) {
+
+          nodes.push({
+            id: origen,
+            label: origen,
+            size: 30,
+            shape: "dot",
+
+            font: {
+              color: "#111827",
+              size: 16,
+              face: "Inter",
+              strokeWidth: 0
+            },
+
+            color: {
+              background: "#bfdbfe",
+              border: "#2563eb"
+            },
+
+            borderWidth: 2
+          });
+
+          nodosAgregados.add(origen);
+        }
+
+        const destinos =
+          data[origen];
+
+        for (const destino in destinos) {
+
+          if (!nodosAgregados.has(destino)) {
+
+            nodes.push({
+              id: destino,
+              label: destino,
+              size: 30,
+              shape: "dot",
+
+              font: {
+                color: "#111827",
+                size: 16,
+                face: "Inter",
+                strokeWidth: 0
+              },
+
+              color: {
+                background: "#bfdbfe",
+                border: "#2563eb"
+              },
+
+              borderWidth: 2
+            });
+
+            nodosAgregados.add(destino);
+          }
+
+          edges.push({
+            from: origen,
+            to: destino,
+
+            label:
+              destinos[destino].toString(),
+
+            arrows: "to",
+
+            width:
+              2 + destinos[destino],
+
+            smooth: {
+              type: "dynamic"
+            },
+
+            font: {
+              size: 14,
+              align: "middle"
+            }
+          });
+        }
+      }
+
+      const container =
+        document.getElementById("grafo");
+
+      const graphData = {
+
+        nodes:
+          new vis.DataSet(nodes),
+
+        edges:
+          new vis.DataSet(edges)
+      };
+
+      const options = {
+
+        autoResize: true,
+
+        layout: {
+          improvedLayout: true
+        },
+
+        physics: {
+
+          enabled: true,
+
+          stabilization: {
+            enabled: true,
+            iterations: 200
+          },
+
+          barnesHut: {
+            gravitationalConstant: -15000,
+            centralGravity: 0.01,
+            springLength: 350,
+            springConstant: 0.015,
+            damping: 0.12,
+            avoidOverlap: 1
+          }
+        },
+
+        interaction: {
+
+          hover: true,
+
+          dragNodes: true,
+
+          dragView: true,
+
+          zoomView: true
+        },
+
+        nodes: {
+
+          borderWidth: 2,
+
+          scaling: {
+            min: 25,
+            max: 45
+          },
+
+          font: {
+            multi: false
+          },
+
+          margin: 20
+        },
+
+        edges: {
+
+          color: {
+            color: "#94a3b8",
+            highlight: "#2563eb"
+          },
+
+          smooth: true
+        }
+      };
+
+      network =
+        new vis.Network(
+          container,
+          graphData,
+          options
+        );
+    }
+
+    function zoomIn() {
+
+      if (!network) return;
+
+      const scale =
+        network.getScale();
+
+      network.moveTo({
+        scale: scale * 1.2
+      });
+    }
+
+    function zoomOut() {
+
+      if (!network) return;
+
+      const scale =
+        network.getScale();
+
+      network.moveTo({
+        scale: scale * 0.8
+      });
+    }
+
+    function resetZoom() {
+
+      if (!network) return;
+
+      network.fit({
+        animation: true
+      });
+    }
+
+    function logout() {
+      sessionStorage.removeItem("usuario");
+    }
+
+  </script>
+
+</body>
+
+</html>

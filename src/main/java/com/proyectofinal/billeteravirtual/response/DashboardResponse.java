@@ -1,6 +1,8 @@
-package com.proyectofinal.billeteravirtual.model;
+package com.proyectofinal.billeteravirtual.response;
 
-import com.proyectofinal.billeteravirtual.response.TransaccionDashboardResponse;
+import com.proyectofinal.billeteravirtual.model.Billetera;
+import com.proyectofinal.billeteravirtual.model.Transaccion;
+import com.proyectofinal.billeteravirtual.model.Usuario;
 
 import java.util.List;
 
@@ -13,6 +15,8 @@ public class DashboardResponse {
 
     private List<TransaccionDashboardResponse> ultimasTransacciones;
     private List<Usuario> topUsuarios;
+    private List<Transaccion> topTransacciones;
+    private List<Billetera> topBilleteras;
 
     public int getTotalUsuarios() {
         return totalUsuarios;
@@ -60,5 +64,21 @@ public class DashboardResponse {
 
     public void setTopUsuarios(List<Usuario> topUsuarios) {
         this.topUsuarios = topUsuarios;
+    }
+
+    public List<Transaccion> getTopTransacciones() {
+        return topTransacciones;
+    }
+
+    public void setTopTransacciones(List<Transaccion> topTransacciones) {
+        this.topTransacciones = topTransacciones;
+    }
+
+    public List<Billetera> getTopBilleteras() {
+        return topBilleteras;
+    }
+
+    public void setTopBilleteras(List<Billetera> topBilleteras) {
+        this.topBilleteras = topBilleteras;
     }
 }

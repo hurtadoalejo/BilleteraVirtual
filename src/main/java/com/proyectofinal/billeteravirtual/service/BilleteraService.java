@@ -1,6 +1,7 @@
 package com.proyectofinal.billeteravirtual.service;
 
 import com.proyectofinal.billeteravirtual.model.*;
+import com.proyectofinal.billeteravirtual.response.BilleteraResponse;
 import org.springframework.stereotype.Service;
 import com.proyectofinal.billeteravirtual.util.ArrayList;
 
@@ -18,16 +19,6 @@ public class BilleteraService {
         this.usuarioService = usuarioService;
         this.sistemaService = sistemaService;
         this.sistema = sistema;
-        Billetera billetera = new Billetera();
-        billetera.setNombre("Nequi");
-        billetera.setTipo(TipoBilletera.AHORRO);
-
-        Billetera billetera2 = new Billetera();
-        billetera2.setNombre("Davi");
-        billetera2.setTipo(TipoBilletera.AHORRO);
-
-        agregarBilletera("1092850037", billetera);
-        agregarBilletera("1036448546", billetera2);
     }
 
     public boolean agregarBilletera(String cedula, Billetera billetera) {
@@ -40,6 +31,7 @@ public class BilleteraService {
         billetera.setUsuario(usuario);
 
         billeteras.put(billetera.getId(), billetera);
+        sistema.getBilleterasPorSaldo().add(billetera);
 
         return true;
     }
@@ -86,6 +78,7 @@ public class BilleteraService {
 
         if (billetera.getSaldo() > 0) return false;
         usuario.getBilleteras().remove(idBilletera);
+        sistema.getBilleterasPorSaldo().remove(billetera);
         return true;
     }
 

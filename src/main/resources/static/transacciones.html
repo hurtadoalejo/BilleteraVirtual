@@ -311,17 +311,17 @@
   <nav class="sidebar">
 
     <div class="nav-group">
-      <a href="/dashboard.html" class="nav-item"><img src="dashboard.svg"><span>Dashboard</span></a>
-      <a href="/usuarios.html" class="nav-item"><img src="usuarios.svg"><span>Usuarios</span></a>
-      <a href="/billeteras.html" class="nav-item"><img src="billeteras.svg"><span>Billeteras</span></a>
-      <a href="/transacciones.html" class="nav-item"><img src="transacciones.svg"><span>Transacciones</span></a>
-      <a href="/ranking.html" class="nav-item"><img src="ranking.svg"><span>Ranking</span></a>
-      <a href="/reporte.html" class="nav-item"><img src="reporte.svg"><span>Reporte</span></a>
+      <a href="/dashboard.html" class="nav-item"><img src="images/dashboard.svg"><span>Dashboard</span></a>
+      <a href="/usuarios.html" class="nav-item"><img src="images/usuarios.svg"><span>Usuarios</span></a>
+      <a href="/billeteras.html" class="nav-item"><img src="images/billeteras.svg"><span>Billeteras</span></a>
+      <a href="/transacciones.html" class="nav-item"><img src="images/transacciones.svg"><span>Transacciones</span></a>
+      <a href="/relaciones.html" class="nav-item"><img src="images/relaciones.svg"><span>Relaciones</span></a>
+      <a href="/reporte.html" class="nav-item"><img src="images/reporte.svg"><span>Reporte</span></a>
     </div>
 
     <div class="nav-group">
       <a href="/login.html" class="nav-item">
-        <img src="cerrar-sesion.svg">
+        <img src="images/cerrar-sesion.svg">
         <span>Cerrar sesión</span>
       </a>
     </div>
@@ -347,13 +347,13 @@
       </div>
 
       <div class="card">
-        <h3>Tipo más usado</h3>
-        <p id="tipoFrecuente">-</p>
+        <h3>Billetera más usada</h3>
+        <p id="billeteraFrecuente">-</p>
       </div>
 
       <div class="card">
-        <h3>Estado más común</h3>
-        <p id="estadoFrecuente">-</p>
+        <h3>Usuario más frecuente</h3>
+        <p id="usuarioFrecuente">-</p>
       </div>
 
     </div>
@@ -500,10 +500,29 @@
 
       const frecuenciaEstados = {};
 
+      const frecuenciaBilleteras = {};
+
+      const frecuenciaUsuarios = {};
+
       lista.forEach(t => {
         if (t.estado === "COMPLETADA") {
 
           dinero += t.valor;
+        }
+
+        if (t.billeteraOrigenId) {
+          frecuenciaBilleteras[t.billeteraOrigenId] =
+            (frecuenciaBilleteras[t.billeteraOrigenId] || 0) + 1;
+        }
+
+        if (t.billeteraDestinoId) {
+          frecuenciaBilleteras[t.billeteraDestinoId] =
+            (frecuenciaBilleteras[t.billeteraDestinoId] || 0) + 1;
+        }
+
+        if (t.idUsuario) {
+          frecuenciaUsuarios[t.idUsuario] =
+            (frecuenciaUsuarios[t.idUsuario] || 0) + 1;
         }
 
         frecuenciaTipos[t.tipo] =
@@ -517,13 +536,13 @@
         .textContent =
         "$ " + formatoCOP.format(dinero);
 
-      document.getElementById("tipoFrecuente")
+      document.getElementById("billeteraFrecuente")
         .textContent =
-        obtenerMayor(frecuenciaTipos);
+        obtenerMayor(frecuenciaBilleteras);
 
-      document.getElementById("estadoFrecuente")
+      document.getElementById("usuarioFrecuente")
         .textContent =
-        obtenerMayor(frecuenciaEstados);
+        obtenerMayor(frecuenciaUsuarios);
 
       renderFrecuencias(
         frecuenciaTipos,

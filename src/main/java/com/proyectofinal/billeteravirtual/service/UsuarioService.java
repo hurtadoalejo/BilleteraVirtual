@@ -1,6 +1,7 @@
 package com.proyectofinal.billeteravirtual.service;
 
 import com.proyectofinal.billeteravirtual.model.*;
+import com.proyectofinal.billeteravirtual.response.UsuarioResponse;
 import org.springframework.stereotype.Service;
 import com.proyectofinal.billeteravirtual.util.ArrayList;
 
@@ -11,22 +12,6 @@ public class UsuarioService {
 
     public UsuarioService(SistemaBilletera sistema) {
         this.sistema = sistema;
-
-        Usuario usuario = new Usuario();
-        usuario.setNombreCompleto("Alejandro Hurtado");
-        usuario.setCedula("1092850037");
-        usuario.setCorreoElectronico("alejohg2911@gmail.com");
-        usuario.setNumeroTelefonico("3161971519");
-        usuario.setPassword("alejohg");
-        Usuario usuario2 = new Usuario();
-        usuario2.setNombreCompleto("Veronica Ibarra");
-        usuario2.setCedula("1036448546");
-        usuario2.setCorreoElectronico("alejandro.hurtadog@uqvirtual.edu.co");
-        usuario2.setNumeroTelefonico("3161971519");
-        usuario2.setPassword("alejohg");
-
-        registrarUsuario(usuario);
-        registrarUsuario(usuario2);
     }
 
     public boolean registrarUsuario(Usuario usuario) {
