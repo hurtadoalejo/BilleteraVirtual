@@ -94,6 +94,8 @@ public class UsuarioService {
         for (Usuario usuario : sistema.getUsuarios().values()) {
             UsuarioResponse response = new UsuarioResponse();
             response.setNombreCompleto(usuario.getNombreCompleto());
+            response.setCorreoElectronico(usuario.getCorreoElectronico());
+            response.setNumeroTelefonico(usuario.getNumeroTelefonico());
             response.setCedula(usuario.getCedula());
             response.setNivel(usuario.getNivel());
             response.setPuntos(usuario.getPuntosAcumulados());
@@ -103,13 +105,12 @@ public class UsuarioService {
                 saldoTotal += billetera.getSaldo();
             }
 
-            response.setSaldoTotal(saldoTotal);
-            java.util.ArrayList<Transaccion> historial = new java.util.ArrayList<>();
-            for (Transaccion transaccion : usuario.getHistorialTransacciones()) {
-                historial.add(transaccion);
+            int transaccionesTotal = 0;
+            for (Transaccion transaccion: usuario.getHistorialTransacciones()) {
+                transaccionesTotal++;
             }
-
-            response.setHistorialTransacciones(historial);
+            response.setTransaccionesTotal(transaccionesTotal);
+            response.setSaldoTotal(saldoTotal);
 
             lista.add(response);
         }

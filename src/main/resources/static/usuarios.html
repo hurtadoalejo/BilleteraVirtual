@@ -289,6 +289,8 @@
           .value
           .trim();
 
+      if (!texto) return usuarios;
+
       return usuarios.filter(u =>
         u.cedula.includes(texto)
       );
@@ -331,20 +333,7 @@
 
         pagina.forEach(u => {
 
-          const recargas =
-            u.historialTransacciones
-              .filter(t => t.tipo === "RECARGA")
-              .length;
-
-          const retiros =
-            u.historialTransacciones
-              .filter(t => t.tipo === "RETIRO")
-              .length;
-
-          const transferencias =
-            u.historialTransacciones
-              .filter(t => t.tipo === "TRANSFERENCIA")
-              .length;
+          const totalTransacciones = u.transaccionesTotal;
 
           lista.innerHTML += `
             <div class="usuario">
@@ -372,18 +361,18 @@
                 </div>
 
                 <div>
-                  <span class="label">Recargas</span>
-                  <span class="value">${recargas}</span>
+                  <span class="label">Correo</span>
+                  <span class="value">${u.correoElectronico}</span>
                 </div>
 
                 <div>
-                  <span class="label">Retiros</span>
-                  <span class="value">${retiros}</span>
+                  <span class="label">Teléfono</span>
+                  <span class="value">${u.numeroTelefonico}</span>
                 </div>
 
                 <div>
-                  <span class="label">Transferencias</span>
-                  <span class="value">${transferencias}</span>
+                  <span class="label">Transacciones</span>
+                  <span class="value">${totalTransacciones}</span>
                 </div>
 
                 <div>

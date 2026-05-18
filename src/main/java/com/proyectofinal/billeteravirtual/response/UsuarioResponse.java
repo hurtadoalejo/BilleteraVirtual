@@ -11,10 +11,10 @@ public class UsuarioResponse {
     private String cedula;
     private int puntos;
     private NivelUsuario nivel;
-
+    private String correoElectronico;
+    private String numeroTelefonico;
     private double saldoTotal;
-
-    private ArrayList<Transaccion> historialTransacciones;
+    private double transaccionesTotal;
 
     public String getNombreCompleto() {
         return nombreCompleto;
@@ -56,11 +56,27 @@ public class UsuarioResponse {
         this.saldoTotal = saldoTotal;
     }
 
-    public ArrayList<Transaccion> getHistorialTransacciones() {
-        return historialTransacciones;
+    public String getCorreoElectronico() {
+        return correoElectronico;
     }
 
-    public void setHistorialTransacciones(ArrayList<Transaccion> historialTransacciones) {
-        this.historialTransacciones = historialTransacciones;
+    public void setCorreoElectronico(String correoElectronico) {
+        this.correoElectronico = correoElectronico;
+    }
+
+    public String getNumeroTelefonico() {
+        return numeroTelefonico;
+    }
+
+    public void setNumeroTelefonico(String numeroTelefonico) {
+        this.numeroTelefonico = numeroTelefonico;
+    }
+
+    public double getTransaccionesTotal() {
+        return transaccionesTotal;
+    }
+
+    public void setTransaccionesTotal(double transaccionesTotal) {
+        this.transaccionesTotal = transaccionesTotal;
     }
 }
