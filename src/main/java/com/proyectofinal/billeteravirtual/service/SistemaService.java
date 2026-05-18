@@ -5,6 +5,7 @@ import com.proyectofinal.billeteravirtual.enums.TipoTransaccion;
 import com.proyectofinal.billeteravirtual.model.*;
 import com.proyectofinal.billeteravirtual.response.DashboardResponse;
 import com.proyectofinal.billeteravirtual.response.TransaccionDashboardResponse;
+import com.proyectofinal.billeteravirtual.util.NotificacionPendiente;
 import org.springframework.stereotype.Service;
 
 import java.util.*;

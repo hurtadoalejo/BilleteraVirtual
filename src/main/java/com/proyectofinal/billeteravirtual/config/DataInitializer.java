@@ -5,6 +5,7 @@ import com.proyectofinal.billeteravirtual.model.*;
 import com.proyectofinal.billeteravirtual.service.BilleteraService;
 import com.proyectofinal.billeteravirtual.service.TransaccionService;
 import com.proyectofinal.billeteravirtual.service.UsuarioService;
+import com.proyectofinal.billeteravirtual.util.ResultadoTransaccion;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

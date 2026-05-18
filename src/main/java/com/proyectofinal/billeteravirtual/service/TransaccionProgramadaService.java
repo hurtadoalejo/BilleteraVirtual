@@ -5,6 +5,7 @@ import com.proyectofinal.billeteravirtual.enums.EstadoTransaccion;
 import com.proyectofinal.billeteravirtual.enums.NivelUsuario;
 import com.proyectofinal.billeteravirtual.enums.TipoTransaccion;
 import com.proyectofinal.billeteravirtual.model.*;
+import com.proyectofinal.billeteravirtual.util.ResultadoTransaccion;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 

@@ -3,6 +3,7 @@ package com.proyectofinal.billeteravirtual.service;
 import com.proyectofinal.billeteravirtual.enums.CodigoResultadoTransaccion;
 import com.proyectofinal.billeteravirtual.enums.TipoTransaccion;
 import com.proyectofinal.billeteravirtual.model.*;
+import com.proyectofinal.billeteravirtual.util.NotificacionPendiente;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import java.text.NumberFormat;

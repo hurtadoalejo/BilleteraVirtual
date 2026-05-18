@@ -1,5 +1,6 @@
 package com.proyectofinal.billeteravirtual.model;
 
+import com.proyectofinal.billeteravirtual.util.NotificacionPendiente;
 import com.proyectofinal.billeteravirtual.util.Queue;
 import org.springframework.stereotype.Service;
 

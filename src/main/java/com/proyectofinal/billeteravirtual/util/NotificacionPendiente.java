@@ -1,4 +1,4 @@
-package com.proyectofinal.billeteravirtual.model;
+package com.proyectofinal.billeteravirtual.util;
 
 public class NotificacionPendiente {
     private String destinatario;

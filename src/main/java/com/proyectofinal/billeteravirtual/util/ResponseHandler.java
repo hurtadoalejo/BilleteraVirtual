@@ -1,6 +1,5 @@
 package com.proyectofinal.billeteravirtual.util;
 
-import com.proyectofinal.billeteravirtual.model.ResultadoTransaccion;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 

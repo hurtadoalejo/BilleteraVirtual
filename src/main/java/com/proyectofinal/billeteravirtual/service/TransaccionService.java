@@ -5,6 +5,7 @@ import com.proyectofinal.billeteravirtual.enums.EstadoTransaccion;
 import com.proyectofinal.billeteravirtual.enums.NivelUsuario;
 import com.proyectofinal.billeteravirtual.enums.TipoTransaccion;
 import com.proyectofinal.billeteravirtual.model.*;
+import com.proyectofinal.billeteravirtual.util.ResultadoTransaccion;
 import org.springframework.stereotype.Service;
 import com.proyectofinal.billeteravirtual.response.TransaccionesResponse;
 import com.proyectofinal.billeteravirtual.util.ArrayList;

@@ -1,7 +1,8 @@
-package com.proyectofinal.billeteravirtual.model;
+package com.proyectofinal.billeteravirtual.util;
 
 import com.proyectofinal.billeteravirtual.enums.CodigoResultadoTransaccion;
 import com.proyectofinal.billeteravirtual.enums.NivelUsuario;
+import com.proyectofinal.billeteravirtual.model.Transaccion;
 
 public class ResultadoTransaccion {
     private boolean ok;

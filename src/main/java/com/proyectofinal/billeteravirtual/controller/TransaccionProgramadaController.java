@@ -1,6 +1,6 @@
 package com.proyectofinal.billeteravirtual.controller;
 
-import com.proyectofinal.billeteravirtual.model.ResultadoTransaccion;
+import com.proyectofinal.billeteravirtual.util.ResultadoTransaccion;
 import com.proyectofinal.billeteravirtual.model.TransaccionProgramada;
 import com.proyectofinal.billeteravirtual.enums.TipoTransaccion;
 import com.proyectofinal.billeteravirtual.model.Usuario;
