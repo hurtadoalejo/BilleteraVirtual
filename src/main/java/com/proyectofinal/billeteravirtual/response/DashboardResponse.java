@@ -3,6 +3,7 @@ package com.proyectofinal.billeteravirtual.response;
 import com.proyectofinal.billeteravirtual.model.Billetera;
 import com.proyectofinal.billeteravirtual.model.Transaccion;
 import com.proyectofinal.billeteravirtual.model.Usuario;
+import com.proyectofinal.billeteravirtual.util.RutaTransferencia;
 
 import java.util.List;
 
@@ -13,7 +14,7 @@ public class DashboardResponse {
     private int totalTransacciones;
     private double dineroMovilizado;
 
-    private List<TransaccionDashboardResponse> ultimasTransacciones;
+    private List<RutaTransferencia> topRutasUsuarios;
     private List<Usuario> topUsuarios;
     private List<Transaccion> topTransacciones;
     private List<Billetera> topBilleteras;
@@ -50,12 +51,12 @@ public class DashboardResponse {
         this.dineroMovilizado = dineroMovilizado;
     }
 
-    public List<TransaccionDashboardResponse> getUltimasTransacciones() {
-        return ultimasTransacciones;
+    public List<RutaTransferencia> getTopRutasUsuarios() {
+        return topRutasUsuarios;
     }
 
-    public void setUltimasTransacciones(List<TransaccionDashboardResponse> ultimasTransacciones) {
-        this.ultimasTransacciones = ultimasTransacciones;
+    public void setTopRutasUsuarios(List<RutaTransferencia> topRutasUsuarios) {
+        this.topRutasUsuarios = topRutasUsuarios;
     }
 
     public List<Usuario> getTopUsuarios() {

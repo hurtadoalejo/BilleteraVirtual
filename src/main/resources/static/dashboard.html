@@ -182,8 +182,8 @@
     <div class="section">
 
       <div class="box">
-        <h2>Últimas transacciones</h2>
-        <div id="ultimas"></div>
+        <h2>Top rutas usuarios</h2>
+        <div id="topRutas"></div>
       </div>
 
       <div class="box">
@@ -234,18 +234,18 @@
       document.getElementById("transacciones").innerText = data.totalTransacciones;
       document.getElementById("dinero").innerText = "$ " + formatoCOP.format(data.dineroMovilizado);
 
-      document.getElementById("ultimas").innerHTML = data.ultimasTransacciones
-        .map(t => {
-          const valorFormateado = formatoCOP.format(Number(t.valor));
+      document.getElementById("topRutas").innerHTML =
+        data.topRutasUsuarios.map(r => {
           return `
             <div class="item">
-              <b>${t.tipo}</b><br>
-              <span class="small">${formatearFecha(t.fecha)}</span><br>
-              Valor: $ ${valorFormateado}
+              <b>Usuario: ${r.origen}</b><br>
+              <span class="small">
+                hacia Usuario: ${r.destino}
+              </span><br>
+              Cantidad de transferencias: ${r.cantidad}
             </div>
           `;
-        })
-        .join("");
+        }).join("");
 
       document.getElementById("topUsuarios").innerHTML = data.topUsuarios.map(u =>
         `<div class="item">

@@ -518,7 +518,7 @@
       lista.forEach(t => {
         if (t.estado === "COMPLETADA") {
 
-          dinero += t.valor;
+          dinero += (t.valor + t.comision);
         }
 
         if (t.billeteraOrigenId) {

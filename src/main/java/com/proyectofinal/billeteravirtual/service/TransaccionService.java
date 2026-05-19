@@ -366,10 +366,8 @@ public class TransaccionService {
     public double getMontoMovilizado(java.util.ArrayList<Transaccion> lista) {
         double total = 0;
         for (Transaccion transaccion : lista) {
-
             if (transaccion.getEstado() == EstadoTransaccion.COMPLETADA) {
-
-                total += transaccion.getValor();
+                total += (transaccion.getValor() + transaccion.getComision());
             }
         }
 
@@ -569,8 +567,8 @@ public class TransaccionService {
         t.setIdUsuario(usuario.getCedula());
         t.setFecha(LocalDateTime.now());
         t.setTipo(tipo);
-        t.setValor(valor);
-        t.setComision(comision);
+        t.setValor(Math.ceil(valor));
+        t.setComision(Math.ceil(comision));
         t.setBilleteraOrigenId(origen != null ? origen.getId() : null);
         t.setBilleteraDestinoId(destino != null ? destino.getId() : null);
         t.setEstado(EstadoTransaccion.COMPLETADA);

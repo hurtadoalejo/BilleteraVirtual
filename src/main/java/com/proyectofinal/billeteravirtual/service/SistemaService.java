@@ -6,6 +6,7 @@ import com.proyectofinal.billeteravirtual.model.*;
 import com.proyectofinal.billeteravirtual.response.DashboardResponse;
 import com.proyectofinal.billeteravirtual.response.TransaccionDashboardResponse;
 import com.proyectofinal.billeteravirtual.util.NotificacionPendiente;
+import com.proyectofinal.billeteravirtual.util.RutaTransferencia;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -68,26 +69,19 @@ public class SistemaService {
         double total = 0;
         for (Usuario u : sistema.getUsuarios().values()) {
             for (Transaccion t : u.getHistorialTransacciones()) {
-                if (t.getEstado() == EstadoTransaccion.COMPLETADA) {
-                    total += t.getValor();
+                if (t.getEstado() != EstadoTransaccion.COMPLETADA) {
+                    continue;
                 }
+
+                if (t.getTipo() == TipoTransaccion.TRANSFERENCIA && !t.getIdUsuario().equals(u.getCedula())) {
+                    continue;
+                }
+
+                total += (t.getValor() + t.getComision());
             }
         }
 
         return total;
-    }
-
-    /**
-     * Obtiene la lista completa de todos los usuarios ordenada por sus puntos.
-     * @return Un ArrayList con los usuarios en orden de clasificación (ranking).
-     */
-    public java.util.ArrayList<Usuario> getRankingUsuarios() {
-        java.util.ArrayList<Usuario> lista = new java.util.ArrayList<>();
-        for (Usuario u : sistema.getUsuariosPorPuntos()) {
-            lista.add(u);
-        }
-
-        return lista;
     }
 
     /**
@@ -108,79 +102,29 @@ public class SistemaService {
         return top;
     }
 
-    /**
-     * Recupera las últimas 3 transacciones realizadas en el sistema, adaptadas para la vista del dashboard.
-     * @return Un ArrayList de objetos TransaccionDashboardResponse ordenados de la más reciente a la más antigua.
-     */
-    public java.util.ArrayList<TransaccionDashboardResponse> getUltimasTransacciones(){
-        java.util.ArrayList<TransaccionDashboardResponse> lista = new java.util.ArrayList<>();
-        for (Usuario usuario : sistema.getUsuarios().values()) {
-            for (Transaccion t : usuario.getHistorialTransacciones()) {
+    public ArrayList<RutaTransferencia> getTopRutasUsuarios() {
+        ArrayList<RutaTransferencia> rutas = obtenerRutas();
+        ordenarRutas(rutas);
+        return new ArrayList<>(rutas.subList(0, Math.min(3, rutas.size())));
+    }
 
-                TransaccionDashboardResponse response = new TransaccionDashboardResponse();
-                response.setTipo(obtenerTipoVisual(t, usuario));
-                response.setValor(t.getValor());
-                response.setFecha(t.getFecha());
-
-                lista.add(response);
+    private ArrayList<RutaTransferencia> obtenerRutas() {
+        ArrayList<RutaTransferencia> rutas = new ArrayList<>();
+        Map<String, Map<String, Integer>> grafo = sistema.getGrafoTransferenciasUsuarios();
+        for (String origen : grafo.keySet()) {
+            for (String destino : grafo.get(origen).keySet()) {
+                int cantidad = grafo.get(origen).get(destino);
+                rutas.add(new RutaTransferencia(origen, destino, cantidad));
             }
         }
 
-        lista.sort(Comparator.comparing(TransaccionDashboardResponse::getFecha).reversed());
-
-        java.util.ArrayList<TransaccionDashboardResponse> resultado = new java.util.ArrayList<>();
-
-        int limite = Math.min(3, lista.size());
-        for (int i = 0; i < limite; i++) {
-            resultado.add(lista.get(i));
-        }
-
-        return resultado;
+        return rutas;
     }
 
-    /**
-     * Determina la etiqueta textual de una transacción para identificar si fue enviada o recibida.
-     * @param t La transacción a evaluar.
-     * @param usuario El usuario asociado a la consulta.
-     * @return Una cadena de texto que representa el tipo visual del movimiento.
-     */
-    private String obtenerTipoVisual(Transaccion t, Usuario usuario) {
-        String tipo = t.getTipo().toString();
-
-        if (t.getTipo() == TipoTransaccion.TRANSFERENCIA) {
-            Billetera origen = usuario.getBilleteras().get(t.getBilleteraOrigenId());
-
-            if (origen != null) {
-                return "TRANSFERENCIA ENVIADA";
-            } else {
-                return "TRANSFERENCIA RECIBIDA";
-            }
-        }
-
-        return tipo;
+    private void ordenarRutas(ArrayList<RutaTransferencia> rutas) {
+        rutas.sort((a, b) -> b.getCantidad() - a.getCantidad());
     }
 
-    /**
-     * Calcula el promedio de transacciones que le corresponden a cada usuario.
-     * @return El promedio de transacciones por usuario, o 0 si no hay usuarios registrados.
-     */
-    public double getPromedioTransaccionesPorUsuario() {
-        int usuarios = getTotalUsuarios();
-        if (usuarios == 0) return 0;
-
-        return (double) getTotalTransacciones() / usuarios;
-    }
-
-    /**
-     * Calcula el promedio de billeteras creadas por cada usuario en el sistema.
-     * @return El promedio de billeteras por usuario, o 0 si no hay usuarios registrados.
-     */
-    public double getPromedioBilleterasPorUsuario() {
-        int usuarios = getTotalUsuarios();
-        if (usuarios == 0) return 0;
-
-        return (double) getTotalBilleteras() / usuarios;
-    }
 
     /**
      * Genera y consolida un objeto con todas las métricas de negocio requeridas para la vista del Dashboard.
@@ -193,7 +137,7 @@ public class SistemaService {
         response.setTotalBilleteras(getTotalBilleteras());
         response.setTotalTransacciones(getTotalTransacciones());
         response.setDineroMovilizado(getDineroMovilizado());
-        response.setUltimasTransacciones(getUltimasTransacciones());
+        response.setTopRutasUsuarios(getTopRutasUsuarios());
         response.setTopUsuarios(getTopUsuarios());
         response.setTopTransacciones(getTopTransacciones());
         response.setTopBilleteras(getTopBilleteras());
@@ -310,9 +254,10 @@ public class SistemaService {
         for (Usuario usuario : obtenerUsuarios()) {
 
             for (Transaccion transaccion : usuario.getHistorialTransacciones()) {
-                if (!lista.contains(transaccion)) {
-                    lista.add(transaccion);
+                if (transaccion.getTipo() == TipoTransaccion.TRANSFERENCIA && !transaccion.getIdUsuario().equals(usuario.getCedula())) {
+                    continue;
                 }
+                lista.add(transaccion);
             }
 
             for (Transaccion transaccion : usuario.getTransaccionesProgramadas()) {
