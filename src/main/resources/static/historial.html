@@ -362,7 +362,16 @@
               <b>${obtenerNombreTransaccion(t)}</b><br>
               ${formatearFecha(t.fecha)} - 
               <span style="color: ${obtenerColorTransaccion(t)}; font-weight: bold;">
-                $${formatearNumero(t.valor)}
+                $${formatearNumero(
+            t.tipo === "TRANSFERENCIA"
+              ? (
+                t.billeteraDestinoId &&
+                usuario.billeteras[t.billeteraDestinoId]
+              )
+                ? t.valor
+                : t.valor + t.comision
+              : t.valor
+          )}
               </span>
             </div>
             <button class="btn" onclick='verDetalle(${JSON.stringify(t)})'>Detalles</button>

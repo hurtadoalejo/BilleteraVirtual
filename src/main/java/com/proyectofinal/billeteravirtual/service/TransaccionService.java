@@ -541,12 +541,14 @@ public class TransaccionService {
     private double calcularComision(Usuario origen, Usuario destino, double valor) {
         if (origen.getCedula().equals(destino.getCedula())) return 0;
 
-        return switch (origen.getNivel()) {
+        double comision = switch (origen.getNivel()) {
             case BRONCE -> valor * 0.005;
             case PLATA -> valor * 0.004;
             case ORO -> valor * 0.003;
             case PLATINO -> valor * 0.001;
         };
+
+        return Math.ceil(comision);
     }
 
     /**
@@ -567,8 +569,8 @@ public class TransaccionService {
         t.setIdUsuario(usuario.getCedula());
         t.setFecha(LocalDateTime.now());
         t.setTipo(tipo);
-        t.setValor(Math.ceil(valor));
-        t.setComision(Math.ceil(comision));
+        t.setValor(valor);
+        t.setComision(comision);
         t.setBilleteraOrigenId(origen != null ? origen.getId() : null);
         t.setBilleteraDestinoId(destino != null ? destino.getId() : null);
         t.setEstado(EstadoTransaccion.COMPLETADA);

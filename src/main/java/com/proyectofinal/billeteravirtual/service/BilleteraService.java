@@ -1,5 +1,6 @@
 package com.proyectofinal.billeteravirtual.service;
 
+import com.proyectofinal.billeteravirtual.enums.EstadoTransaccion;
 import com.proyectofinal.billeteravirtual.model.*;
 import com.proyectofinal.billeteravirtual.response.BilleteraResponse;
 import org.springframework.stereotype.Service;
@@ -69,6 +70,30 @@ public class BilleteraService {
         ArrayList<Billetera> lista = new ArrayList<>();
         for (Billetera b : usuario.getBilleteras().values()) {
             lista.add(b);
+            double enviado = 0;
+            double recibido = 0;
+
+            for (Transaccion t : b.getTransacciones()) {
+
+                if (t.getEstado() != EstadoTransaccion.COMPLETADA) {
+                    continue;
+                }
+
+                if (b.getId().equals(t.getBilleteraOrigenId())) {
+                    enviado += (t.getValor() + t.getComision());
+                }
+
+                if (b.getId().equals(t.getBilleteraDestinoId())) {
+                    recibido += t.getValor();
+                }
+            }
+
+            System.out.println("==========");
+            System.out.println("Billetera: " + b.getId());
+            System.out.println("Saldo actual: " + b.getSaldo());
+            System.out.println("Dinero enviado: " + enviado);
+            System.out.println("Dinero recibido: " + recibido);
+            System.out.println("Total movido: " + (enviado + recibido));
         }
 
         return lista;
