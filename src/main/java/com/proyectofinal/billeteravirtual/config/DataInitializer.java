@@ -112,8 +112,8 @@ public class DataInitializer {
 
                     if (b.getSaldo() > 50000) {
 
-                        double maximo = Math.min(b.getSaldo() * 0.6, 300000);
-                        double valor = 10000 + random.nextDouble() * maximo;
+                        int maximo = (int) Math.min(b.getSaldo() * 0.6, 300000);
+                        double valor = 10000 + random.nextInt(maximo);
 
                         ResultadoTransaccion resultado =
                                 transaccionService.retirarSinCorreo(cedula, billetera, valor);
@@ -151,8 +151,8 @@ public class DataInitializer {
 
                     if (origen.getSaldo() > 50000) {
 
-                        double maximo = Math.min(origen.getSaldo() * 0.4, 250000);
-                        double valor = 10000 + random.nextDouble() * maximo;
+                        int maximo = (int) Math.min(origen.getSaldo() * 0.4, 250000);
+                        double valor = 10000 + random.nextInt(maximo);
 
                         ResultadoTransaccion resultado =
                                 transaccionService.transferirSinCorreo(
