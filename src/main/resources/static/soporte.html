@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soporte</title>
+
+  <style>
+    * {
+      user-select: none;
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      display: flex;
+      height: 100vh;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(77, 130, 188, 0.6), transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(77, 130, 188, 0.6), transparent 40%),
+        radial-gradient(circle at 50% 50%, #4d82bc, #005187);
+      background-blend-mode: screen;
+      color: white;
+    }
+
+    .sidebar {
+      width: 220px;
+      background: rgba(7, 68, 109, 0.25);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px 10px;
+    }
+
+    .nav-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 15px;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      color: white;
+    }
+
+    .nav-item img {
+      width: 20px;
+      height: 20px;
+      opacity: 0.8;
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .content {
+      flex: 1;
+      background: #F3F6FF;
+      color: #1e293b;
+      padding: 40px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-container {
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .titulo {
+      font-size: 32px;
+      margin-bottom: 25px;
+      color: #1e293b;
+    }
+
+    .chat-card {
+      flex: 1;
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 25px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      background: #f8fbff;
+    }
+
+    .message {
+      max-width: 75%;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .message-header {
+      font-size: 12px;
+      font-weight: bold;
+      color: #64748b;
+    }
+
+    .message-content {
+      padding: 14px 18px;
+      border-radius: 18px;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    .assistant {
+      align-self: flex-start;
+    }
+
+    .assistant .message-content {
+      background: rgba(77, 130, 188, 0.12);
+      color: #1e293b;
+      border-top-left-radius: 6px;
+    }
+
+    .user {
+      align-self: flex-end;
+      align-items: flex-end;
+    }
+
+    .user .message-content {
+      background: #4d82bc;
+      color: white;
+      border-top-right-radius: 6px;
+    }
+
+    .chat-input-container {
+      padding: 20px;
+      border-top: 1px solid #e2e8f0;
+      background: white;
+    }
+
+    .chat-form {
+      display: flex;
+      gap: 15px;
+      align-items: flex-end;
+    }
+
+    .chat-input {
+      flex: 1;
+      resize: none;
+      border: 1px solid #dbe3ef;
+      border-radius: 18px;
+      padding: 14px 18px;
+      font-size: 15px;
+      outline: none;
+
+      height: 55px;
+      min-height: 55px;
+      max-height: 160px;
+
+      overflow-y: auto;
+      color: #1e293b;
+    }
+
+    .chat-input:focus {
+      border-color: #4d82bc;
+    }
+
+    .send-btn {
+      border: none;
+      background: #4d82bc;
+      color: white;
+      padding: 14px 22px;
+      border-radius: 18px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s;
+      height: 55px;
+      min-width: 120px;
+    }
+
+    .send-btn:hover {
+      background: #3c6da1;
+    }
+
+    .chat-messages::-webkit-scrollbar,
+    .chat-input::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb,
+    .chat-input::-webkit-scrollbar-thumb {
+      background: rgba(77, 130, 188, 0.4);
+      border-radius: 20px;
+    }
+
+    @media (max-width: 768px) {
+
+      .content {
+        padding: 20px;
+      }
+
+      .message {
+        max-width: 90%;
+      }
+
+      .chat-form {
+        flex-direction: column;
+      }
+
+      .send-btn {
+        width: 100%;
+      }
+    }
+
+    .typing {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 12px 16px;
+    }
+
+    .typing span {
+      width: 8px;
+      height: 8px;
+      background: #4d82bc;
+      border-radius: 50%;
+      animation: bounce 1.2s infinite ease-in-out;
+    }
+
+    .typing span:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing span:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes bounce {
+
+      0%,
+      80%,
+      100% {
+        transform: scale(0.7);
+        opacity: 0.5;
+      }
+
+      40% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <nav class="sidebar">
+    <div class="nav-group">
+      <a href="/home.html" class="nav-item"><img src="images/home.svg"><span>Inicio</span></a>
+      <a href="/billetera.html" class="nav-item"><img src="images/billeteras.svg"><span>Billeteras</span></a>
+      <a href="/recargar.html" class="nav-item"><img src="images/recargar.svg"><span>Recargar</span></a>
+      <a href="/retirar.html" class="nav-item"><img src="images/retirar.svg"><span>Retirar</span></a>
+      <a href="/transferir.html" class="nav-item"><img src="images/transferir.svg"><span>Transferir</span></a>
+      <a href="/programar.html" class="nav-item"><img src="images/programar.svg"><span>Programar</span></a>
+      <a href="/historial.html" class="nav-item"><img src="images/historial.svg"><span>Historial</span></a>
+      <a href="/canjear.html" class="nav-item"><img src="images/canjear.svg"><span>Canjear</span></a>
+      <a href="/soporte.html" class="nav-item"><img src="images/support.svg"><span>Soporte</span></a>
+    </div>
+
+    <div class="nav-group">
+      <a href="/login.html" class="nav-item" onclick="logout()">
+        <img src="images/cerrar-sesion.svg">
+        <span>Cerrar sesión</span>
+      </a>
+    </div>
+  </nav>
+
+  <div class="content">
+
+    <div class="chat-container">
+
+      <h1 class="titulo">Soporte virtual</h1>
+
+      <div class="chat-card">
+
+        <div class="chat-messages" id="chatMessages">
+
+          <div class="message assistant">
+            <div class="message-header">Asistente</div>
+            <div class="message-content">
+              Hola, soy el asistente virtual de la billetera digital.
+              ¿En qué puedo ayudarte hoy?
+            </div>
+          </div>
+
+        </div>
+
+        <div class="chat-input-container">
+
+          <form class="chat-form" id="chatForm">
+
+            <textarea id="mensajeInput" class="chat-input" placeholder="Escribe tu mensaje..." rows="1"></textarea>
+
+            <button type="submit" class="send-btn">
+              Enviar
+            </button>
+
+          </form>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+
+    const form = document.getElementById("chatForm");
+    const input = document.getElementById("mensajeInput");
+    const chatMessages = document.getElementById("chatMessages");
+
+    function logout() {
+      sessionStorage.removeItem("usuario");
+    }
+
+    function agregarMensaje(tipo, autor, mensaje) {
+
+      const messageDiv = document.createElement("div");
+      messageDiv.classList.add("message", tipo);
+
+      messageDiv.innerHTML = `
+        <div class="message-header">${autor}</div>
+        <div class="message-content">${mensaje}</div>
+      `;
+
+      chatMessages.appendChild(messageDiv);
+
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    async function enviarMensaje(mensaje) {
+
+      try {
+
+        mostrarTyping();
+
+        const response = await fetch(
+          `http://localhost:8080/chat?mensaje=${encodeURIComponent(mensaje)}`
+        );
+
+        const respuestaIA = await response.text();
+
+        ocultarTyping();
+
+        agregarMensaje("assistant", "Asistente", respuestaIA);
+
+      } catch (error) {
+
+        ocultarTyping();
+
+        agregarMensaje(
+          "assistant",
+          "Asistente",
+          "Ocurrió un error al conectar con el servidor."
+        );
+
+        console.error(error);
+      }
+    }
+
+    form.addEventListener("submit", async (e) => {
+
+      e.preventDefault();
+
+      const mensaje = input.value.trim();
+
+      if (!mensaje) return;
+
+      agregarMensaje("user", "Yo", mensaje);
+
+      input.value = "";
+      input.style.height = "auto";
+      input.style.height = Math.min(input.scrollHeight, 160) + "px";
+
+      await enviarMensaje(mensaje);
+    });
+
+    input.addEventListener("input", () => {
+
+      input.style.height = "auto";
+      input.style.height =
+        Math.min(input.scrollHeight, 160) + "px";
+
+    });
+
+    function mostrarTyping() {
+
+      const typingDiv = document.createElement("div");
+
+      typingDiv.classList.add("message", "assistant");
+
+      typingDiv.id = "typingIndicator";
+
+      typingDiv.innerHTML = `
+        <div class="message-header">Asistente</div>
+
+        <div class="message-content typing">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      `;
+
+      chatMessages.appendChild(typingDiv);
+
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function ocultarTyping() {
+
+      const typing = document.getElementById("typingIndicator");
+
+      if (typing) {
+        typing.remove();
+      }
+    }
+
+  </script>
+
+</body>
+
+</html>
