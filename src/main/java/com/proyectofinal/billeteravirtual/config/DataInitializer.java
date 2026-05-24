@@ -213,7 +213,7 @@ public class DataInitializer {
 
     private LocalDateTime fechaRandom(Random random) {
 
-        int mes = 1 + random.nextInt(5);
+        int mes = 1 + random.nextInt(4);
 
         int diaMaximo = switch (mes) {
             case 2 -> 28;
