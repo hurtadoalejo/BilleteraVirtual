@@ -276,16 +276,39 @@
     </div>
   </div>
 
+  Aquí tienes el octavo script (módulo de retiros de saldo) documentado bajo las mismas reglas y estándar de JSDoc,
+  manteniendo el nivel conceptual de abstracción:
+
+  ---
+
+  ```html
   <script>
+    /**
+     * Datos del usuario autenticado obtenidos desde la sesión.
+     * @type {Object|null}
+     */
     const usuario = JSON.parse(sessionStorage.getItem("usuario"));
+
+    /**
+     * Almacena de manera temporal un mensaje o notificación para ser desplegado consecutivamente después del cierre de la ventana modal activa.
+     * @type {string|null}
+     */
     let siguientePopup = null;
 
     if (!usuario) {
       window.location.href = "/login.html";
     }
 
+    /**
+     * Listado general de billeteras pertenecientes al usuario para validación de fondos en memoria.
+     * @type {Array<Object>}
+     */
     let billeteras = [];
 
+    /**
+     * Consume el servicio web para obtener las billeteras vinculadas al usuario, actualiza la memoria local e inyecta las opciones en el selector de la interfaz.
+     * @returns {Promise<void>}
+     */
     async function cargarBilleteras() {
       const res = await fetch(`http://localhost:8080/billeteras/${usuario.cedula}`);
       const data = await res.json();
@@ -300,6 +323,10 @@
       });
     }
 
+    /**
+     * Evalúa la disponibilidad de saldo y las restricciones del monto ingresado para enviar de forma asíncrona la solicitud de retiro al servidor, controlando las bonificaciones de nivel.
+     * @returns {Promise<void>}
+     */
     async function retirar() {
       const valorInput = document.getElementById("valor");
       const valor = parseFloat(valorInput.value.replace(/\./g, ""));
@@ -352,11 +379,20 @@
       }
     }
 
+    /**
+     * Despliega una ventana modal en la interfaz con una notificación específica.
+     * @param {string} mensaje - El texto explicativo a mostrar en el popup.
+     * @returns {void}
+     */
     function mostrarPopup(mensaje) {
       document.getElementById("popup-message").textContent = mensaje;
       document.getElementById("popup").classList.remove("hidden");
     }
 
+    /**
+     * Oculta el popup modal activo y evalúa de forma encadenada si hay alguna alerta visual retenida en cola para mostrarla de inmediato.
+     * @returns {void}
+     */
     function cerrarPopup() {
       document.getElementById("popup").classList.add("hidden");
 
@@ -368,10 +404,19 @@
       }
     }
 
+    /**
+     * Elimina las credenciales del usuario de la sesión para bloquear el acceso y forzar el cierre de la cuenta en el cliente.
+     * @returns {void}
+     */
     function logout() {
       sessionStorage.removeItem("usuario");
     }
 
+    /**
+     * Procesa la entrada de texto de un input aislando caracteres no numéricos y formateándolo dinámicamente con separadores de miles regionales (Colombia).
+     * @param {HTMLElement} input - El elemento input del DOM que se está editando.
+     * @returns {void}
+     */
     function formatearMiles(input) {
       let valor = input.value.replace(/\./g, "");
       valor = valor.replace(/[^0-9]/g, "");
@@ -384,6 +429,9 @@
       input.value = Number(valor).toLocaleString("es-CO");
     }
 
+    /**
+     * Escucha la inserción de datos en el campo de monto de retiro para ocultar y limpiar las advertencias o animaciones de error.
+     */
     document.getElementById("valor").addEventListener("input", function () {
       const errorMsg = document.getElementById("error-msg");
 

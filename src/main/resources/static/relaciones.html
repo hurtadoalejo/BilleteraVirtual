@@ -272,9 +272,16 @@
   </div>
 
   <script>
-
+    /**
+     * Instancia global encargada de gestionar y renderizar la red o grafo interactivo.
+     * @type {vis.Network|null}
+     */
     let network = null;
 
+    /**
+     * Evalúa la opción de visualización seleccionada en la interfaz y solicita de forma asíncrona la matriz de datos de la red correspondiente al servidor.
+     * @returns {Promise<void>}
+     */
     async function cargarGrafo() {
 
       const tipo =
@@ -312,6 +319,12 @@
       }
     }
 
+    /**
+     * Transforma la estructura de datos relacional obtenida del servidor en colecciones válidas de nodos y aristas (conexiones), configurando las físicas, estilos visuales y la inicialización de la librería en el contenedor del DOM.
+     * @param {Object} data - Datos crudos del grafo mapeados por nodos de origen y destino.
+     * @param {string} tipo - Categoría del grafo a procesar (e.g., "usuarios" o "billeteras").
+     * @returns {void}
+     */
     function construirGrafo(data, tipo) {
 
       const nodes = [];
@@ -490,6 +503,10 @@
       }, 300);
     }
 
+    /**
+     * Incrementa de forma progresiva el nivel de acercamiento o escala en la vista activa del grafo interactivo.
+     * @returns {void}
+     */
     function zoomIn() {
 
       if (!network) return;
@@ -502,6 +519,10 @@
       });
     }
 
+    /**
+     * Reduce de forma progresiva el nivel de acercamiento o escala en la vista activa del grafo interactivo.
+     * @returns {void}
+     */
     function zoomOut() {
 
       if (!network) return;
@@ -514,6 +535,10 @@
       });
     }
 
+    /**
+     * Restablece el encuadre óptico del lienzo calculando el zoom adecuado para encajar todos los elementos visibles de la red.
+     * @returns {void}
+     */
     function resetZoom() {
 
       if (!network) return;

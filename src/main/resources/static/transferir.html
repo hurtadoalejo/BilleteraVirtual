@@ -328,16 +328,38 @@
   </div>
 
   <script>
+    /**
+     * Datos del usuario autenticado obtenidos desde la sesión.
+     * @type {Object|null}
+     */
     let usuario = JSON.parse(sessionStorage.getItem("usuario"));
+
+    /**
+     * Guarda temporalmente la nueva categoría o escalafón alcanzado tras una operación para notificarlo de manera diferida.
+     * @type {string|null}
+     */
     let nivelPendiente = null;
+
+    /**
+     * Identificador de la temporización asignada para controlar el margen de tiempo permitido para deshacer la transacción.
+     * @type {number|null}
+     */
     let timeoutReversion = null;
 
     if (!usuario) {
       window.location.href = "/login.html";
     }
 
+    /**
+     * Arreglo global con la lista de billeteras del usuario para validar la disponibilidad local de fondos.
+     * @type {Array<Object>}
+     */
     let billeteras = [];
 
+    /**
+     * Analiza el rango de beneficios del usuario activo y devuelve la representación textual del porcentaje de recargo aplicable.
+     * @returns {string} Texto con el porcentaje correspondiente (e.g., "0.4%", "0.3%").
+     */
     function obtenerComision() {
       switch (usuario.nivel) {
         case "PLATA": return "0.4%";
@@ -350,6 +372,10 @@
     document.getElementById("notaComision").textContent =
       "Nota: Comisión por transferencia a otra persona será de " + obtenerComision();
 
+    /**
+     * Consume el servicio web para obtener las billeteras asociadas al usuario e inyecta dinámicamente las opciones dentro del selector del DOM.
+     * @returns {Promise<void>}
+     */
     async function cargarBilleteras() {
       const res = await fetch(`http://localhost:8080/billeteras/${usuario.cedula}`);
       const data = await res.json();
@@ -364,21 +390,37 @@
       });
     }
 
+    /**
+     * Modifica las clases del contenedor modal de cancelación para hacerlo visible en la interfaz gráfica.
+     * @returns {void}
+     */
     function mostrarConfirmacionCancelacion() {
       document.getElementById("popupCancelar")
         .classList.remove("hidden");
     }
 
+    /**
+     * Modifica las clases del contenedor modal de cancelación para ocultarlo de la vista del usuario.
+     * @returns {void}
+     */
     function cerrarPopupCancelacion() {
       document.getElementById("popupCancelar")
         .classList.add("hidden");
     }
 
+    /**
+     * Remueve el popup de advertencia e inicia de forma asíncrona la petición de anulación de la transferencia del usuario.
+     * @returns {Promise<void>}
+     */
     async function confirmarCancelacion() {
       cerrarPopupCancelacion();
       await cancelarUltimaTransferencia();
     }
 
+    /**
+     * Evalúa las restricciones del monto, la equivalencia de cuentas y los topes de saldo más comisiones para tramitar asíncronamente el envío de dinero hacia un tercero o cuenta propia.
+     * @returns {Promise<void>}
+     */
     async function transferir() {
       const valorInput = document.getElementById("valor");
       const valor = parseFloat(valorInput.value.replace(/\./g, ""));
@@ -461,11 +503,20 @@
       }
     }
 
+    /**
+     * Cambia las propiedades visuales de la ventana informativa e inyecta la alerta o texto recibido.
+     * @param {string} mensaje - El texto informativo que se expondrá en el popup.
+     * @returns {void}
+     */
     function mostrarPopup(mensaje) {
       document.getElementById("popup-message").textContent = mensaje;
       document.getElementById("popup").classList.remove("hidden");
     }
 
+    /**
+     * Envía una orden asíncrona al servidor para contrarrestar los efectos económicos de la última transacción efectuada y sincroniza los balances informativos en el cliente.
+     * @returns {Promise<void>}
+     */
     async function cancelarUltimaTransferencia() {
       try {
         const res = await fetch(
@@ -495,6 +546,10 @@
       }
     }
 
+    /**
+     * Oculta el popup modal general y comprueba de forma encadenada si existe una notificación de ascenso de categoría pendiente para desplegarla.
+     * @returns {void}
+     */
     function cerrarPopup() {
       document.getElementById("popup").classList.add("hidden");
 
@@ -506,10 +561,19 @@
       }
     }
 
+    /**
+     * Destruye el registro de credenciales del usuario de la sesión para desautenticar la navegación.
+     * @returns {void}
+     */
     function logout() {
       sessionStorage.removeItem("usuario");
     }
 
+    /**
+     * Deduce el valor absoluto del cobro de comisión multiplicando el monto base por la tasa fraccionaria asignada al escalafón del usuario.
+     * @param {number} valor - Importe monetario base de la transferencia.
+     * @returns {number} Monto final de la comisión redondeado numéricamente.
+     */
     function calcularComision(valor) {
       let porcentaje = 0.005;
 
@@ -522,10 +586,19 @@
       return Math.round(valor * porcentaje);
     }
 
+    /**
+     * Examina si el identificador de destino de la operación concuerda con alguna de las billeteras que le pertenecen al usuario autenticado.
+     * @param {string} destinoId - Identificador único de la billetera destino.
+     * @returns {boolean} Verdadero si la cuenta destino es del mismo propietario; falso en caso contrario.
+     */
     function esBilleteraPropia(destinoId) {
       return billeteras.some(b => String(b.id) === String(destinoId));
     }
 
+    /**
+     * Calcula la sumatoria del valor de transferencia sumado a los recargos por comisión (si la cuenta es de un tercero) e inyecta el valor total formateado en el DOM.
+     * @returns {void}
+     */
     function actualizarTotal() {
       const valorInput = document.getElementById("valor");
       const totalInput = document.getElementById("total");
@@ -554,6 +627,11 @@
         Math.round(total).toLocaleString("es-CO");
     }
 
+    /**
+     * Limpia los caracteres no numéricos del input y renderiza los separadores de miles estándar regionales (Colombia) antes de recalcular los totales.
+     * @param {HTMLElement} input - Elemento input de tipo texto del DOM.
+     * @returns {void}
+     */
     function formatearMiles(input) {
 
       let valor = input.value.replace(/\./g, "");
@@ -570,6 +648,10 @@
       actualizarTotal();
     }
 
+    /**
+     * Invoca de forma asíncrona la reversión total e inmediata de los flujos de dinero de la última operación registrada y gestiona las alertas correspondientes.
+     * @returns {Promise<void>}
+     */
     async function revertirUltimaTransferencia() {
       try {
         const res = await fetch(
@@ -599,6 +681,10 @@
       }
     }
 
+    /**
+     * Consulta asíncronamente el estado de la cuenta del usuario en el origen de datos para refrescar la categoría y las comisiones en la sesión.
+     * @returns {Promise<void>}
+     */
     async function actualizarUsuario() {
       const usuarioStorage = JSON.parse(sessionStorage.getItem("usuario"));
 
@@ -614,10 +700,24 @@
         "Nota: Comisión por transferencia a otra persona será de " + obtenerComision();
     }
 
+    /**
+     * Escucha los cambios o pulsaciones de teclas en el campo de monto de transferencia para recalcular los costos agregados.
+     */
     document.getElementById("valor").addEventListener("input", actualizarTotal);
+
+    /**
+     * Escucha las variaciones en el campo del destinatario para actualizar la presencia de la tarifa por comisión.
+     */
     document.getElementById("destino").addEventListener("input", actualizarTotal);
+
+    /**
+     * Escucha la selección de una billetera de origen alternativa para reajustar los balances totales del formulario.
+     */
     document.getElementById("billeteraSelect").addEventListener("change", actualizarTotal);
 
+    /**
+     * Autoejecución inmediata de tareas iniciales para la actualización de balances de usuario y la carga de billeteras utilizables.
+     */
     (async () => {
       await actualizarUsuario();
       await cargarBilleteras();

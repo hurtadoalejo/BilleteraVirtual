@@ -206,11 +206,18 @@
   </div>
 
   <script>
+    /** * @type {Intl.NumberFormat} Formateador de moneda regionalizado para Pesos Colombianos (COP) sin decimales.
+     */
     const formatoCOP = new Intl.NumberFormat("es-CO", {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     });
 
+    /**
+     * Convierte una cadena de fecha ISO en un texto detallado con hora, minutos y segundos para auditoría en el dashboard.
+     * @param {string} fechaISO - Fecha en formato estándar (ej: "2026-05-25T11:00:00Z").
+     * @returns {string} Fecha formateada en texto largo (ej: "25 de mayo de 2026, 11:00:00 a. m.").
+     */
     function formatearFecha(fechaISO) {
       const fecha = new Date(fechaISO);
 
@@ -224,29 +231,33 @@
       });
     }
 
+    /**
+     * Consume el endpoint de analítica global e inyecta las métricas generales y los "Top 4" rankings en el DOM.
+     * @returns {Promise<void>}
+     */
     async function cargarDashboard() {
-
       const res = await fetch("http://localhost:8080/sistema/dashboard");
       const data = await res.json();
 
+      // Inyección de métricas acumuladas básicas
       document.getElementById("usuarios").innerText = data.totalUsuarios;
       document.getElementById("billeteras").innerText = data.totalBilleteras;
       document.getElementById("transacciones").innerText = data.totalTransacciones;
       document.getElementById("dinero").innerText = "$ " + formatoCOP.format(data.dineroMovilizado);
 
+      // 1. Renderizado de rutas de transferencias más recurrentes entre usuarios
       document.getElementById("topRutas").innerHTML =
         data.topRutasUsuarios.map(r => {
           return `
             <div class="item">
               <b>Usuario: ${r.origen}</b><br>
-              <span class="small">
-                hacia Usuario: ${r.destino}
-              </span><br>
+              <span class="small">hacia Usuario: ${r.destino}</span><br>
               Cantidad de transferencias: ${r.cantidad}
             </div>
           `;
         }).join("");
 
+      // 2. Renderizado de usuarios con mayor acumulación de puntos y nivel de rango
       document.getElementById("topUsuarios").innerHTML = data.topUsuarios.map(u =>
         `<div class="item">
           <b>${u.nombreCompleto}</b><br>
@@ -256,6 +267,7 @@
         </div>`
       ).join("");
 
+      // 3. Renderizado de las transacciones con los montos económicos más elevados
       document.getElementById("topTransacciones").innerHTML =
         data.topTransacciones.map(t => {
           const valorFormateado = formatoCOP.format(Number(t.valor));
@@ -268,6 +280,7 @@
           `;
         }).join("");
 
+      // 4. Renderizado de las billeteras con mayor saldo custodiado en el sistema
       document.getElementById("topBilleteras").innerHTML =
         data.topBilleteras.map(b => {
           return `
@@ -279,12 +292,17 @@
         }).join("");
     }
 
+    // Ejecución del bloque inicial al cargar la pantalla
     cargarDashboard();
+
+    /**
+     * @type {number} Temporizador en segundo plano para actualizar los gráficos y KPI cada 5 segundos.
+     */
     setInterval(() => {
       cargarDashboard();
     }, 5000);
 
-  </script>
+</script>
 
 </body>
 

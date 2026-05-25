@@ -292,13 +292,27 @@
   </div>
 
   <script>
+    /**
+     * Datos del usuario autenticado obtenidos desde la sesión.
+     * @type {Object|null}
+     */
     const usuario = JSON.parse(sessionStorage.getItem("usuario"));
+
+    /**
+     * Almacena de manera temporal una notificación de ascenso de categoría para ser desplegada en diferido.
+     * @type {string|null}
+     */
     let mensajeNivelPendiente = null;
 
     if (!usuario) {
       window.location.href = "/login.html";
     }
 
+    /**
+     * Procesa la entrada de texto de un input aislando caracteres no numéricos y formateándolo dinámicamente con separadores de miles regionales.
+     * @param {HTMLElement} input - El elemento input del DOM que se está modificando.
+     * @returns {void}
+     */
     function formatearMiles(input) {
       let valor = input.value.replace(/\./g, "");
       valor = valor.replace(/[^0-9]/g, "");
@@ -311,6 +325,10 @@
       input.value = Number(valor).toLocaleString("es-CO");
     }
 
+    /**
+     * Consume el servicio web para obtener el listado de billeteras asociadas al usuario e inyecta las opciones dentro del selector en el DOM.
+     * @returns {Promise<void>}
+     */
     async function cargarBilleteras() {
       const res = await fetch(`http://localhost:8080/billeteras/${usuario.cedula}`);
       const data = await res.json();
@@ -323,6 +341,10 @@
       });
     }
 
+    /**
+     * Valida el monto ingresado y envía de forma asíncrona la orden de recarga al servidor externo, controlando los cambios de nivel resultantes.
+     * @returns {Promise<void>}
+     */
     async function recargar() {
       const valorInput = document.getElementById("valor");
       const valor = parseFloat(valorInput.value.replace(/\./g, ""));
@@ -363,11 +385,20 @@
       }
     }
 
+    /**
+     * Modifica las clases visuales y el contenido del contenedor modal para desplegar un mensaje en la interfaz.
+     * @param {string} mensaje - El texto informativo que se mostrará en el popup.
+     * @returns {void}
+     */
     function mostrarPopup(mensaje) {
       document.getElementById("popup-message").textContent = mensaje;
       document.getElementById("popup").classList.remove("hidden");
     }
 
+    /**
+     * Oculta el popup modal activo y evalúa de forma encadenada si existe una notificación de nivel pendiente por mostrar.
+     * @returns {void}
+     */
     function cerrarPopup() {
       document.getElementById("popup").classList.add("hidden");
 
@@ -379,10 +410,17 @@
       }
     }
 
+    /**
+     * Elimina el registro del usuario en el almacenamiento local para desautenticar la sesión.
+     * @returns {void}
+     */
     function logout() {
       sessionStorage.removeItem("usuario");
     }
 
+    /**
+     * Escucha la inserción de caracteres en el campo de monto para ocultar alertas visuales de error cuando el valor sea válido.
+     */
     document.getElementById("valor").addEventListener("input", function () {
       const valor = parseFloat(this.value.replace(/\./g, ""));
       const errorMsg = document.getElementById("error-msg");

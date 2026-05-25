@@ -298,14 +298,36 @@
   </div>
 
   <script>
+    /**
+     * Datos del usuario autenticado obtenidos desde la sesión.
+     * @type {Object|null}
+     */
     const usuario = JSON.parse(sessionStorage.getItem("usuario"));
+
+    /**
+     * Listado completo de transacciones históricas del usuario.
+     * @type {Array<Object>}
+     */
     let transacciones = [];
 
+    /**
+     * Índice de la página de transacciones que se muestra actualmente en la interfaz.
+     * @type {number}
+     */
     let paginaActual = 1;
+
+    /**
+     * Cantidad máxima de transacciones visibles por cada página de la lista.
+     * @type {number}
+     */
     const porPagina = 5;
 
     if (!usuario) window.location.href = "/login.html";
 
+    /**
+     * Obtiene el historial de transacciones del usuario desde el servidor, las ordena cronológicamente y reinicia la paginación.
+     * @returns {Promise<void>}
+     */
     async function cargar() {
       const res = await fetch(`http://localhost:8080/transacciones/historial/${usuario.cedula}`);
       transacciones = await res.json();
@@ -316,6 +338,10 @@
       render(true);
     }
 
+    /**
+     * Filtra el listado global de transacciones según los criterios de tipo y rango de fechas seleccionados en la interfaz.
+     * @returns {Array<Object>} Listado de transacciones que cumplen con los filtros.
+     */
     function obtenerFiltradas() {
       const tipo = document.getElementById("tipo").value;
       const inicio = document.getElementById("fechaInicio").value;
@@ -332,6 +358,11 @@
       });
     }
 
+    /**
+     * Controla el flujo visual y de animación para actualizar la lista de transacciones en el DOM.
+     * @param {boolean} [sinAnimacion=false] - Indica si se debe omitir el efecto visual de transición.
+     * @returns {void}
+     */
     function render(sinAnimacion = false) {
       const lista = document.getElementById("lista");
 
@@ -342,6 +373,10 @@
         dibujar();
       }
 
+      /**
+       * Procesa las transacciones filtradas, calcula el rango de la página actual e inyecta las tarjetas de transacciones en el DOM.
+       * @returns {void}
+       */
       function dibujar() {
         lista.classList.remove("fade");
         lista.classList.add("lista-animada");
@@ -383,6 +418,11 @@
       }
     }
 
+    /**
+     * Determina la etiqueta comercial o descriptiva de una transacción según su naturaleza (envío o recepción).
+     * @param {Object} t - Objeto de la transacción evaluada.
+     * @returns {string} Texto descriptivo del tipo de transacción.
+     */
     function obtenerNombreTransaccion(t) {
       if (t.tipo !== "TRANSFERENCIA") {
         return t.tipo;
@@ -393,6 +433,11 @@
       return esRecibida ? "TRANSFERENCIA RECIBIDA" : "TRANSFERENCIA ENVIADA";
     }
 
+    /**
+     * Construye e inyecta los controles de navegación de la paginación en base al volumen total de elementos.
+     * @param {number} total - Cantidad total de transacciones que coinciden con los filtros.
+     * @returns {void}
+     */
     function renderPaginacion(total) {
       const cont = document.getElementById("paginacion");
       cont.innerHTML = "";
@@ -408,11 +453,21 @@
     `;
     }
 
+    /**
+     * Desplaza la vista a la página de resultados anterior o posterior y actualiza la interfaz.
+     * @param {number} dir - Dirección del cambio de página (usualmente -1 o 1).
+     * @returns {void}
+     */
     function cambiarPagina(dir) {
       paginaActual += dir;
       render();
     }
 
+    /**
+     * Asigna un color representativo según el impacto financiero (ingreso o egreso) de la transacción.
+     * @param {Object} t - Objeto de la transacción evaluada.
+     * @returns {string} Nombre del color en inglés (green, red, black) correspondiente.
+     */
     function obtenerColorTransaccion(t) {
       if (t.tipo === "RECARGA") {
         return "green";
@@ -430,6 +485,11 @@
       return "black";
     }
 
+    /**
+     * Despliega una sección flotante o modal con los metadatos extendidos de una transacción específica.
+     * @param {Object} t - Objeto de la transacción a detallar.
+     * @returns {void}
+     */
     function verDetalle(t) {
       document.getElementById("detalleContenido").innerHTML = `
         <p><b>ID:</b> ${t.id}</p>
@@ -458,6 +518,11 @@
       document.getElementById("detalle").classList.remove("hidden");
     }
 
+    /**
+     * Convierte una cadena de fecha en formato ISO a una estructura localizada en español colombiano con formato de 12 horas.
+     * @param {string} fechaISO - Fecha en formato estándar ISO de origen.
+     * @returns {string} Fecha y hora formateada para el usuario.
+     */
     function formatearFecha(fechaISO) {
       const f = new Date(fechaISO);
 
@@ -475,19 +540,37 @@
       return `${dia} de ${mes} ${anio}, ${horas}:${minutos}:${segundos} ${ampm}`;
     }
 
+    /**
+     * Transforma un valor numérico a una representación con separadores de miles y decimales regionales (Colombia).
+     * @param {number|string} valor - Número o cadena numérica a procesar.
+     * @returns {string} Cadena numérica con formato localizado.
+     */
     function formatearNumero(valor) {
       return Number(valor).toLocaleString("es-CO");
     }
 
+    /**
+     * Oculta de la vista el contenedor de los metadatos de la transacción.
+     * @returns {void}
+     */
     function cerrarDetalle() {
       document.getElementById("detalle").classList.add("hidden");
     }
 
+    /**
+     * Oculta el diálogo o ventana emergente de confirmación de operaciones del usuario.
+     * @returns {void}
+     */
     function cerrarPopupConfirmacion() {
       document.getElementById("popupConfirmacion")
         .classList.add("hidden");
     }
 
+    /**
+     * Muestra un mensaje emergente de notificación de carácter informativo con un único botón de aceptación.
+     * @param {string} mensaje - Texto o advertencia a desplegar en la interfaz.
+     * @returns {void}
+     */
     function mostrarPopup(mensaje) {
 
       document.getElementById("mensajeConfirmacion")
@@ -511,6 +594,12 @@
         .classList.remove("hidden");
     }
 
+    /**
+     * Evalúa la viabilidad temporal del reverso de una transferencia y solicita confirmación de acción al usuario si aplica.
+     * @param {string} id - Identificador único de la transferencia.
+     * @param {string} fecha - Fecha de creación de la transferencia para validar el límite de tiempo.
+     * @returns {void}
+     */
     function confirmarReversion(id, fecha) {
 
       const diferencia =
@@ -543,6 +632,11 @@
         .classList.remove("hidden");
     }
 
+    /**
+     * Solicita la reversión de una transferencia al servidor de manera asíncrona y desencadena validaciones colaterales del estado del usuario.
+     * @param {string} id - Identificador único de la transferencia a revertir.
+     * @returns {Promise<void>}
+     */
     async function revertirTransferencia(id) {
       cerrarPopupConfirmacion();
 
@@ -573,6 +667,12 @@
       );
     }
 
+    /**
+     * Muestra una ventana emergente definitiva al concluir un flujo de negocio y ejecuta un proceso posterior al cerrarse.
+     * @param {string} mensaje - Texto informativo final.
+     * @param {Function|null} [callback=null] - Función asíncrona o síncrona a ejecutar tras aceptar el mensaje.
+     * @returns {void}
+     */
     function mostrarPopupConfirmacionFinal(mensaje, callback = null) {
       document.getElementById("mensajeConfirmacion")
         .innerText = mensaje;
@@ -597,6 +697,11 @@
         .classList.remove("hidden");
     }
 
+    /**
+     * Consulta el estado del usuario tras una reversión para verificar si bajó de categoría, actualizando la sesión local en el proceso.
+     * @param {string|number} nivelAnterior - Nivel o rango que poseía el usuario previo a la operación.
+     * @returns {Promise<void>}
+     */
     async function verificarDescensoNivel(
       nivelAnterior
     ) {
@@ -623,6 +728,10 @@
       }
     }
 
+    /**
+     * Restablece los inputs de filtrado y los límites de fechas a su estado vacío inicial, refrescando la visualización de datos.
+     * @returns {void}
+     */
     function limpiar() {
       document.getElementById("tipo").value = "";
       document.getElementById("fechaInicio").value = "";
@@ -635,6 +744,10 @@
       render();
     }
 
+    /**
+     * Escucha el cambio en la fecha de inicio para restringir el límite mínimo de la fecha final,
+     * reiniciar la paginación y refrescar la vista de transacciones.
+     */
     document.getElementById("fechaInicio").addEventListener("change", e => {
       const inicio = e.target.value;
       const finInput = document.getElementById("fechaFin");
@@ -649,6 +762,10 @@
       render();
     });
 
+    /**
+     * Escucha el cambio en la fecha de fin para restringir el límite máximo de la fecha inicial,
+     * reiniciar la paginación y refrescar la vista de transacciones.
+     */
     document.getElementById("fechaFin").addEventListener("change", e => {
       const fin = e.target.value;
 
@@ -658,11 +775,19 @@
       render();
     });
 
+    /**
+     * Escucha el cambio en el selector de tipo de transacción para reiniciar la paginación 
+     * y aplicar el nuevo filtro en la vista.
+     */
     document.getElementById("tipo").addEventListener("change", () => {
       paginaActual = 1;
       render();
     });
 
+    /**
+     * Destruye las credenciales de la sesión activa del usuario para desautenticarlo del sistema.
+     * @returns {void}
+     */
     function logout() {
       sessionStorage.removeItem("usuario");
     }

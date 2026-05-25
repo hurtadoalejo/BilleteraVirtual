@@ -458,16 +458,36 @@
   </div>
 
   <script>
+    /** * @type {Object|null} Datos del usuario en sesión obtenidos de la memoria del navegador.
+     */
     const usuario = JSON.parse(sessionStorage.getItem("usuario"));
+
+    /** * @type {Array<Object>} Lista en memoria de todas las billeteras del usuario actual.
+     */
     let listaActualBilleteras = [];
 
+    /** * @type {number} Índice de la página actual del catálogo de billeteras.
+     */
     let paginaActual = 1;
+
+    /** * @type {number} Límite máximo de elementos visibles en la lista por página.
+     */
     const porPagina = 3;
 
+    /** * @type {string|null} ID de la billetera que el usuario seleccionó para modificar.
+     */
+    let billeteraEditandoId = null;
+
+    // Validación de sesión inmediata
     if (!usuario) {
       window.location.href = "/login.html";
     }
 
+    /**
+     * Captura el formulario, valida que el nombre no se repita y registra una nueva billetera en el servidor.
+     * @param {Event} event - Evento nativo del submit del formulario.
+     * @returns {Promise<void>}
+     */
     async function crearBilletera(event) {
       event.preventDefault();
 
@@ -478,16 +498,12 @@
 
       if (nombreRepetido(nombre)) {
         const input = document.getElementById("nombre");
-
         error.style.display = "block";
         reiniciarErrorAnimacion(input);
         return;
       }
 
-      const billetera = {
-        nombre,
-        tipo
-      };
+      const billetera = { nombre, tipo };
 
       try {
         const res = await fetch(`http://localhost:8080/billeteras/${usuario.cedula}`, {
@@ -499,10 +515,8 @@
         if (!res.ok) throw new Error();
 
         mostrarPopup("Billetera creada");
-
         document.getElementById("nombre").value = "";
         document.getElementById("tipo").value = "";
-
         cargarBilleteras();
 
       } catch {
@@ -510,15 +524,17 @@
       }
     }
 
+    /**
+     * Trae desde el servidor el listado completo de billeteras asociadas a la cédula del usuario.
+     * @returns {Promise<void>}
+     */
     async function cargarBilleteras() {
       try {
         const res = await fetch(`http://localhost:8080/billeteras/${usuario.cedula}`);
         const data = await res.json();
 
         listaActualBilleteras = data;
-
-        paginaActual = 1;
-
+        paginaActual = 1; // Reinicia el paginado tras refrescar datos
         renderBilleteras(true);
 
       } catch (e) {
@@ -526,109 +542,87 @@
       }
     }
 
+    /**
+     * Segmenta el array global por páginas y lo inyecta en el contenedor HTML usando plantillas.
+     * @param {boolean} [sinAnimacion=false] - Define si se omite el retardo visual de transición ("fade").
+     * @returns {void}
+     */
     function renderBilleteras(sinAnimacion = false) {
-
       const contenedor = document.getElementById("listaBilleteras");
 
       if (!sinAnimacion) {
         contenedor.classList.add("fade");
-
         setTimeout(() => dibujar(), 200);
-
       } else {
         dibujar();
       }
 
       function dibujar() {
-
         contenedor.classList.remove("fade");
         contenedor.classList.add("lista-animada");
-
         contenedor.innerHTML = "";
 
         const inicio = (paginaActual - 1) * porPagina;
         const fin = inicio + porPagina;
-
         const pagina = listaActualBilleteras.slice(inicio, fin);
 
         pagina.forEach(b => {
-
           contenedor.innerHTML += `
-        <div class="billetera-item">
-          <div class="billetera-info">
-            <span class="billetera-nombre">${b.nombre}</span>
-
-            <span class="billetera-meta" style="font-weight:bold; color:#334155;">
-              Número de billetera: ${b.id}
-            </span>
-
-            <span class="billetera-meta">${formatearTipo(b.tipo)}</span>
-
-            <span class="billetera-meta">
-              Saldo: $${(b.saldo || 0).toLocaleString()}
-            </span>
-
-            <span class="billetera-meta">
-              Estado: ${b.estado}
-            </span>
-          </div>
-
-          <div style="display:flex; gap:10px;">
-            <button class="btn"
-              onclick="editarBilletera('${b.id}', '${b.nombre}', '${b.tipo}')">
-              Editar
-            </button>
-
-            <button class="btn"
-              style="background:#ff6b6b;"
-              onclick="eliminarBilletera('${b.id}')">
-              Eliminar
-            </button>
-          </div>
-        </div>
-      `;
+            <div class="billetera-item">
+              <div class="billetera-info">
+                <span class="billetera-nombre">${b.nombre}</span>
+                <span class="billetera-meta" style="font-weight:bold; color:#334155;">
+                  Número de billetera: ${b.id}
+                </span>
+                <span class="billetera-meta">${formatearTipo(b.tipo)}</span>
+                <span class="billetera-meta">Saldo: $${(b.saldo || 0).toLocaleString()}</span>
+                <span class="billetera-meta">Estado: ${b.estado}</span>
+              </div>
+              <div style="display:flex; gap:10px;">
+                <button class="btn" onclick="editarBilletera('${b.id}', '${b.nombre}', '${b.tipo}')">Editar</button>
+                <button class="btn" style="background:#ff6b6b;" onclick="eliminarBilletera('${b.id}')">Eliminar</button>
+              </div>
+            </div>
+          `;
         });
 
         renderPaginacion();
       }
     }
 
+    /**
+     * Calcula las páginas totales y genera dinámicamente los botones de navegación previa/siguiente.
+     * @returns {void}
+     */
     function renderPaginacion() {
-
       const cont = document.getElementById("paginacion");
-
       cont.innerHTML = "";
 
       const totalPaginas = Math.ceil(listaActualBilleteras.length / porPagina);
-
       if (totalPaginas <= 1) return;
 
       cont.innerHTML = `
-        <button class="btn"
-          onclick="cambiarPagina(-1)"
-          ${paginaActual === 1 ? "disabled" : ""}>
-          ←
-        </button>
-
-        <span>
-          Página ${paginaActual} de ${totalPaginas}
-        </span>
-
-        <button class="btn"
-          onclick="cambiarPagina(1)"
-          ${paginaActual === totalPaginas ? "disabled" : ""}>
-          →
-        </button>
-        `;
+        <button class="btn" onclick="cambiarPagina(-1)" ${paginaActual === 1 ? "disabled" : ""}>←</button>
+        <span>Página ${paginaActual} de ${totalPaginas}</span>
+        <button class="btn" onclick="cambiarPagina(1)" ${paginaActual === totalPaginas ? "disabled" : ""}>→</button>
+      `;
     }
 
+    /**
+     * Modifica el índice de la página actual y re-renderiza la vista de las billeteras.
+     * @param {number} dir - Desplazamiento de páginas: `1` para avanzar, `-1` para retroceder.
+     * @returns {void}
+     */
     function cambiarPagina(dir) {
-
       paginaActual += dir;
-
       renderBilleteras();
     }
 
+    /**
+     * Solicita confirmación en pantalla y ejecuta una petición HTTP DELETE para remover la billetera.
+     * @param {string|number} id - Identificador único de la billetera que se desea remover.
+     * @returns {void}
+     */
     function eliminarBilletera(id) {
       mostrarConfirmacion(
         "¿Estás seguro que quieres eliminar la billetera?",
@@ -654,23 +648,65 @@
       );
     }
 
+    /**
+     * Prepara el formulario emergente rellenando los campos con los valores vigentes de la billetera.
+     * @param {string|number} id - Identificador de la billetera a editar.
+     * @param {string} nombre - Nombre actual de la billetera.
+     * @param {string} tipo - Tipo actual (ej: "AHORROS").
+     * @returns {void}
+     */
+    function editarBilletera(id, nombre, tipo) {
+      billeteraEditandoId = id.toString();
+
+      document.getElementById("editNombre").value = nombre;
+      document.getElementById("editTipo").value = tipo;
+
+      const error = document.getElementById("error-edit-nombre");
+      const input = document.getElementById("editNombre");
+
+      error.style.display = "none";
+      input.classList.remove("input-error");
+
+      document.getElementById("popup-editar").classList.remove("hidden");
+    }
+
+    /**
+     * Comprueba si un nombre ya existe en la lista de billeteras del usuario para evitar duplicaciones.
+     * @param {string} nombre - Texto a validar (no distingue mayúsculas/minúsculas).
+     * @param {string|null} [ignorarId=null] - ID opcional de una billetera que se excluirá de la comparación (útil al editar).
+     * @returns {boolean} `true` si el nombre ya está registrado en otra billetera, de lo contrario `false`.
+     */
+    function nombreRepetido(nombre, ignorarId = null) {
+      return listaActualBilleteras.some(b =>
+        b.nombre.toLowerCase() === nombre.toLowerCase() &&
+        b.id.toString() !== ignorarId
+      );
+    }
+
+    /**
+     * Remueve los guiones bajos de los strings devueltos por los Enums del Backend.
+     * @param {string} tipo - Tipo de cuenta original (ej: "CORRIENTE_AVANZADA").
+     * @returns {string} Texto formateado con espacios limpios (ej: "CORRIENTE AVANZADA").
+     */
+    function formatearTipo(tipo) {
+      return tipo.replaceAll("_", " ");
+    }
+
+    /** Estructura visual de los popups generales */
     function mostrarPopup(mensaje) {
       document.getElementById("popup-message").textContent = mensaje;
-
       document.getElementById("btnAceptar").classList.remove("hidden");
       document.getElementById("btnSi").classList.add("hidden");
       document.getElementById("btnNo").classList.add("hidden");
-
       document.getElementById("popup").classList.remove("hidden");
     }
 
+    /** Intercepta la decisión del usuario en el popup de confirmación */
     function mostrarConfirmacion(mensaje, onConfirmar) {
       document.getElementById("popup-message").textContent = mensaje;
-
       document.getElementById("btnAceptar").classList.add("hidden");
       document.getElementById("btnSi").classList.remove("hidden");
       document.getElementById("btnNo").classList.remove("hidden");
-
       document.getElementById("popup").classList.remove("hidden");
 
       const btnSi = document.getElementById("btnSi");
@@ -687,61 +723,36 @@
       document.getElementById("popup").classList.add("hidden");
     }
 
-    function logout() {
-      sessionStorage.removeItem("usuario");
-    }
-
-    function formatearTipo(tipo) {
-      return tipo.replaceAll("_", " ");
-    }
-
-    function nombreRepetido(nombre, ignorarId = null) {
-      return listaActualBilleteras.some(b =>
-        b.nombre.toLowerCase() === nombre.toLowerCase() &&
-        b.id !== ignorarId
-      );
-    }
-
-    let billeteraEditandoId = null;
-
-    function editarBilletera(id, nombre, tipo) {
-      billeteraEditandoId = id.toString();
-
-      document.getElementById("editNombre").value = nombre;
-      document.getElementById("editTipo").value = tipo;
-
-      const error = document.getElementById("error-edit-nombre");
-      const input = document.getElementById("editNombre");
-
-      error.style.display = "none";
-      input.classList.remove("input-error");
-
-      document.getElementById("popup-editar").classList.remove("hidden");
-    }
-
     function cerrarPopupEditar() {
       document.getElementById("popup-editar").classList.add("hidden");
     }
 
-    document.getElementById("btnActualizar").addEventListener("click", async () => {
+    /** Limpia las credenciales activas del almacenamiento de sesión */
+    function logout() {
+      sessionStorage.removeItem("usuario");
+    }
 
+    /** Fuerza el reinicio de la animación CSS de sacudida cuando hay un error en formularios */
+    function reiniciarErrorAnimacion(element) {
+      element.classList.remove("input-error");
+      void element.offsetWidth; // Truco de reflujo para reiniciar ciclo CSS
+      element.classList.add("input-error");
+    }
+
+    /** Listener: Valida los cambios y actualiza los datos modificados de una billetera vía PUT */
+    document.getElementById("btnActualizar").addEventListener("click", async () => {
       const nombre = document.getElementById("editNombre").value;
       const tipo = document.getElementById("editTipo").value;
 
       if (nombreRepetido(nombre, billeteraEditandoId)) {
         const input = document.getElementById("editNombre");
         const error = document.getElementById("error-edit-nombre");
-
         error.style.display = "block";
         reiniciarErrorAnimacion(input);
-
         return;
       }
 
-      const datos = {
-        nombre,
-        tipo
-      };
+      const datos = { nombre, tipo };
 
       try {
         const res = await fetch(`http://localhost:8080/billeteras/${usuario.cedula}/${billeteraEditandoId}`, {
@@ -759,38 +770,25 @@
       } catch {
         mostrarPopup("Error al actualizar");
       }
-
     });
 
-    function reiniciarErrorAnimacion(element) {
-      element.classList.remove("input-error");
-      void element.offsetWidth;
-      element.classList.add("input-error");
-    }
-
-    function nombreRepetido(nombre, ignorarId = null) {
-      return listaActualBilleteras.some(b =>
-        b.nombre.toLowerCase() === nombre.toLowerCase() &&
-        b.id.toString() !== ignorarId
-      );
-    }
-
+    /** Listener: Remueve alertas de error del input de edición mientras el usuario escribe */
     document.getElementById("editNombre").addEventListener("input", () => {
       const input = document.getElementById("editNombre");
       const error = document.getElementById("error-edit-nombre");
-
       error.style.display = "none";
       input.classList.remove("input-error");
     });
 
+    /** Listener: Remueve alertas de error del input de creación mientras el usuario escribe */
     document.getElementById("nombre").addEventListener("input", () => {
       const input = document.getElementById("nombre");
       const error = document.getElementById("error-nombre");
-
       error.style.display = "none";
       input.classList.remove("input-error");
     });
 
+    // Inicialización del ecosistema
     cargarBilleteras();
   </script>
 

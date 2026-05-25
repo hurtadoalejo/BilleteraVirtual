@@ -337,18 +337,47 @@
   </div>
 
   <script>
+    /**
+     * Elemento del DOM que representa el formulario de envío del chat.
+     * @type {HTMLElement}
+     */
     const form = document.getElementById("chatForm");
+
+    /**
+     * Elemento del DOM correspondiente al campo de texto o área de escritura del mensaje.
+     * @type {HTMLElement}
+     */
     const input = document.getElementById("mensajeInput");
+
+    /**
+     * Contenedor del DOM donde se inyectan dinámicamente los bloques de la conversación.
+     * @type {HTMLElement}
+     */
     const chatMessages = document.getElementById("chatMessages");
 
+    /**
+     * Escucha la carga inicial de la estructura del documento para recuperar y pintar el historial de mensajes guardados de la sesión.
+     */
     document.addEventListener("DOMContentLoaded", () => {
       cargarHistorial();
     });
 
+    /**
+     * Limpia la totalidad de los registros y variables almacenadas en el almacenamiento de la sesión actual.
+     * @returns {void}
+     */
     function logout() {
       sessionStorage.clear();
     }
 
+    /**
+     * Crea un nodo de mensaje en la interfaz, le asigna estilos según el rol del emisor, fuerza el desplazamiento del scroll e invoca el respaldo en persistencia si se requiere.
+     * @param {string} tipo - Rol del emisor del mensaje (e.g., "user", "assistant").
+     * @param {string} autor - Nombre visible que firma el mensaje (e.g., "Yo", "Asistente").
+     * @param {string} mensaje - Contenido textual de la interacción.
+     * @param {boolean} [guardar=true] - Define si la interacción debe almacenarse en el historial de la sesión.
+     * @returns {void}
+     */
     function agregarMensaje(tipo, autor, mensaje, guardar = true) {
       const messageDiv = document.createElement("div");
       messageDiv.classList.add("message", tipo);
@@ -366,12 +395,21 @@
       }
     }
 
+    /**
+     * Serializa e incorpora un nuevo objeto de mensaje al arreglo guardado en el almacenamiento temporal de la sesión.
+     * @param {Object} msgObjeto - Estructura que contiene el tipo, autor y texto del mensaje.
+     * @returns {void}
+     */
     function guardarEnHistorial(msgObjeto) {
       let historial = JSON.parse(sessionStorage.getItem("historialChat")) || [];
       historial.push(msgObjeto);
       sessionStorage.setItem("historialChat", JSON.stringify(historial));
     }
 
+    /**
+     * Recupera el arreglo de interacciones pasadas desde el almacenamiento local y reconstruye de manera secuencial la conversación en pantalla.
+     * @returns {void}
+     */
     function cargarHistorial() {
       let historial = JSON.parse(sessionStorage.getItem("historialChat")) || [];
 
@@ -383,6 +421,11 @@
       }
     }
 
+    /**
+     * Despliega el estado de espera en la interfaz y realiza una petición asíncrona para obtener la respuesta del modelo de inteligencia artificial del servidor.
+     * @param {string} mensaje - Texto de consulta digitado por el usuario.
+     * @returns {Promise<void>}
+     */
     async function enviarMensaje(mensaje) {
       try {
         mostrarTyping();
@@ -407,6 +450,9 @@
       }
     }
 
+    /**
+     * Escucha el envío del formulario para procesar el mensaje del usuario, limpiar el área de texto, ajustar las dimensiones elásticas del input y disparar la consulta al servidor.
+     */
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -422,11 +468,18 @@
       await enviarMensaje(mensaje);
     });
 
+    /**
+     * Escucha la digitación en tiempo real dentro del campo de entrada para recalcular de forma elástica la altura del contenedor de texto.
+     */
     input.addEventListener("input", () => {
       input.style.height = "auto";
       input.style.height = Math.min(input.scrollHeight, 160) + "px";
     });
 
+    /**
+     * Construye e inyecta visualmente un indicador de carga con animación de puntos suspensivos para denotar que el sistema está procesando una respuesta.
+     * @returns {void}
+     */
     function mostrarTyping() {
       const typingDiv = document.createElement("div");
       typingDiv.classList.add("message", "assistant");
@@ -445,6 +498,10 @@
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
+    /**
+     * Localiza el elemento indicador de carga o escritura en el contenedor de mensajes y lo remueve del árbol del DOM.
+     * @returns {void}
+     */
     function ocultarTyping() {
       const typing = document.getElementById("typingIndicator");
       if (typing) {

@@ -475,18 +475,38 @@
   </div>
 
   <script>
-
+    /**
+     * Arreglo global que contiene el listado completo de operaciones o transacciones financieras del sistema.
+     * @type {Array<Object>}
+     */
     let transacciones = [];
 
+    /**
+     * Índice de la página de datos que se está visualizando activamente en la tabla.
+     * @type {number}
+     */
     let paginaActual = 1;
 
+    /**
+     * Cantidad máxima de registros o filas permitidas por cada página de la tabla.
+     * @type {number}
+     */
     const porPagina = 7;
 
+    /**
+     * Formateador de esquemas numéricos configurado bajo los estándares locales de la moneda Peso Colombiano (COP).
+     * @type {Intl.NumberFormat}
+     */
     const formatoCOP = new Intl.NumberFormat("es-CO", {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     });
 
+    /**
+     * Convierte una cadena de fecha en formato ISO a una representación de texto localizada con formato regional de fecha y hora.
+     * @param {string} fechaISO - Cadena de fecha estructurada.
+     * @returns {string} Fecha formateada según la configuración regional 'es-CO'.
+     */
     function formatearFecha(fechaISO) {
 
       const fecha = new Date(fechaISO);
@@ -500,6 +520,11 @@
       });
     }
 
+    /**
+     * Recorre la colección de transacciones para computar las métricas acumuladas de dinero, volumen e identificar el usuario y la billetera con mayor frecuencia operativa, actualizando los contenedores del DOM.
+     * @param {Array<Object>} lista - Conjunto de transacciones activas sobre las cuales se calcularán los indicadores.
+     * @returns {void}
+     */
     function actualizarAnalitica(lista) {
 
       document.getElementById("totalTransacciones")
@@ -568,6 +593,11 @@
       );
     }
 
+    /**
+     * Evalúa un mapa de frecuencias y extrae la clave que posee el valor numérico más alto.
+     * @param {Object} objeto - Mapa asociativo con las claves y sus respectivas incidencias acumuladas.
+     * @returns {string} El identificador o clave con mayor frecuencia detectada.
+     */
     function obtenerMayor(objeto) {
 
       let mayor = "-";
@@ -587,6 +617,13 @@
       return mayor;
     }
 
+    /**
+     * Construye e inyecta bloques HTML en la interfaz para representar la distribución cuantitativa de las categorías de transacciones o de sus estados.
+     * @param {Object} data - Objeto con las métricas calculadas.
+     * @param {string} id - ID del contenedor del DOM donde se inyectarán las estadísticas.
+     * @param {string} tipo - Discriminador del tipo de renderizado ("tipo" o "estado").
+     * @returns {void}
+     */
     function renderFrecuencias(data, id, tipo) {
 
       const contenedor =
@@ -635,6 +672,10 @@
       }
     }
 
+    /**
+     * Examina los controles selectores del DOM y genera una lista filtrada de transacciones basada en concordancias de tipo, estado y rangos de fechas.
+     * @returns {Array<Object>} Arreglo depurado con los elementos que superaron los filtros del administrador.
+     */
     function obtenerFiltradas() {
 
       const tipo =
@@ -687,6 +728,10 @@
       });
     }
 
+    /**
+     * Vacía el contenido y las restricciones de límites de todos los campos de búsqueda e invoca la reconstrucción de la tabla desde la página inicial.
+     * @returns {void}
+     */
     function limpiarFiltros() {
 
       document.getElementById("fechaInicio").value = "";
@@ -708,6 +753,10 @@
       renderTabla();
     }
 
+    /**
+     * Consume el servicio administrativo para traer el consolidado global de operaciones y gatilla el flujo de actualización de la interfaz.
+     * @returns {Promise<void>}
+     */
     async function cargarDatos() {
 
       const res = await fetch(
@@ -722,6 +771,10 @@
       renderTabla();
     }
 
+    /**
+     * Aplica efectos de transición visual, segmenta las transacciones obtenidas bajo el rango de paginación vigente y edita las filas de la tabla con los datos monetarios y temporales correspondientes.
+     * @returns {void}
+     */
     function renderTabla() {
       const tabla = document.getElementById("tablaTransacciones");
 
@@ -786,6 +839,11 @@
       }, 150);
     }
 
+    /**
+     * Actualiza el contador de páginas textual e inhabilita o habilita los controles de navegación según la disponibilidad de registros complementarios.
+     * @param {number} total - Sumatoria de elementos resultantes aptos para mostrar.
+     * @returns {void}
+     */
     function renderPaginacion(total) {
 
       const totalPaginas =
@@ -804,6 +862,11 @@
         paginaActual >= totalPaginas;
     }
 
+    /**
+     * Altera el índice de posicionamiento de la página conforme a un diferencial direccional y comanda la regeneración visual de las filas informativas.
+     * @param {number} direccion - Incremento o decremento unitario de la posición de la página (e.g., -1 o 1).
+     * @returns {void}
+     */
     function cambiarPagina(direccion) {
 
       const total =
@@ -828,6 +891,9 @@
       renderTabla();
     }
 
+    /**
+     * Escucha la modificación del control de fecha inicial para condicionar dinámicamente el umbral mínimo del control de fecha de finalización.
+     */
     document.getElementById("fechaInicio")
       .addEventListener("change", (e) => {
 
@@ -850,6 +916,9 @@
         renderTabla();
       });
 
+    /**
+     * Escucha la modificación del control de fecha de finalización para delimitar el umbral máximo permitido en el control de la fecha de partida.
+     */
     document.getElementById("fechaFin")
       .addEventListener("change", (e) => {
 
@@ -872,6 +941,9 @@
         renderTabla();
       });
 
+    /**
+     * Escucha la variación en el control de selección del tipo de transacción para reiniciar la paginación y refrescar los elementos vigentes de la tabla.
+     */
     document.getElementById("filtroTipo")
       .addEventListener("change", () => {
 
@@ -880,6 +952,9 @@
         renderTabla();
       });
 
+    /**
+     * Escucha la variación en el control de selección del estado operacional para reiniciar la paginación y refrescar los elementos vigentes de la tabla.
+     */
     document.getElementById("filtroEstado")
       .addEventListener("change", () => {
 
@@ -892,6 +967,9 @@
     document.getElementById("tablaTransacciones")
       .classList.add("fade-table");
 
+    /**
+     * Ejecuta una rutina cíclica e indefinida con intervalos fijos para re-consultar de forma automática los datos del servidor sin intervención del administrador.
+     */
     setInterval(() => {
 
       cargarDatos();

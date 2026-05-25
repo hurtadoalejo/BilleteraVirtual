@@ -464,21 +464,32 @@
 
   <script>
 
+    /** * @type {Array<Object>} Lista global de alertas de fraude obtenidas del backend.
+     */
     let alertas = [];
 
+    /** * @type {number} Índice de la página actual en la paginación.
+     */
     let paginaActual = 1;
 
+    /** * @type {number} Cantidad máxima de registros visibles por página.
+     */
     const porPagina = 7;
 
+    /** * @type {Intl.NumberFormat} Formateador de moneda para Pesos Colombianos (COP) sin decimales.
+     */
     const formatoCOP = new Intl.NumberFormat("es-CO", {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     });
 
+    /**
+     * Convierte una fecha ISO en un texto amigable con formato colombiano.
+     * @param {string} fechaISO - Fecha en formato estándar (ej: "2026-05-25T11:00:00Z").
+     * @returns {string} Fecha formateada (ej: "25 de may de 2026, 11:00 AM").
+     */
     function formatearFecha(fechaISO) {
-
       const fecha = new Date(fechaISO);
-
       return fecha.toLocaleString("es-CO", {
         year: "numeric",
         month: "short",
@@ -488,293 +499,193 @@
       });
     }
 
+    /**
+     * Consulta las alertas de fraude desde el servidor API y recarga la interfaz.
+     * @returns {Promise<void>}
+     */
     async function cargarDatos() {
-
       const response = await fetch(
         "http://localhost:8080/fraude"
       );
-
       alertas = await response.json();
-
       renderTabla();
     }
 
+    /**
+     * Filtra la lista global de alertas según los criterios seleccionados en el HTML.
+     * @returns {Array<Object>} Lista de alertas que cumplen con los filtros de tipo, riesgo y fechas.
+     */
     function obtenerFiltradas() {
-
-      const tipo =
-        document.getElementById("filtroTipo").value;
-
-      const riesgo =
-        document.getElementById("filtroRiesgo").value;
-
-      const fechaInicio =
-        document.getElementById("fechaInicio").value;
-
-      const fechaFin =
-        document.getElementById("fechaFin").value;
+      const tipo = document.getElementById("filtroTipo").value;
+      const riesgo = document.getElementById("filtroRiesgo").value;
+      const fechaInicio = document.getElementById("fechaInicio").value;
+      const fechaFin = document.getElementById("fechaFin").value;
 
       return alertas.filter(t => {
-
-        const coincideTipo =
-          !tipo || t.tipo === tipo;
-
-        const coincideRiesgo =
-          !riesgo || t.nivelRiesgo === riesgo;
-
-        const fechaTransaccion =
-          new Date(t.fecha);
+        const coincideTipo = !tipo || t.tipo === tipo;
+        const coincideRiesgo = !riesgo || t.nivelRiesgo === riesgo;
+        const fechaTransaccion = new Date(t.fecha);
 
         let coincideInicio = true;
-
         let coincideFin = true;
 
         if (fechaInicio) {
-
-          coincideInicio =
-            fechaTransaccion >= new Date(fechaInicio);
+          coincideInicio = fechaTransaccion >= new Date(fechaInicio);
         }
 
         if (fechaFin) {
-
-          const fin =
-            new Date(fechaFin);
-
-          fin.setHours(23, 59, 59, 999);
-
-          coincideFin =
-            fechaTransaccion <= fin;
+          const fin = new Date(fechaFin);
+          fin.setHours(23, 59, 59, 999); // Incluye todo el día final
+          coincideFin = fechaTransaccion <= fin;
         }
 
-        return coincideTipo
-          && coincideRiesgo
-          && coincideInicio
-          && coincideFin;
+        return coincideTipo && coincideRiesgo && coincideInicio && coincideFin;
       });
     }
 
+    /**
+     * Restablece todos los inputs de filtro a sus valores vacíos y reinicia la tabla.
+     * @returns {void}
+     */
     function limpiarFiltros() {
-
       document.getElementById("fechaInicio").value = "";
-
       document.getElementById("fechaFin").value = "";
-
       document.getElementById("filtroTipo").value = "";
-
       document.getElementById("filtroRiesgo").value = "";
-
       paginaActual = 1;
-
       renderTabla();
     }
 
+    /**
+     * Ordena, pagina y dibuja las alertas filtradas en la tabla HTML con un efecto visual de transición.
+     * @returns {void}
+     */
     function renderTabla() {
-
-      const tabla =
-        document.getElementById("tablaAlertas");
-
+      const tabla = document.getElementById("tablaAlertas");
       tabla.classList.add("out");
 
       setTimeout(() => {
+        const filtradas = obtenerFiltradas();
 
-        const filtradas =
-          obtenerFiltradas();
+        filtradas.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
-        filtradas.sort((a, b) =>
-          new Date(b.fecha) - new Date(a.fecha)
-        );
-
-        const inicio =
-          (paginaActual - 1) * porPagina;
-
-        const fin =
-          inicio + porPagina;
-
-        const pagina =
-          filtradas.slice(inicio, fin);
+        const inicio = (paginaActual - 1) * porPagina;
+        const fin = inicio + porPagina;
+        const pagina = filtradas.slice(inicio, fin);
 
         tabla.innerHTML = "";
 
         pagina.forEach(t => {
-
           tabla.innerHTML += `
-          
           <tr>
-
+            <td><span class="badge ${t.tipo}">${t.tipo}</span></td>
+            <td><span class="badge ${t.nivelRiesgo}">${t.nivelRiesgo}</span></td>
+            <td>$ ${formatoCOP.format(t.valor)}</td>
+            <td>${t.billeteraOrigenId || "-"}</td>
+            <td>${t.billeteraDestinoId || "-"}</td>
+            <td>${formatearFecha(t.fecha)}</td>
             <td>
-              <span class="badge ${t.tipo}">
-                ${t.tipo}
-              </span>
-            </td>
-
-            <td>
-              <span class="badge ${t.nivelRiesgo}">
-                ${t.nivelRiesgo}
-              </span>
-            </td>
-
-            <td>
-              $ ${formatoCOP.format(t.valor)}
-            </td>
-
-            <td>
-              ${t.billeteraOrigenId || "-"}
-            </td>
-
-            <td>
-              ${t.billeteraDestinoId || "-"}
-            </td>
-
-            <td>
-              ${formatearFecha(t.fecha)}
-            </td>
-
-            <td>
-
               <div class="alertas-lista">
-
                 ${(t.alertasFraude || []).map(alerta => `
-                  
-                  <div class="alerta-item">
-                    ${alerta}
-                  </div>
-
+                  <div class="alerta-item">${alerta}</div>
                 `).join("")}
-
               </div>
-
             </td>
-
           </tr>
-          
           `;
         });
 
         renderPaginacion(filtradas.length);
-
-        tabla.classList.remove("out");
-
+        tabla.classList.remove("out"); // Inicia animación de entrada
       }, 150);
     }
 
+    /**
+     * Actualiza el estado de los botones de navegación y el texto indicador de páginas.
+     * @param {number} total - El total de registros que pasaron los filtros actuales.
+     * @returns {void}
+     */
     function renderPaginacion(total) {
+      const totalPaginas = Math.ceil(total / porPagina);
 
-      const totalPaginas =
-        Math.ceil(total / porPagina);
-
-      document.getElementById("paginaTexto")
-        .textContent =
+      document.getElementById("paginaTexto").textContent =
         `Página ${paginaActual} de ${totalPaginas || 1}`;
 
-      document.getElementById("btnAnterior")
-        .disabled =
-        paginaActual === 1;
-
-      document.getElementById("btnSiguiente")
-        .disabled =
-        paginaActual >= totalPaginas;
+      document.getElementById("btnAnterior").disabled = paginaActual === 1;
+      document.getElementById("btnSiguiente").disabled = paginaActual >= totalPaginas;
     }
 
+    /**
+     * Incrementa o decrementa la página actual y refresca la tabla si el movimiento es válido.
+     * @param {number} direccion - Utilizar `1` para avanzar página o `-1` para retroceder.
+     * @returns {void}
+     */
     function cambiarPagina(direccion) {
+      const total = obtenerFiltradas().length;
+      const totalPaginas = Math.ceil(total / porPagina) || 1;
+      const nuevaPagina = paginaActual + direccion;
 
-      const total =
-        obtenerFiltradas().length;
-
-      const totalPaginas =
-        Math.ceil(total / porPagina) || 1;
-
-      const nuevaPagina =
-        paginaActual + direccion;
-
-      if (nuevaPagina < 1) return;
-
-      if (nuevaPagina > totalPaginas) return;
+      if (nuevaPagina < 1 || nuevaPagina > totalPaginas) return;
 
       paginaActual = nuevaPagina;
-
       renderTabla();
     }
 
-    const inputInicio =
-      document.getElementById("fechaInicio");
+    const inputInicio = document.getElementById("fechaInicio");
+    const inputFin = document.getElementById("fechaFin");
 
-    const inputFin =
-      document.getElementById("fechaFin");
-
+    /** Listener: Controla las restricciones y coherencia al cambiar la fecha de inicio */
     inputInicio.addEventListener("change", () => {
-
       if (inputInicio.value) {
-
-        inputFin.min =
-          inputInicio.value;
+        inputFin.min = inputInicio.value;
       } else {
-
         inputFin.min = "";
       }
 
-      if (
-        inputFin.value &&
-        inputFin.value < inputInicio.value
-      ) {
-
-        inputFin.value =
-          inputInicio.value;
+      if (inputFin.value && inputFin.value < inputInicio.value) {
+        inputFin.value = inputInicio.value;
       }
-
       paginaActual = 1;
-
       renderTabla();
     });
 
+    /** Listener: Controla las restricciones y coherencia al cambiar la fecha de fin */
     inputFin.addEventListener("change", () => {
-
       if (inputFin.value) {
-
-        inputInicio.max =
-          inputFin.value;
+        inputInicio.max = inputFin.value;
       } else {
-
         inputInicio.max = "";
       }
 
-      if (
-        inputInicio.value &&
-        inputInicio.value > inputFin.value
-      ) {
-
-        inputInicio.value =
-          inputFin.value;
+      if (inputInicio.value && inputInicio.value > inputFin.value) {
+        inputInicio.value = inputFin.value;
       }
-
       paginaActual = 1;
-
       renderTabla();
     });
 
-    document.getElementById("filtroTipo")
-      .addEventListener("change", () => {
+    /** Listener: Reinicia la paginación y filtra cuando cambia el selector de tipo */
+    document.getElementById("filtroTipo").addEventListener("change", () => {
+      paginaActual = 1;
+      renderTabla();
+    });
 
-        paginaActual = 1;
+    /** Listener: Reinicia la paginación y filtra cuando cambia el selector de riesgo */
+    document.getElementById("filtroRiesgo").addEventListener("change", () => {
+      paginaActual = 1;
+      renderTabla();
+    });
 
-        renderTabla();
-      });
-
-    document.getElementById("filtroRiesgo")
-      .addEventListener("change", () => {
-
-        paginaActual = 1;
-
-        renderTabla();
-      });
-
+    // Carga inicial al abrir la página
     cargarDatos();
 
-    document.getElementById("tablaAlertas")
-      .classList.add("fade-table");
+    document.getElementById("tablaAlertas").classList.add("fade-table");
 
+    /**
+     * @type {number} Temporizador en bucle para auto-refrescar los datos cada 5 segundos.
+     */
     setInterval(() => {
-
       cargarDatos();
-
     }, 5000);
 
   </script>

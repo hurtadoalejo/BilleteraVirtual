@@ -244,6 +244,11 @@
   </div>
 
   <script>
+    /**
+     * Fuerza el reinicio de los efectos visuales de error en un elemento del DOM restableciendo sus clases CSS.
+     * @param {HTMLElement} element - El elemento contenedor al que se le reaplicará la animación.
+     * @returns {void}
+     */
     function reiniciarErrorAnimacion(element) {
       element.classList.remove("input-error");
 
@@ -252,11 +257,34 @@
       element.classList.add("input-error");
     }
 
+    /**
+     * Elemento del DOM que representa el formulario de inicio de sesión.
+     * @type {HTMLElement}
+     */
     const form = document.getElementById("loginForm");
+
+    /**
+     * Elemento del DOM correspondiente al campo de entrada de la cédula o usuario.
+     * @type {HTMLElement}
+     */
     const cedulaInput = document.getElementById("cedula");
+
+    /**
+     * Elemento del DOM correspondiente al campo de entrada de la contraseña.
+     * @type {HTMLElement}
+     */
     const passwordInput = document.getElementById("password");
+
+    /**
+     * Elemento del DOM encargado de desplegar el texto de error de autenticación.
+     * @type {HTMLElement}
+     */
     const errorMsg = document.getElementById("error-msg");
 
+    /**
+     * Escucha el envío del formulario para interceptar la acción, validar credenciales especiales de administración 
+     * o solicitar de forma asíncrona la autenticación en el servidor.
+     */
     form.addEventListener("submit", function (e) {
       e.preventDefault();
 
@@ -298,6 +326,12 @@
         });
     });
 
+    /**
+     * Alterna la visibilidad del texto de un campo de contraseña (de oculto a visible y viceversa) modificando los íconos del ojo.
+     * @param {string} inputId - ID del elemento input de tipo contraseña.
+     * @param {HTMLElement} element - Elemento del DOM que disparó la acción y contiene los iconos.
+     * @returns {void}
+     */
     function togglePassword(inputId, element) {
       const input = document.getElementById(inputId);
       const eyeOpen = element.querySelector(".eye-open");
@@ -314,11 +348,18 @@
       }
     }
 
+    /**
+     * Escucha la carga completa de la ventana para limpiar los valores residuales de los campos de entrada de datos.
+     */
     window.onload = function () {
       document.getElementById("cedula").value = "";
       document.getElementById("password").value = "";
     };
 
+    /**
+     * Oculta el mensaje de alerta y remueve los estilos visuales de error de los campos principales del formulario.
+     * @returns {void}
+     */
     function limpiarError() {
       errorMsg.style.display = "none";
 
@@ -326,9 +367,17 @@
       passwordInput.parentElement.classList.remove("input-error");
     }
 
+    /**
+     * Escucha la escritura en el campo de cédula para limpiar las alertas de error de la interfaz.
+     */
     cedulaInput.addEventListener("input", limpiarError);
+
+    /**
+     * Escucha la escritura en el campo de contraseña para limpiar las alertas de error de la interfaz.
+     */
     passwordInput.addEventListener("input", limpiarError);
   </script>
+
 </body>
 
 </html>

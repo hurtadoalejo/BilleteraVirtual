@@ -494,20 +494,56 @@
   </div>
 
   <script>
+    /**
+     * Datos del usuario autenticado obtenidos desde la sesión.
+     * @type {Object|null}
+     */
     let usuario = JSON.parse(sessionStorage.getItem("usuario"));
 
     if (!usuario) {
       window.location.href = "/login.html";
     }
 
+    /**
+     * Define la categoría o tipo de transacción activa en el flujo actual (e.g., RECARGA, TRANSFERENCIA).
+     * @type {string}
+     */
     let tipoActual = "RECARGA";
+
+    /**
+     * Listado de billeteras asociadas a la cuenta del usuario.
+     * @type {Array<Object>}
+     */
     let billeteras = [];
+
+    /**
+     * Listado general de transacciones programadas del usuario.
+     * @type {Array<Object>}
+     */
     let programadas = [];
+
+    /**
+     * Almacena temporalmente el identificador de la transacción que se pretende cancelar.
+     * @type {string|number|null}
+     */
     let idPendienteCancelar = null;
 
+    /**
+     * Índice de la página de transacciones programadas visible en la interfaz.
+     * @type {number}
+     */
     let paginaActual = 1;
+
+    /**
+     * Cantidad máxima de transacciones programadas visibles por página.
+     * @type {number}
+     */
     const porPagina = 3;
 
+    /**
+     * Devuelve la representación textual del porcentaje de comisión según la categoría de fidelidad del usuario.
+     * @returns {string} Cadena que representa el porcentaje aplicable (e.g., "0.4%").
+     */
     function obtenerComision() {
 
       switch (usuario.nivel) {
@@ -526,6 +562,11 @@
       }
     }
 
+    /**
+     * Calcula el monto numérico equivalente de la comisión basándose en el nivel del usuario y un valor base.
+     * @param {number} valor - El importe base sobre el cual calcular la comisión.
+     * @returns {number} El valor redondeado de la comisión resultante.
+     */
     function calcularComision(valor) {
 
       let porcentaje = 0.005;
@@ -548,6 +589,11 @@
       return Math.round(valor * porcentaje);
     }
 
+    /**
+     * Verifica si una billetera de destino seleccionada se encuentra dentro del grupo de cuentas del propio usuario.
+     * @param {string|number} destinoId - Identificador de la billetera a evaluar.
+     * @returns {boolean} Verdadero si la billetera pertenece al usuario, falso de lo contrario.
+     */
     function esBilleteraPropia(destinoId) {
 
       return billeteras.some(
@@ -555,6 +601,10 @@
       );
     }
 
+    /**
+     * Recalcula dinámicamente el costo total de la operación (incluyendo comisiones si aplican) y actualiza el campo correspondiente en el DOM.
+     * @returns {void}
+     */
     function actualizarTotal() {
 
       const valorInput =
@@ -594,6 +644,10 @@
           .toLocaleString("es-CO");
     }
 
+    /**
+     * Consume el servicio para obtener las billeteras del usuario e inyecta las opciones en el elemento selector del DOM.
+     * @returns {Promise<void>}
+     */
     async function cargarBilleteras() {
 
       const res = await fetch(
@@ -616,6 +670,11 @@
       });
     }
 
+    /**
+     * Configura y abre el diálogo emergente para programar una operación, modificando la visibilidad de los campos según el tipo de transacción.
+     * @param {string} tipo - Tipo de transacción a configurar (e.g., "TRANSFERENCIA").
+     * @returns {Promise<void>}
+     */
     async function abrirPopupProgramar(tipo) {
       await actualizarUsuario();
       tipoActual = tipo;
@@ -658,6 +717,10 @@
       actualizarTotal();
     }
 
+    /**
+     * Restablece los campos del formulario de programación y oculta la ventana emergente de la vista.
+     * @returns {void}
+     */
     function cerrarPopupProgramar() {
 
       document.getElementById("popupProgramar")
@@ -673,6 +736,10 @@
         .classList.remove("input-error");
     }
 
+    /**
+     * Valida las restricciones de negocio (fechas, montos y cuentas) y envía la solicitud de registro de la transacción programada al servidor.
+     * @returns {Promise<void>}
+     */
     async function programar() {
 
       const origen = document.getElementById("origen").value;
@@ -788,6 +855,11 @@
       }
     }
 
+    /**
+     * Solicita al servidor el listado actualizado de transacciones programadas y las ordena de forma cronológica descendente.
+     * @param {boolean} [auto=false] - Define si la consulta es automática (evita reiniciar el índice de paginación).
+     * @returns {Promise<void>}
+     */
     async function cargarProgramadas(auto = false) {
 
       const res = await fetch(
@@ -808,6 +880,11 @@
       render(auto);
     }
 
+    /**
+     * Administra las transiciones visuales y delega la inyección de los bloques de transacciones programadas en el DOM.
+     * @param {boolean} [sinAnimacion=false] - Indica si se omite el efecto de desvanecimiento en la actualización.
+     * @returns {void}
+     */
     function render(sinAnimacion = false) {
 
       const lista = document.getElementById("lista");
@@ -825,6 +902,10 @@
         dibujar();
       }
 
+      /**
+       * Segmenta el arreglo de datos según la página actual y genera los elementos HTML correspondientes en el contenedor de la lista.
+       * @returns {void}
+       */
       function dibujar() {
 
         lista.classList.remove("fade");
@@ -888,6 +969,10 @@
       }
     }
 
+    /**
+     * Calcula el volumen de páginas totales e inyecta los elementos de control y navegación en el DOM.
+     * @returns {void}
+     */
     function renderPaginacion() {
 
       const totalPaginas =
@@ -923,6 +1008,11 @@
       `;
     }
 
+    /**
+     * Modifica el índice de paginación global y refresca el renderizado de la lista.
+     * @param {number} dir - Desplazamiento numérico para cambiar de página (usualmente -1 o 1).
+     * @returns {void}
+     */
     function cambiarPagina(dir) {
 
       paginaActual += dir;
@@ -930,6 +1020,11 @@
       render();
     }
 
+    /**
+     * Abre el modal de confirmación de cancelación asociándole el identificador de la transacción seleccionada.
+     * @param {string|number} id - Identificador de la transacción que se planea revocar.
+     * @returns {void}
+     */
     function cancelar(id) {
 
       idPendienteCancelar = id;
@@ -951,6 +1046,10 @@
         .classList.remove("hidden");
     }
 
+    /**
+     * Ejecuta de forma asíncrona la petición de cancelación de la transacción guardada en memoria y refresca la lista de transacciones.
+     * @returns {Promise<void>}
+     */
     async function confirmarCancelacion() {
 
       try {
@@ -978,6 +1077,11 @@
       idPendienteCancelar = null;
     }
 
+    /**
+     * Procesa la entrada de texto de un input aislando caracteres no numéricos y formateándolo dinámicamente con separadores de miles.
+     * @param {HTMLElement} input - El elemento input del DOM que se está digitando.
+     * @returns {void}
+     */
     function formatearMiles(input) {
 
       let valor =
@@ -996,12 +1100,22 @@
       actualizarTotal();
     }
 
+    /**
+     * Convierte un valor numérico a una representación con separadores de miles regionales (Colombia).
+     * @param {number|string} valor - Número o cadena numérica a procesar.
+     * @returns {string} Cadena formateada para su visualización.
+     */
     function formatearNumero(valor) {
 
       return Number(valor)
         .toLocaleString("es-CO");
     }
 
+    /**
+     * Convierte una fecha ISO estándar en un formato amigable localizado en español colombiano (12 horas).
+     * @param {string} fechaISO - Fecha estándar de origen.
+     * @returns {string} Estructura legible de fecha y hora.
+     */
     function formatearFecha(fechaISO) {
 
       const f = new Date(fechaISO);
@@ -1017,7 +1131,7 @@
 
       let horas = f.getHours();
 
-      const minutos =
+      const minutes =
         String(f.getMinutes()).padStart(2, "0");
 
       const ampm =
@@ -1027,10 +1141,15 @@
 
       return `
         ${dia} de ${mes} ${anio},
-        ${horas}:${minutos} ${ampm}
+        ${horas}:${minutes} ${ampm}
       `;
     }
 
+    /**
+     * Muestra un popup genérico adaptando la visibilidad de los botones para que actúe de modo informativo (aceptar).
+     * @param {string} mensaje - El texto explicativo a mostrar en la interfaz.
+     * @returns {void}
+     */
     function mostrarPopup(mensaje) {
 
       document.getElementById("popup-message")
@@ -1049,16 +1168,28 @@
         .classList.remove("hidden");
     }
 
+    /**
+     * Oculta el popup flotante o modal de la interfaz de usuario.
+     * @returns {void}
+     */
     function cerrarPopup() {
 
       document.getElementById("popup")
         .classList.add("hidden");
     }
 
+    /**
+     * Destruye las credenciales de la sesión activa del usuario para desautenticarlo del sistema.
+     * @returns {void}
+     */
     function logout() {
       sessionStorage.removeItem("usuario");
     }
 
+    /**
+     * Sincroniza la información del usuario consultando sus datos actualizados en el servidor remoto y refrescando la sesión local.
+     * @returns {Promise<void>}
+     */
     async function actualizarUsuario() {
 
       const usuarioStorage =
@@ -1078,6 +1209,9 @@
       usuario = usuarioActualizado;
     }
 
+    /**
+     * Escucha la inserción de datos en el campo de valor monetario para limpiar las alertas visuales de error.
+     */
     document.getElementById("valor")
       .addEventListener("input", function () {
 
@@ -1089,15 +1223,24 @@
         this.classList.remove("input-error");
       });
 
+    /**
+     * Escucha la inserción o cambio del destino de la transacción para recalcular los montos totales de la operación.
+     */
     document.getElementById("destino")
       .addEventListener("input", actualizarTotal);
 
+    /**
+     * Escucha la modificación de la billetera de origen para actualizar los montos de cobro totales de la operación.
+     */
     document.getElementById("origen")
       .addEventListener("change", actualizarTotal);
 
     cargarBilleteras();
     cargarProgramadas();
 
+    /**
+     * Setea un intervalo de refresco automático que consulta y sincroniza el estado de las transacciones programadas cada 5 segundos.
+     */
     setInterval(() => {
       cargarProgramadas(true);
     }, 5000);

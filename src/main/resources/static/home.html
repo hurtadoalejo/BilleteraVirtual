@@ -448,6 +448,10 @@
   </div>
 
   <script>
+    /**
+     * Datos del usuario autenticado obtenidos desde la sesión.
+     * @type {Object|null}
+     */
     const usuario = JSON.parse(sessionStorage.getItem("usuario"));
 
     if (!usuario) {
@@ -474,11 +478,34 @@
     document.getElementById("correoElectronico").value = usuario.correoElectronico;
     document.getElementById("numeroTelefonico").value = usuario.numeroTelefonico;
 
+    /**
+     * Elemento del DOM correspondiente al campo de la nueva contraseña.
+     * @type {HTMLElement}
+     */
     const nuevaPassword = document.getElementById("nuevaPassword");
+
+    /**
+     * Elemento del DOM correspondiente al campo de confirmación de la contraseña.
+     * @type {HTMLElement}
+     */
     const confirmarPassword = document.getElementById("confirmarPassword");
+
+    /**
+     * Elemento del DOM para mostrar mensajes de error de validación de contraseñas.
+     * @type {HTMLElement}
+     */
     const errorMsg = document.getElementById("error-msg");
+
+    /**
+     * Contenedor o envoltura visual del campo de confirmación para aplicar estilos de error.
+     * @type {HTMLElement}
+     */
     const confirmWrapper = document.getElementById("confirmWrapper");
 
+    /**
+     * Compara los campos de nueva contraseña y confirmación, controlando la visualización de alertas visuales en caso de discrepancia.
+     * @returns {void}
+     */
     function validarPassword() {
       if (confirmarPassword.value === "") {
         errorMsg.style.display = "none";
@@ -495,9 +522,22 @@
       }
     }
 
+    /**
+     * Escucha la escritura en el campo de confirmación de contraseña para validar la coincidencia en tiempo real.
+     */
     confirmarPassword.addEventListener("input", validarPassword);
+
+    /**
+     * Escucha la escritura en el campo de nueva contraseña para validar la coincidencia en tiempo real.
+     */
     nuevaPassword.addEventListener("input", validarPassword);
 
+    /**
+     * Alterna la visibilidad del texto de un campo de contraseña (de oculto a visible y viceversa) modificando los íconos del ojo.
+     * @param {string} inputId - ID del elemento input de tipo contraseña.
+     * @param {HTMLElement} element - Elemento del DOM que disparó la acción y contiene los iconos.
+     * @returns {void}
+     */
     function togglePassword(inputId, element) {
       const input = document.getElementById(inputId);
       const eyeOpen = element.querySelector(".eye-open");
@@ -514,9 +554,21 @@
       }
     }
 
+    /**
+     * Elemento del DOM que representa el formulario de perfil de usuario.
+     * @type {HTMLElement}
+     */
     const form = document.getElementById("formPerfil");
+
+    /**
+     * Elemento del DOM correspondiente al botón para restablecer el formulario.
+     * @type {HTMLElement}
+     */
     const btnLimpiar = document.getElementById("btnLimpiar");
 
+    /**
+     * Escucha el clic en el botón limpiar para restaurar los valores de los inputs a los datos originales de la sesión y limpiar errores.
+     */
     btnLimpiar.addEventListener("click", () => {
       const usuarioSession = JSON.parse(sessionStorage.getItem("usuario"));
 
@@ -531,10 +583,17 @@
       confirmWrapper.classList.remove("input-error");
     });
 
+    /**
+     * Destruye las credenciales de la sesión activa del usuario para desautenticarlo del sistema.
+     * @returns {void}
+     */
     function logout() {
       sessionStorage.removeItem("usuario");
     }
 
+    /**
+     * Escucha el envío del formulario para validar los datos, empaquetar los cambios y enviarlos al servidor de manera asíncrona.
+     */
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -585,6 +644,10 @@
       }
     });
 
+    /**
+     * Consulta los datos actualizados del usuario en el servidor externo, refresca el almacenamiento de sesión y actualiza la información del perfil en el DOM.
+     * @returns {Promise<void>}
+     */
     async function cargarUsuario() {
       try {
         const usuarioSession = JSON.parse(sessionStorage.getItem("usuario"));
@@ -618,11 +681,20 @@
       }
     }
 
+    /**
+     * Despliega una ventana modal en la interfaz con un mensaje específico.
+     * @param {string} mensaje - El texto informativo a mostrar en el popup.
+     * @returns {void}
+     */
     function mostrarPopup(mensaje) {
       document.getElementById("popup-message").textContent = mensaje;
       document.getElementById("popup").classList.remove("hidden");
     }
 
+    /**
+     * Oculta el popup modal de la interfaz de usuario.
+     * @returns {void}
+     */
     function cerrarPopup() {
       document.getElementById("popup").classList.add("hidden");
     }

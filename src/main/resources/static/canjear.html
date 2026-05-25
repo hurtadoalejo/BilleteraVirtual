@@ -384,27 +384,41 @@
   </div>
 
   <script>
-
+    /** * @type {Object|null} Datos de sesión del usuario activo (ej: cédula, puntos actuales).
+     */
     const usuario = JSON.parse(
       sessionStorage.getItem("usuario")
     );
 
+    // Guardián de seguridad: Redirección inmediata si no hay sesión activa
     if (!usuario) {
       window.location.href = "/login.html";
     }
 
+    /** * @type {Array<Object>} Colección de billeteras vinculadas a la cédula del usuario.
+     */
     let billeteras = [];
+
+    /** * @type {Array<Object>} Historial con los registros de beneficios y canjes efectuados.
+     */
     let beneficios = [];
 
+    /** * @type {number} Página del historial en la que se encuentra posicionado el usuario.
+     */
     let paginaActual = 1;
+
+    /** * @type {number} Límite máximo de filas visibles por página en el historial.
+     */
     const porPagina = 3;
 
+    /**
+     * Consulta el estado más reciente del usuario en la base de datos y actualiza el almacenamiento local.
+     * @returns {Promise<void>}
+     */
     async function actualizarUsuario() {
-
       const res = await fetch(
         `http://localhost:8080/usuarios/${usuario.cedula}`
       );
-
       const usuarioActualizado = await res.json();
 
       sessionStorage.setItem(
@@ -415,102 +429,76 @@
       Object.assign(usuario, usuarioActualizado);
     }
 
+    /**
+     * Trae las billeteras del usuario y las inyecta como opciones en el elemento `<select>` del HTML.
+     * @returns {Promise<void>}
+     */
     async function cargarBilleteras() {
-
       const res = await fetch(
         `http://localhost:8080/billeteras/${usuario.cedula}`
       );
-
       const data = await res.json();
-
       billeteras = data;
 
-      const select = document.getElementById(
-        "billeteraSelect"
-      );
-
+      const select = document.getElementById("billeteraSelect");
       select.innerHTML = "";
 
       data.forEach(b => {
-
         select.innerHTML += `
-          <option value="${b.id}">
-            ${b.nombre}
-          </option>
+          <option value="${b.id}">${b.nombre}</option>
         `;
       });
     }
 
+    /**
+     * Descarga el historial de canjes del usuario, lo ordena de forma cronológica descendente y reinicia el paginado.
+     * @returns {Promise<void>}
+     */
     async function cargarHistorial() {
-
       const res = await fetch(
         `http://localhost:8080/beneficios/historial/${usuario.cedula}`
       );
-
       beneficios = await res.json();
 
-      beneficios.sort((a, b) =>
-        new Date(b.fecha) - new Date(a.fecha)
-      );
+      beneficios.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
       paginaActual = 1;
-
       renderHistorial(true);
     }
 
+    /**
+     * Modifica el DOM inyectando los bloques de historial correspondientes al segmento de la página actual.
+     * @param {boolean} [sinAnimacion=false] - Si es `true`, salta la transición visual de desvanecimiento ("fade").
+     * @returns {void}
+     */
     function renderHistorial(sinAnimacion = false) {
-
       const lista = document.getElementById("lista");
 
       if (!sinAnimacion) {
-
         lista.classList.add("fade");
-
         setTimeout(() => dibujar(), 200);
-
       } else {
-
         dibujar();
       }
 
       function dibujar() {
-
         lista.classList.remove("fade");
         lista.classList.add("lista-animada");
-
         lista.innerHTML = "";
 
         const inicio = (paginaActual - 1) * porPagina;
         const fin = inicio + porPagina;
-
         const pagina = beneficios.slice(inicio, fin);
 
         pagina.forEach(b => {
-
           lista.innerHTML += `
             <div class="historial-item">
-
               <div class="historial-info">
-
-                <span class="historial-fecha">
-                  ${formatearFecha(b.fecha)}
-                </span>
-
-                <span class="historial-meta">
-                  Puntos gastados: ${b.costoPuntos.toLocaleString("es-CO")}
-                </span>
-
-                <span class="historial-meta">
-                  Dinero canjeado: $${b.dineroCanjeado.toLocaleString("es-CO")}
-                </span>
-
-                <span class="historial-meta">
-                  Billetera destino:
-                  ${b.billeteraDestino.nombre}
-                </span>
-
+                <span class="historial-fecha">${formatearFecha(b.fecha)}</span>
+                <span class="historial-meta">Puntos gastados: ${b.costoPuntos.toLocaleString("es-CO")}</span>
+                <span class="historial-meta">Dinero canjeado: $${b.dineroCanjeado.toLocaleString("es-CO")}</span>
+                <span class="historial-meta">Billetera destino: ${b.billeteraDestino.nombre}</span>
               </div>
-
             </div>
           `;
         });
@@ -519,59 +507,44 @@
       }
     }
 
+    /**
+     * Renderiza e inyecta dinámicamente los controles interactivos de paginación según el total de registros.
+     * @param {number} total - Longitud actual de la lista de beneficios.
+     * @returns {void}
+     */
     function renderPaginacion(total) {
-
-      const cont = document.getElementById(
-        "paginacion"
-      );
-
+      const cont = document.getElementById("paginacion");
       cont.innerHTML = "";
 
-      const totalPaginas = Math.ceil(
-        total / porPagina
-      );
-
+      const totalPaginas = Math.ceil(total / porPagina);
       if (totalPaginas <= 1) return;
 
       cont.innerHTML = `
-
-        <button
-          class="btn"
-          onclick="cambiarPagina(-1)"
-          ${paginaActual === 1 ? 'disabled' : ''}
-        >
-          ←
-        </button>
-
-        <span>
-          Página ${paginaActual} de ${totalPaginas}
-        </span>
-
-        <button
-          class="btn"
-          onclick="cambiarPagina(1)"
-          ${paginaActual === totalPaginas ? 'disabled' : ''}
-        >
-          →
-        </button>
+        <button class="btn" onclick="cambiarPagina(-1)" ${paginaActual === 1 ? 'disabled' : ''}>←</button>
+        <span>Página ${paginaActual} de ${totalPaginas}</span>
+        <button class="btn" onclick="cambiarPagina(1)" ${paginaActual === totalPaginas ? 'disabled' : ''}>→</button>
       `;
     }
 
+    /**
+     * Cambia la página activa en el número indicado y refresca la lista.
+     * @param {number} dir - Desplazamiento: `1` para avanzar página, `-1` para retroceder.
+     * @returns {void}
+     */
     function cambiarPagina(dir) {
-
       paginaActual += dir;
-
       renderHistorial();
     }
 
+    /**
+     * Calcula en tiempo real la equivalencia monetaria de los puntos ingresados (Multiplica Puntos x 5).
+     * @returns {void}
+     */
     function actualizarDinero() {
-
       const puntos = parseInt(document.getElementById("puntos").value.replace(/\./g, ""));
 
       if (!puntos || puntos <= 0) {
-
         document.getElementById("dinero").value = "";
-
         return;
       }
 
@@ -579,148 +552,98 @@
         "$" + (puntos * 5).toLocaleString("es-CO");
     }
 
+    /**
+     * Valida los fondos de puntos, despacha la transacción POST al backend y refresca todo el ecosistema de datos.
+     * @returns {Promise<void>}
+     */
     async function canjear() {
-
-      const puntosInput =
-        document.getElementById("puntos");
-
-      const puntos =
-        parseInt(puntosInput.value.replace(/\./g, ""));
-
-      const billeteraId =
-        document.getElementById("billeteraSelect").value;
-
-      const errorMsg =
-        document.getElementById("error-msg");
+      const puntosInput = document.getElementById("puntos");
+      const puntos = parseInt(puntosInput.value.replace(/\./g, ""));
+      const billeteraId = document.getElementById("billeteraSelect").value;
+      const errorMsg = document.getElementById("error-msg");
 
       if (!puntos || puntos <= 0) {
-
-        errorMsg.textContent =
-          "Los puntos deben ser mayores que 0";
-
+        errorMsg.textContent = "Los puntos deben ser mayores que 0";
         errorMsg.style.display = "block";
-
-        puntosInput.classList.remove("input-error");
-
-        void puntosInput.offsetWidth;
-
-        puntosInput.classList.add("input-error");
-
+        reiniciarErrorAnimacion(puntosInput);
         return;
       }
 
       if (puntos > usuario.puntos) {
-
-        errorMsg.textContent =
-          "No tienes suficientes puntos";
-
+        errorMsg.textContent = "No tienes suficientes puntos";
         errorMsg.style.display = "block";
-
-        puntosInput.classList.remove("input-error");
-
-        void puntosInput.offsetWidth;
-
-        puntosInput.classList.add("input-error");
-
+        reiniciarErrorAnimacion(puntosInput);
         return;
       }
 
       errorMsg.style.display = "none";
-
       puntosInput.classList.remove("input-error");
 
       try {
-
         const res = await fetch(
           `http://localhost:8080/beneficios/canjear/${usuario.cedula}/${billeteraId}/${puntos}`,
-          {
-            method: "POST"
-          }
+          { method: "POST" }
         );
 
         if (!res.ok) {
-
-          mostrarPopup(
-            "No se pudo realizar el canje"
-          );
-
+          mostrarPopup("No se pudo realizar el canje");
           return;
         }
 
         await actualizarUsuario();
-
-        mostrarPopup(
-          "Canje realizado correctamente"
-        );
+        mostrarPopup("Canje realizado correctamente");
 
         document.getElementById("puntos").value = "";
-
         document.getElementById("dinero").value = "";
 
         await cargarBilleteras();
         await cargarHistorial();
 
       } catch {
-
-        mostrarPopup(
-          "Error al realizar el canje"
-        );
+        mostrarPopup("Error al realizar el canje");
       }
     }
 
+    /** Control visual de las alertas emergentes de la interfaz */
     function mostrarPopup(mensaje) {
-
-      document.getElementById(
-        "popup-message"
-      ).textContent = mensaje;
-
-      document.getElementById(
-        "popup"
-      ).classList.remove("hidden");
+      document.getElementById("popup-message").textContent = mensaje;
+      document.getElementById("popup").classList.remove("hidden");
     }
 
+    /** Cierra el popup añadiendole la clase de hidden */
     function cerrarPopup() {
-
-      document.getElementById(
-        "popup"
-      ).classList.add("hidden");
+      document.getElementById("popup").classList.add("hidden");
     }
 
+    /** Destruye la sesión guardada del usuario */
     function logout() {
-
       sessionStorage.removeItem("usuario");
     }
 
+    /**
+     * Procesa una fecha ISO y extrae una cadena legible adaptada al idioma local.
+     * @param {string} fechaISO - String de tiempo (ej: "2026-05-25T11:00:00Z").
+     * @returns {string} Fecha estructurada en texto (ej: "25 de mayo 2026, 11:00 a.m.").
+     */
     function formatearFecha(fechaISO) {
-
       const f = new Date(fechaISO);
-
       const dia = f.getDate();
-
-      const mes = f.toLocaleString(
-        "es-CO",
-        { month: "long" }
-      );
-
+      const mes = f.toLocaleString("es-CO", { month: "long" });
       const anio = f.getFullYear();
-
       let horas = f.getHours();
-
-      const minutos = String(
-        f.getMinutes()
-      ).padStart(2, "0");
-
-      const ampm =
-        horas >= 12 ? "p.m." : "a.m.";
+      const minutos = String(f.getMinutes()).padStart(2, "0");
+      const ampm = horas >= 12 ? "p.m." : "a.m.";
 
       horas = horas % 12 || 12;
 
-      return `
-        ${dia} de ${mes} ${anio},
-        ${horas}:${minutos} ${ampm}
-      `;
+      return `${dia} de ${mes} ${anio}, ${horas}:${minutos} ${ampm}`;
     }
 
+    /**
+     * Aplica formato dinámico con separadores de miles al input numérico mientras el usuario digita.
+     * @param {HTMLInputElement} input - Elemento input que está capturando los puntos.
+     * @returns {void}
+     */
     function formatearMiles(input) {
       let valor = input.value.replace(/\./g, "");
       valor = valor.replace(/[^0-9]/g, "");
@@ -732,40 +655,41 @@
       }
 
       input.value = Number(valor).toLocaleString("es-CO");
-
       actualizarDinero();
     }
 
-    document.getElementById("puntos")
-      .addEventListener("input", () => {
+    /** Provoca el reflujo del navegador para reiniciar la animación CSS de sacudida */
+    function reiniciarErrorAnimacion(element) {
+      element.classList.remove("input-error");
+      void element.offsetWidth;
+      element.classList.add("input-error");
+    }
 
-        actualizarDinero();
+    // Listener: Limpia los estilos de error cuando el usuario modifica el campo
+    document.getElementById("puntos").addEventListener("input", () => {
+      actualizarDinero();
+      const puntosInput = document.getElementById("puntos");
+      const errorMsg = document.getElementById("error-msg");
 
-        const puntosInput =
-          document.getElementById("puntos");
+      errorMsg.style.display = "none";
+      errorMsg.textContent = "";
+      puntosInput.classList.remove("input-error");
+    });
 
-        const errorMsg =
-          document.getElementById("error-msg");
-
-        errorMsg.style.display = "none";
-
-        errorMsg.textContent = "";
-
-        puntosInput.classList.remove("input-error");
-      });
-
+    /**
+     * Punto de entrada de la aplicación. Orquesta la secuencia de inicio asíncrona de la página.
+     * @returns {Promise<void>}
+     */
     async function iniciarPagina() {
-
       await actualizarUsuario();
-
       await cargarBilleteras();
-
       await cargarHistorial();
     }
 
+    // Inicialización automática al cargar el módulo
     iniciarPagina();
 
-  </script>
+</script>
 
 </body>
 

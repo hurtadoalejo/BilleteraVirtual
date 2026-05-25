@@ -263,12 +263,35 @@
   </div>
 
   <script>
+    /**
+     * Arreglo global que almacena el listado consolidad de cuentas de usuario del sistema.
+     * @type {Array<Object>}
+     */
     let usuarios = [];
+
+    /**
+     * Índice de la página de datos que se expone visualmente en la interfaz del panel.
+     * @type {number}
+     */
     let paginaActual = 1;
+
+    /**
+     * Número límite de tarjetas o bloques informativos de usuarios permitidos por sección.
+     * @type {number}
+     */
     const porPagina = 4;
 
+    /**
+     * Formateador de valores numéricos configurado bajo la notación estándar regional (Colombia).
+     * @type {Intl.NumberFormat}
+     */
     const formatoCOP = new Intl.NumberFormat("es-CO");
 
+    /**
+     * Realiza una consulta asíncrona al servicio central para actualizar la memoria de usuarios y comanda la regeneración del árbol visual, controlando la posición de la página.
+     * @param {boolean} [recargaAutomatica=false] - Indica si la petición procede de una rutina cíclica en segundo plano para evitar reiniciar el posicionamiento de la paginación.
+     * @returns {Promise<void>}
+     */
     async function cargarUsuarios(recargaAutomatica = false) {
       const textoBusqueda = document.getElementById("buscarCedula").value;
       const res = await fetch("http://localhost:8080/usuarios");
@@ -282,6 +305,10 @@
       render(true);
     }
 
+    /**
+     * Examina el control de entrada de texto e implementa un filtrado por coincidencia de caracteres sobre los documentos de identidad de los usuarios registrados.
+     * @returns {Array<Object>} Arreglo depurado con los perfiles que cumplen con la condición de búsqueda.
+     */
     function obtenerFiltrados() {
 
       const texto =
@@ -296,6 +323,11 @@
       );
     }
 
+    /**
+     * Gestiona las clases de transición visual y segmenta la colección de perfiles según la página activa para inyectar dinámicamente los bloques informativos y las acciones del administrador en el DOM.
+     * @param {boolean} [sinAnimacion=false] - Define si se omite el retardo cronometrado de los efectos de desvanecimiento en la interfaz.
+     * @returns {void}
+     */
     function render(sinAnimacion = false) {
 
       const lista =
@@ -399,6 +431,11 @@
       }
     }
 
+    /**
+     * Evalúa la cantidad global de elementos coincidentes para construir, deshabilitar o suprimir los controles de paginación e inyectar el estado de posición en el DOM.
+     * @param {number} total - Sumatoria de registros aptos para visualización tras el filtrado.
+     * @returns {void}
+     */
     function renderPaginacion(total) {
 
       const cont =
@@ -434,6 +471,11 @@
       `;
     }
 
+    /**
+     * Modifica algebraicamente el valor de la página actual y dispara la reconstrucción estructural de la vista del panel.
+     * @param {number} dir - Factor multiplicador de movimiento posicional o dirección (e.g., -1 para retroceder, 1 para avanzar).
+     * @returns {void}
+     */
     function cambiarPagina(dir) {
 
       paginaActual += dir;
@@ -441,6 +483,11 @@
       render();
     }
 
+    /**
+     * Intercepta la acción de borrado, escribe la advertencia contextual en la ventana modal y vincula dinámicamente el identificador del usuario al evento de confirmación asíncrona.
+     * @param {string} cedula - Documento de identidad del usuario objetivo.
+     * @returns {void}
+     */
     function confirmarEliminar(cedula) {
 
       document.getElementById("popupMensaje")
@@ -456,6 +503,11 @@
         .classList.remove("hidden");
     }
 
+    /**
+     * Envía una petición de borrado físico o lógico al servidor web mediante el identificador provisto y desencadena la actualización del listado global.
+     * @param {string} cedula - Documento de identidad único del usuario que se va a suprimir.
+     * @returns {Promise<void>}
+     */
     async function eliminarUsuario(cedula) {
 
       cerrarPopup();
@@ -475,12 +527,19 @@
       await cargarUsuarios();
     }
 
+    /**
+     * Adiciona la clase de aislamiento visual para ocultar la ventana emergente modal de la vista del administrador.
+     * @returns {void}
+     */
     function cerrarPopup() {
 
       document.getElementById("popup")
         .classList.add("hidden");
     }
 
+    /**
+     * Escucha la inserción de caracteres en el cuadro de búsqueda para reiniciar el puntero de paginación y filtrar interactivamente los usuarios en pantalla.
+     */
     document.getElementById("buscarCedula")
       .addEventListener("input", () => {
 
@@ -489,12 +548,19 @@
         render();
       });
 
+    /**
+     * Remueve el registro de credenciales del usuario de la sesión para bloquear los privilegios de navegación.
+     * @returns {void}
+     */
     function logout() {
       sessionStorage.removeItem("usuario");
     }
 
     cargarUsuarios();
 
+    /**
+     * Inicializa una rutina temporizada e indefinida para re-consultar de forma silenciosa el servidor y sincronizar los datos mutados por otros clientes.
+     */
     setInterval(() => {
       cargarUsuarios(true);
     }, 5000);
