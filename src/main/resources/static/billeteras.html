@@ -280,232 +280,284 @@
   </div>
 
   <script>
-    /** * @type {Array<Object>} Lista global de alertas de fraude obtenidas del backend.
+    /**
+     * Lista global que almacena todas las billeteras obtenidas del servidor.
+     * @type {Array<Object>}
      */
-    let alertas = [];
+    let billeteras = [];
 
-    /** * @type {number} Índice de la página actual en la paginación.
+    /**
+     * Índice de la página que se está visualizando actualmente en la interfaz.
+     * @type {number}
      */
     let paginaActual = 1;
 
-    /** * @type {number} Cantidad máxima de registros visibles por página.
+    /**
+     * Cantidad máxima de registros de billeteras que se muestran por cada página.
+     * @type {number}
      */
-    const porPagina = 7;
-
-    /** * @type {Intl.NumberFormat} Formateador de moneda para Pesos Colombianos (COP) sin decimales.
-     */
-    const formatoCOP = new Intl.NumberFormat("es-CO", {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    });
+    const porPagina = 4;
 
     /**
-     * Convierte una fecha ISO en un texto amigable con formato colombiano.
-     * @param {string} fechaISO - Fecha en formato estándar (ej: "2026-05-25T11:00:00Z").
-     * @returns {string} Fecha formateada (ej: "25 de may de 2026, 11:00 AM").
+     * Formateador de números configurado para la moneda Pesos Colombianos (COP).
+     * @type {Intl.NumberFormat}
      */
-    function formatearFecha(fechaISO) {
-      const fecha = new Date(fechaISO);
-      return fecha.toLocaleString("es-CO", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-    }
+    const formatoCOP = new Intl.NumberFormat("es-CO");
 
     /**
-     * Consulta las alertas de fraude desde el servidor API y recarga la interfaz.
+     * Solicita de forma asíncrona la lista de billeteras al backend, 
+     * las ordena por cantidad de movimientos de forma descendente y actualiza la interfaz.
+     * @async
+     * @function cargarBilleteras
      * @returns {Promise<void>}
      */
-    async function cargarDatos() {
-      const response = await fetch(
-        "http://localhost:8080/fraude"
+    async function cargarBilleteras() {
+      const res = await fetch(
+        "http://localhost:8080/billeteras/admin"
       );
-      alertas = await response.json();
-      renderTabla();
+      billeteras = await res.json();
+      billeteras.sort((a, b) =>
+        b.movimientos - a.movimientos
+      );
+
+      document.getElementById("totalBilleteras")
+        .textContent =
+        billeteras.length;
+
+      calcularEstadisticas();
+      render(true);
     }
 
     /**
-     * Filtra la lista global de alertas según los criterios seleccionados en el HTML.
-     * @returns {Array<Object>} Lista de alertas que cumplen con los filtros de tipo, riesgo y fechas.
+     * Analiza el arreglo de billeteras para determinar cuál tiene mayor número de movimientos 
+     * y cuál es la categoría (tipo) con más actividad acumulada, reflejando los resultados en el DOM.
+     * @function calcularEstadisticas
+     * @returns {void}
+     */
+    function calcularEstadisticas() {
+      if (billeteras.length === 0) {
+        document.getElementById("mayorUso")
+          .textContent = "-";
+        document.getElementById("categoriaActiva")
+          .textContent = "-";
+        return;
+      }
+
+      let mayor = billeteras[0];
+
+      for (const billetera of billeteras) {
+        if (billetera.movimientos > mayor.movimientos) {
+          mayor = billetera;
+        }
+      }
+
+      document.getElementById("mayorUso")
+        .textContent =
+        mayor.id;
+
+      const categorias = {};
+
+      for (const billetera of billeteras) {
+        const tipo = billetera.tipo;
+        categorias[tipo] =
+          (categorias[tipo] || 0) +
+          billetera.movimientos;
+      }
+
+      let categoriaMasActiva = "-";
+      let max = -1;
+
+      for (const categoria in categorias) {
+        if (categorias[categoria] > max) {
+          max = categorias[categoria];
+          categoriaMasActiva = categoria;
+        }
+      }
+
+      document.getElementById("categoriaActiva")
+        .textContent =
+        categoriaMasActiva;
+    }
+
+    /**
+     * Filtra el arreglo global de billeteras basándose en el texto ingresado en el buscador.
+     * Evalúa coincidencias parciales (insensible a mayúsculas/minúsculas) en el ID, nombre del dueño o cédula.
+     * @function obtenerFiltradas
+     * @returns {Array<Object>} Lista de billeteras que cumplen con el criterio de búsqueda.
      */
     function obtenerFiltradas() {
-      const tipo = document.getElementById("filtroTipo").value;
-      const riesgo = document.getElementById("filtroRiesgo").value;
-      const fechaInicio = document.getElementById("fechaInicio").value;
-      const fechaFin = document.getElementById("fechaFin").value;
+      const texto =
+        document.getElementById("buscarBilletera")
+          .value
+          .trim()
+          .toLowerCase();
 
-      return alertas.filter(t => {
-        const coincideTipo = !tipo || t.tipo === tipo;
-        const coincideRiesgo = !riesgo || t.nivelRiesgo === riesgo;
-        const fechaTransaccion = new Date(t.fecha);
-
-        let coincideInicio = true;
-        let coincideFin = true;
-
-        if (fechaInicio) {
-          coincideInicio = fechaTransaccion >= new Date(fechaInicio);
-        }
-
-        if (fechaFin) {
-          const fin = new Date(fechaFin);
-          fin.setHours(23, 59, 59, 999); // Incluye todo el día final
-          coincideFin = fechaTransaccion <= fin;
-        }
-
-        return coincideTipo && coincideRiesgo && coincideInicio && coincideFin;
-      });
+      return billeteras.filter(b =>
+        b.id.toLowerCase().includes(texto) ||
+        b.usuarioNombre.toLowerCase().includes(texto) ||
+        b.usuarioId.toLowerCase().includes(texto)
+      );
     }
 
     /**
-     * Restablece todos los inputs de filtro a sus valores vacíos y reinicia la tabla.
+     * Coordina el proceso de renderizado de la lista de billeteras en el DOM.
+     * Aplica un efecto visual de transición ("fade") a menos que se indique lo contrario.
+     * @function render
+     * @param {boolean} [sinAnimacion=false] - Si es verdadero, dibuja la lista inmediatamente omitiendo el delay de animación.
      * @returns {void}
      */
-    function limpiarFiltros() {
-      document.getElementById("fechaInicio").value = "";
-      document.getElementById("fechaFin").value = "";
-      document.getElementById("filtroTipo").value = "";
-      document.getElementById("filtroRiesgo").value = "";
-      paginaActual = 1;
-      renderTabla();
-    }
+    function render(sinAnimacion = false) {
+      const lista = document.getElementById("lista");
 
-    /**
-     * Ordena, pagina y dibuja las alertas filtradas en la tabla HTML con un efecto visual de transición.
-     * @returns {void}
-     */
-    function renderTabla() {
-      const tabla = document.getElementById("tablaAlertas");
-      tabla.classList.add("out"); // Inicia animación de salida
+      if (!sinAnimacion) {
+        lista.classList.add("fade");
+        setTimeout(() => dibujar(), 200);
+      } else {
+        dibujar();
+      }
 
-      setTimeout(() => {
+      /**
+       * Procesa la paginación, limpia el contenedor e inyecta el código HTML 
+       * correspondiente a los elementos de la página actual.
+       * @function dibujar
+       * @inner
+       * @returns {void}
+       */
+      function dibujar() {
+        lista.classList.remove("fade");
+        lista.classList.add("lista-animada");
+
         const filtradas = obtenerFiltradas();
-
-        // Ordenar de la más reciente a la más antigua
-        filtradas.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-
-        // Segmentar los registros por página (Paginación)
         const inicio = (paginaActual - 1) * porPagina;
         const fin = inicio + porPagina;
         const pagina = filtradas.slice(inicio, fin);
 
-        tabla.innerHTML = "";
+        lista.innerHTML = "";
 
-        pagina.forEach(t => {
-          tabla.innerHTML += `
-          <tr>
-            <td><span class="badge ${t.tipo}">${t.tipo}</span></td>
-            <td><span class="badge ${t.nivelRiesgo}">${t.nivelRiesgo}</span></td>
-            <td>$ ${formatoCOP.format(t.valor)}</td>
-            <td>${t.billeteraOrigenId || "-"}</td>
-            <td>${t.billeteraDestinoId || "-"}</td>
-            <td>${formatearFecha(t.fecha)}</td>
-            <td>
-              <div class="alertas-lista">
-                ${(t.alertasFraude || []).map(alerta => `
-                  <div class="alerta-item">${alerta}</div>
-                `).join("")}
+        pagina.forEach(b => {
+          lista.innerHTML += `
+          <div class="billetera">
+            <div class="billetera-info">
+              <div>
+                <span class="label">ID</span>
+                <span class="value">${b.id}</span>
               </div>
-            </td>
-          </tr>
-          `;
+              <div>
+                <span class="label">Nombre</span>
+                <span class="value">${b.nombre}</span>
+              </div>
+              <div>
+                <span class="label">Dueño</span>
+                <span class="value">${b.usuarioNombre}</span>
+              </div>
+              <div>
+                <span class="label">Cédula</span>
+                <span class="value">${b.usuarioId}</span>
+              </div>
+              <div>
+                <span class="label">Saldo</span>
+                <span class="value">$ ${formatoCOP.format(b.saldo)}</span>
+              </div>
+              <div>
+                <span class="label">Categoría</span>
+                <span class="categoria ${b.tipo}">${b.tipo}</span>
+              </div>
+              <div>
+                <span class="label">Movimientos</span>
+                <span class="value">${b.movimientos}</span>
+              </div>
+              <div>
+                <span class="label">Estado</span>
+                <span class="value">${b.estado}</span>
+              </div>
+            </div>
+          </div>
+        `;
         });
 
         renderPaginacion(filtradas.length);
-        tabla.classList.remove("out"); // Inicia animación de entrada
-      }, 150);
+      }
     }
 
     /**
-     * Actualiza el estado de los botones de navegación y el texto indicador de páginas.
-     * @param {number} total - El total de registros que pasaron los filtros actuales.
+     * Genera e inyecta los controles de navegación (botones adelante/atrás e indicador) 
+     * en el DOM basándose en la cantidad total de elementos filtrados.
+     * @function renderPaginacion
+     * @param {number} total - Cantidad total de elementos resultantes del filtro actual.
      * @returns {void}
      */
     function renderPaginacion(total) {
+      const cont = document.getElementById("paginacion");
+      cont.innerHTML = "";
+
       const totalPaginas = Math.ceil(total / porPagina);
 
-      document.getElementById("paginaTexto").textContent =
-        `Página ${paginaActual} de ${totalPaginas || 1}`;
+      if (totalPaginas <= 1) return;
 
-      document.getElementById("btnAnterior").disabled = paginaActual === 1;
-      document.getElementById("btnSiguiente").disabled = paginaActual >= totalPaginas;
+      cont.innerHTML = `
+      <button
+        class="btn"
+        onclick="cambiarPagina(-1)"
+        ${paginaActual === 1 ? 'disabled' : ''}
+      >
+        ←
+      </button>
+      <span style="align-self:center;">
+        Página ${paginaActual} de ${totalPaginas}
+      </span>
+      <button
+        class="btn"
+        onclick="cambiarPagina(1)"
+        ${paginaActual === totalPaginas ? 'disabled' : ''}
+      >
+        →
+      </button>
+    `;
     }
 
     /**
-     * Incrementa o decrementa la página actual y refresca la tabla si el movimiento es válido.
-     * @param {number} direccion - Utilizar `1` para avanzar página o `-1` para retroceder.
+     * Cambia la página actual incrementando o decrementando su valor según la dirección provista
+     * y ejecuta el renderizado de la nueva vista.
+     * @function cambiarPagina
+     * @param {number} dir - Dirección del cambio (típicamente 1 para avanzar o -1 para retroceder).
      * @returns {void}
      */
-    function cambiarPagina(direccion) {
-      const total = obtenerFiltradas().length;
-      const totalPaginas = Math.ceil(total / porPagina) || 1;
-      const nuevaPagina = paginaActual + direccion;
-
-      if (nuevaPagina < 1 || nuevaPagina > totalPaginas) return;
-
-      paginaActual = nuevaPagina;
-      renderTabla();
+    function cambiarPagina(dir) {
+      paginaActual += dir;
+      render();
     }
 
-    const inputInicio = document.getElementById("fechaInicio");
-    const inputFin = document.getElementById("fechaFin");
-
-    /** Listener: Controla las restricciones y coherencia al cambiar la fecha de inicio */
-    inputInicio.addEventListener("change", () => {
-      if (inputInicio.value) {
-        inputFin.min = inputInicio.value;
-      } else {
-        inputFin.min = "";
-      }
-
-      if (inputFin.value && inputFin.value < inputInicio.value) {
-        inputFin.value = inputInicio.value;
-      }
-      paginaActual = 1;
-      renderTabla();
-    });
-
-    /** Listener: Controla las restricciones y coherencia al cambiar la fecha de fin */
-    inputFin.addEventListener("change", () => {
-      if (inputFin.value) {
-        inputInicio.max = inputFin.value;
-      } else {
-        inputInicio.max = "";
-      }
-
-      if (inputInicio.value && inputInicio.value > inputFin.value) {
-        inputInicio.value = inputFin.value;
-      }
-      paginaActual = 1;
-      renderTabla();
-    });
-
-    /** Listener: Reinicia la paginación y filtra cuando cambia el selector de tipo */
-    document.getElementById("filtroTipo").addEventListener("change", () => {
-      paginaActual = 1;
-      renderTabla();
-    });
-
-    /** Listener: Reinicia la paginación y filtra cuando cambia el selector de riesgo */
-    document.getElementById("filtroRiesgo").addEventListener("change", () => {
-      paginaActual = 1;
-      renderTabla();
-    });
-
-    // Carga inicial al abrir la página
-    cargarDatos();
-
-    document.getElementById("tablaAlertas").classList.add("fade-table");
+    /**
+     * Escuchador de eventos para la entrada de texto en el buscador. 
+     * Reinicia el control de paginación a la primera página y vuelve a renderizar los datos coincidentes.
+     * @event InputEvent
+     * @listener
+     */
+    document.getElementById("buscarBilletera")
+      .addEventListener("input", () => {
+        paginaActual = 1;
+        render();
+      });
 
     /**
-     * @type {number} Temporizador en bucle para auto-refrescar los datos cada 5 segundos.
+     * Remueve la información del usuario almacenada en el almacenamiento de sesión para cerrar la sesión actual.
+     * @function logout
+     * @returns {void}
+     */
+    function logout() {
+      sessionStorage.removeItem("usuario");
+    }
+
+    // Inicializa la carga de datos al abrir o refrescar la pantalla.
+    cargarBilleteras();
+
+    /**
+     * Temporizador cíclico que actualiza de manera automática la lista de billeteras en segundo plano cada 5 segundos.
+     * @type {number}
      */
     setInterval(() => {
-      cargarDatos();
+      cargarBilleteras();
     }, 5000);
-
 </script>
 
 </body>
