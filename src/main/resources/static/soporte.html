@@ -337,17 +337,19 @@
   </div>
 
   <script>
-
     const form = document.getElementById("chatForm");
     const input = document.getElementById("mensajeInput");
     const chatMessages = document.getElementById("chatMessages");
 
+    document.addEventListener("DOMContentLoaded", () => {
+      cargarHistorial();
+    });
+
     function logout() {
-      sessionStorage.removeItem("usuario");
+      sessionStorage.clear();
     }
 
-    function agregarMensaje(tipo, autor, mensaje) {
-
+    function agregarMensaje(tipo, autor, mensaje, guardar = true) {
       const messageDiv = document.createElement("div");
       messageDiv.classList.add("message", tipo);
 
@@ -357,14 +359,32 @@
       `;
 
       chatMessages.appendChild(messageDiv);
-
       chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      if (guardar) {
+        guardarEnHistorial({ tipo, autor, mensaje });
+      }
+    }
+
+    function guardarEnHistorial(msgObjeto) {
+      let historial = JSON.parse(sessionStorage.getItem("historialChat")) || [];
+      historial.push(msgObjeto);
+      sessionStorage.setItem("historialChat", JSON.stringify(historial));
+    }
+
+    function cargarHistorial() {
+      let historial = JSON.parse(sessionStorage.getItem("historialChat")) || [];
+
+      if (historial.length > 0) {
+        chatMessages.innerHTML = "";
+        historial.forEach(msg => {
+          agregarMensaje(msg.tipo, msg.autor, msg.mensaje, false);
+        });
+      }
     }
 
     async function enviarMensaje(mensaje) {
-
       try {
-
         mostrarTyping();
 
         const response = await fetch(
@@ -374,29 +394,23 @@
         const respuestaIA = await response.text();
 
         ocultarTyping();
-
         agregarMensaje("assistant", "Asistente", respuestaIA);
 
       } catch (error) {
-
         ocultarTyping();
-
         agregarMensaje(
           "assistant",
           "Asistente",
           "Ocurrió un error al conectar con el servidor."
         );
-
         console.error(error);
       }
     }
 
     form.addEventListener("submit", async (e) => {
-
       e.preventDefault();
 
       const mensaje = input.value.trim();
-
       if (!mensaje) return;
 
       agregarMensaje("user", "Yo", mensaje);
@@ -409,24 +423,17 @@
     });
 
     input.addEventListener("input", () => {
-
       input.style.height = "auto";
-      input.style.height =
-        Math.min(input.scrollHeight, 160) + "px";
-
+      input.style.height = Math.min(input.scrollHeight, 160) + "px";
     });
 
     function mostrarTyping() {
-
       const typingDiv = document.createElement("div");
-
       typingDiv.classList.add("message", "assistant");
-
       typingDiv.id = "typingIndicator";
 
       typingDiv.innerHTML = `
         <div class="message-header">Asistente</div>
-
         <div class="message-content typing">
           <span></span>
           <span></span>
@@ -435,14 +442,11 @@
       `;
 
       chatMessages.appendChild(typingDiv);
-
       chatMessages.scrollTop = chatMessages.scrollHeight;
     }
 
     function ocultarTyping() {
-
       const typing = document.getElementById("typingIndicator");
-
       if (typing) {
         typing.remove();
       }

@@ -87,13 +87,6 @@ public class BilleteraService {
                     recibido += t.getValor();
                 }
             }
-
-            System.out.println("==========");
-            System.out.println("Billetera: " + b.getId());
-            System.out.println("Saldo actual: " + b.getSaldo());
-            System.out.println("Dinero enviado: " + enviado);
-            System.out.println("Dinero recibido: " + recibido);
-            System.out.println("Total movido: " + (enviado + recibido));
         }
 
         return lista;
